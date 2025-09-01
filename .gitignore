@@ -5,7 +5,6 @@ CMakeUserPresets.json
 .vscode/**/*
 
 # exclude these files from being ignored
-!.vscode/settings.json
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json

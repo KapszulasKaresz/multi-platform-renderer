@@ -1,8 +1,3 @@
-find_package(glfw3 3.4 REQUIRED)
+set(STANDALONE_PROJECT_NAME "${PROJECT_NAME}_standalone")
 
-add_executable(${PROJECT_NAME} src/main.cpp)
-
-target_link_libraries(
-    ${PROJECT_NAME}
-    glfw    
-)
+add_executable(${STANDALONE_PROJECT_NAME} src/main.cpp)
