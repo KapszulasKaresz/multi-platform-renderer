@@ -1,2 +1,3 @@
 add_subdirectory(render_target)
+add_subdirectory(rendering_server)
 add_subdirectory(window)

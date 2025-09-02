@@ -9,7 +9,7 @@
 
 namespace renderer {
 namespace window {
-class Window : public render_target::RenderTarget {
+class Window {
 public:
     Window() = default;
 
