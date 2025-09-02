@@ -23,7 +23,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": false,
+            "console": "internalConsole",
             "type": "cppvsdbg",
             "program": "${workspaceFolder}/_build/build/app/standalone/${input:BuildType}/MultiPlatformRenderer_standalone.exe",
         }

@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-#include "glm/vec2.hpp"
+#include <glm/vec2.hpp>
 #include "renderer/render_target/inc/render_target.hpp"
 
 namespace renderer {

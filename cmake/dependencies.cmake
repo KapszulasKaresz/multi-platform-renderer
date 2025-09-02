@@ -5,3 +5,9 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
         GLM_FORCE_RADIANS
 )
 target_link_libraries(${PROJECT_NAME} PUBLIC glm::glm)
+
+#glfw
+find_package(glfw3 CONFIG REQUIRED)
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+)
+target_link_libraries(${PROJECT_NAME} PUBLIC glfw)
