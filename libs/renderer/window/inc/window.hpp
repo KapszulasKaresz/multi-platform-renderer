@@ -21,6 +21,8 @@ public:
     virtual bool isValid() const;
 
     virtual Window& create() = 0;
+    virtual bool isOpen() = 0;
+    virtual void update() = 0;
 
     virtual ~Window() = default;
 

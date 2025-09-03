@@ -10,12 +10,19 @@ namespace renderer {
 namespace window {
 class GLFWWindow : public Window{
 public:
-    GLFWWindow();
+    GLFWWindow() = default;
+
+    std::shared_ptr<render_target::RenderTarget> getRenderTarget() const override final;
+
+    Window& create() override final;
+    bool isOpen() override final;
+    void update() override final;
 
     ~GLFWWindow() override final;
 private:
-    std::unique_ptr<GLFWwindow> m_window{nullptr};
+    GLFWwindow* m_window{nullptr};
 
+    static int s_numberOfWindows;
 };
 }   // namespace window
 }   // namespace renderer

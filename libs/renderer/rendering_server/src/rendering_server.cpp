@@ -41,6 +41,16 @@ void RenderingServer::mainLoop() {
     {
         throw std::runtime_error("RenderingServer::mainLoop() renderingMode is not RENDER_MODE_LOOP");
     }
+
+    if(m_window.get() != nullptr)
+    {
+        m_mainLoopRunning = true;
+        while(m_window->isOpen() && m_renderMode == RENDER_MODE_LOOP)
+        {
+            m_window->update();
+        }
+        m_mainLoopRunning = false;
+    }
 }
 
 
