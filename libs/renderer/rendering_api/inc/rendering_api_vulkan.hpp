@@ -1,0 +1,18 @@
+#ifndef RENDERING_API_VULKAN_HPP_INCLUDED
+#define RENDERING_API_VULKAN_HPP_INCLUDED
+
+#include "renderer/rendering_api/inc/rendering_api.hpp"
+
+namespace renderer {
+namespace rendering_api {
+
+class RenderingApiVulkan : public RenderingApi {
+public:
+
+    std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() override final;
+private:
+};
+}   // namespace rendering_api
+}   // namespace renderer
+
+#endif

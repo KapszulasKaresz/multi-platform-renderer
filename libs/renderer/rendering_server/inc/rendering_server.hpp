@@ -2,7 +2,9 @@
 #define RENDERING_SERVER_HPP_INCLUDED
 
 #include <memory>
+
 #include "renderer/render_target/inc/render_target.hpp"
+#include "renderer/rendering_api/inc/rendering_api.hpp"
 #include "renderer/window/inc/window.hpp"
 
 namespace renderer {
@@ -18,26 +20,29 @@ class RenderingServer {
 private:
     RenderingServer();
 
-    RenderingServer(const RenderingServer&) = delete;
+    RenderingServer(const RenderingServer&)            = delete;
     RenderingServer& operator=(const RenderingServer&) = delete;
+
 public:
     static RenderingServer& getInstance();
 
-    void setRenderMode(RenderMode f_renderMode);
+    void       setRenderMode(RenderMode f_renderMode);
     RenderMode getRenderMode() const;
 
     void setRenderTarget(std::unique_ptr<render_target::RenderTarget>&& f_renderTarget);
     void setWindow(std::unique_ptr<window::Window>&& f_renderTarget);
+    void setRenderingApi(std::unique_ptr<rendering_api::RenderingApi>&& f_renderingApi);
 
     void frame();
     void mainLoop();
 
 private:
-    RenderMode m_renderMode{RENDER_MODE_LOOP};
-    bool       m_mainLoopRunning{false};
+    RenderMode m_renderMode{ RENDER_MODE_LOOP };
+    bool       m_mainLoopRunning{ false };
 
-    std::unique_ptr<render_target::RenderTarget> m_renderTarget{nullptr};
-    std::unique_ptr<window::Window> m_window{nullptr};
+    std::unique_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
+    std::unique_ptr<window::Window>              m_window{ nullptr };
+    std::unique_ptr<rendering_api::RenderingApi> m_renderingApi{ nullptr };
 };
 }   // namespace rendering_server
 }   // namespace renderer

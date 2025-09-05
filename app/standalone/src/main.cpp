@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "renderer/rendering_server/inc/rendering_server.hpp"
+#include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 
 int main(int argc, const char* argv[])
@@ -15,6 +16,7 @@ int main(int argc, const char* argv[])
         auto l_window = std::make_unique<renderer::window::GLFWWindow>();
         l_window->setSize(glm::ivec2(1600, 1200)).setTitle("Test Window").create();
 
+        l_renderingServer.setRenderingApi(std::make_unique<renderer::rendering_api::RenderingApiVulkan>());
         l_renderingServer.setWindow(std::move(l_window));
 
         l_renderingServer.mainLoop();
