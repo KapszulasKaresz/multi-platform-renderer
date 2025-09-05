@@ -1,6 +1,8 @@
 #ifndef RENDERING_API_VULKAN_HPP_INCLUDED
 #define RENDERING_API_VULKAN_HPP_INCLUDED
 
+#include <vulkan/vulkan.hpp>
+
 #include "renderer/rendering_api/inc/rendering_api.hpp"
 
 namespace renderer {

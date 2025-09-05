@@ -7,6 +7,7 @@ namespace renderer {
 namespace rendering_device {
 class RenderingDeviceVulkan : public RenderingDevice {
 public:
+    RenderingDeviceVulkan();
 
 private:
 };
