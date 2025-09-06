@@ -3,11 +3,19 @@
 
 #include <memory>
 
-#include "renderer/render_target/inc/render_target.hpp"
-#include "renderer/rendering_api/inc/rendering_api.hpp"
-#include "renderer/window/inc/window.hpp"
-
 namespace renderer {
+namespace render_target {
+class RenderTarget;
+}   // namespace render_target
+
+namespace window {
+class Window;
+}   // namespace window
+
+namespace rendering_api {
+    class RenderingApi;
+}
+
 namespace rendering_server {
 
 enum RenderMode {

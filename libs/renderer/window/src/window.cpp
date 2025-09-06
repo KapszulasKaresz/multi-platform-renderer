@@ -1,5 +1,8 @@
 #include "renderer/window/inc/window.hpp"
 
+#include "renderer/render_target/inc/render_target_window.hpp"
+#include "renderer/rendering_api/inc/rendering_api.hpp"
+
 #include <stdexcept>
 
 namespace renderer {

@@ -6,10 +6,15 @@
 
 #include <glm/vec2.hpp>
 
-#include "renderer/render_target/inc/render_target_window.hpp"
-#include "renderer/rendering_api/inc/rendering_api.hpp"
 
 namespace renderer {
+namespace render_target {
+    class RenderTargetWindow;
+}
+
+namespace rendering_api {
+    class RenderingApi;
+}
 namespace window {
 class Window {
 public:

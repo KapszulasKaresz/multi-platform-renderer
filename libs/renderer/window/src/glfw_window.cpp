@@ -6,26 +6,6 @@ namespace renderer {
 namespace window {
 int GLFWWindow::s_numberOfWindows{ 0 };
 
-std::shared_ptr<render_target::RenderTargetWindow> GLFWWindow::getRenderTarget(
-    rendering_api::RenderingApi* f_renderingApi
-) const
-{
-    switch (f_renderingApi->getRenderingAPIType()) {
-        case rendering_api::RENDERING_API_TYPE_VULKAN: {
-            break;
-        }
-        default: {
-            throw std::runtime_error(
-                "GLFWWindow::getRenderTarget(rendering_api::RenderingApi* "
-                "f_renderingApi) no implementation for this type of API"
-            );
-            break;
-        }
-    }
-
-    return m_renderTarget;
-}
-
 Window& GLFWWindow::create()
 {
     if (s_numberOfWindows == 0) {

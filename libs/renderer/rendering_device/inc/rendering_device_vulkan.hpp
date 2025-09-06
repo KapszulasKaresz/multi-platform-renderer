@@ -9,6 +9,10 @@ class RenderingDeviceVulkan : public RenderingDevice {
 public:
     RenderingDeviceVulkan();
 
+    std::shared_ptr<render_target::RenderTargetWindow> createRenderTargetWindow(
+        const window::Window* f_window
+    ) override final;
+
 private:
 };
 

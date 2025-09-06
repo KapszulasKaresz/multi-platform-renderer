@@ -1,5 +1,9 @@
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 
+#include "renderer/render_target/inc/render_target_window.hpp"
+#include "renderer/rendering_api/inc/rendering_api.hpp"
+#include "renderer/window/inc/window.hpp"
+
 #include <stdexcept>
 
 namespace renderer {
@@ -39,7 +43,7 @@ void RenderingServer::setWindow(std::unique_ptr<window::Window>&& f_window)
         );
     }
     m_window = std::move(f_window);
-    m_renderTarget = f_window->getRenderTarget(m_renderingApi.get());
+    m_renderTarget = m_window->getRenderTarget(m_renderingApi.get());
 }
 
 void RenderingServer::setRenderingApi(
