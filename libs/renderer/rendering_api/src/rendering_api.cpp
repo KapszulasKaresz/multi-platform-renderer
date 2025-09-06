@@ -11,6 +11,11 @@ std::shared_ptr<rendering_device::RenderingDevice> RenderingApi::getMainRenderin
     return m_mainRenderingDevice;
 }
 
+RenderingAPIType RenderingApi::getRenderingAPIType() const
+{
+    return m_apiType;
+}
+
 bool RenderingApi::isValid() const
 {
     return m_valid;

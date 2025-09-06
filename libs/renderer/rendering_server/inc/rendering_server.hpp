@@ -40,7 +40,7 @@ private:
     RenderMode m_renderMode{ RENDER_MODE_LOOP };
     bool       m_mainLoopRunning{ false };
 
-    std::unique_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
+    std::shared_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
     std::unique_ptr<window::Window>              m_window{ nullptr };
     std::unique_ptr<rendering_api::RenderingApi> m_renderingApi{ nullptr };
 };

@@ -7,6 +7,13 @@
 
 namespace renderer {
 namespace rendering_api {
+
+enum RenderingAPIType {
+    RENDERING_API_TYPE_NONE,
+    RENDERING_API_TYPE_VULKAN,
+    RENDERING_API_TYPE_MAX
+};
+
 class RenderingApi {
 public:
     RenderingApi() = default;
@@ -14,9 +21,11 @@ public:
     virtual std::shared_ptr<rendering_device::RenderingDevice> getMainRenderingDevice();
     virtual std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() = 0;
 
+    RenderingAPIType getRenderingAPIType() const;
     bool isValid() const;
 protected:
     bool m_valid{false};
+    RenderingAPIType m_apiType{RENDERING_API_TYPE_NONE};
     std::shared_ptr<rendering_device::RenderingDevice> m_mainRenderingDevice{nullptr};
 };
 }   // namespace rendering_api

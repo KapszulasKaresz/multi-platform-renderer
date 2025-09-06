@@ -11,7 +11,7 @@ namespace rendering_api {
 
 class RenderingApiVulkan : public RenderingApi {
 public:
-    RenderingApiVulkan() = default;
+    RenderingApiVulkan();
 
     std::shared_ptr<rendering_device::RenderingDevice>
         createRenderingDevice() override final;

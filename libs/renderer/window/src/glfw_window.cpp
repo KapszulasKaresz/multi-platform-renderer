@@ -6,9 +6,25 @@ namespace renderer {
 namespace window {
 int GLFWWindow::s_numberOfWindows{ 0 };
 
-std::shared_ptr<render_target::RenderTarget> GLFWWindow::getRenderTarget() const
+std::shared_ptr<render_target::RenderTarget> GLFWWindow::getRenderTarget(
+    rendering_api::RenderingApi* f_renderingApi
+) const
 {
-    return std::make_unique<render_target::RenderTarget>();
+    std::shared_ptr<render_target::RenderTarget> l_renderTarget;
+    switch (f_renderingApi->getRenderingAPIType()) {
+        case rendering_api::RENDERING_API_TYPE_VULKAN: {
+            break;
+        }
+        default: {
+            throw std::runtime_error(
+                "GLFWWindow::getRenderTarget(rendering_api::RenderingApi* "
+                "f_renderingApi) no implementation for this type of API"
+            );
+            break;
+        }
+    }
+
+    return l_renderTarget;
 }
 
 Window& GLFWWindow::create()
@@ -41,7 +57,7 @@ void GLFWWindow::update()
 std::vector<const char*> GLFWWindow::getRequiredInstanceExtensionsVulkan()
 {
     uint32_t l_extensionCount = 0;
-    auto l_extension = glfwGetRequiredInstanceExtensions(&l_extensionCount);
+    auto     l_extension      = glfwGetRequiredInstanceExtensions(&l_extensionCount);
 
     return std::vector(l_extension, l_extension + l_extensionCount);
 }

@@ -4,6 +4,11 @@
 
 namespace renderer {
 namespace rendering_api {
+RenderingApiVulkan::RenderingApiVulkan() : RenderingApi()
+{
+    m_apiType = RENDERING_API_TYPE_VULKAN;
+}
+
 std::shared_ptr<rendering_device::RenderingDevice>
     RenderingApiVulkan::createRenderingDevice()
 {

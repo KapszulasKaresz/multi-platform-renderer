@@ -5,7 +5,9 @@
 #include <string>
 
 #include <glm/vec2.hpp>
+
 #include "renderer/render_target/inc/render_target.hpp"
+#include "renderer/rendering_api/inc/rendering_api.hpp"
 
 namespace renderer {
 namespace window {
@@ -13,7 +15,10 @@ class Window {
 public:
     Window() = default;
 
-    virtual std::shared_ptr<render_target::RenderTarget> getRenderTarget() const = 0;
+    virtual std::shared_ptr<render_target::RenderTarget> getRenderTarget(
+        rendering_api::RenderingApi* f_renderingApi
+    ) const                                                                      = 0;
+    virtual std::shared_ptr<render_target::RenderTarget> getRenderTarget() const;
 
     Window& setSize(const glm::ivec2& f_size);
     Window& setTitle(const std::string& f_title);
@@ -21,15 +26,16 @@ public:
     virtual bool isValid() const;
 
     virtual Window& create() = 0;
-    virtual bool isOpen() = 0;
-    virtual void update() = 0;
+    virtual bool    isOpen() = 0;
+    virtual void    update() = 0;
 
     virtual ~Window() = default;
 
 protected:
-    glm::ivec2  m_size{ 600, 600 };
-    bool        m_created{ false };
-    std::string m_title{ "empty window" };
+    glm::ivec2                                   m_size{ 600, 600 };
+    bool                                         m_created{ false };
+    std::string                                  m_title{ "empty window" };
+    std::shared_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
 };
 }   // namespace window
 }   // namespace renderer

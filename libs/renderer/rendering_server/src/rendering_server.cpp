@@ -32,7 +32,14 @@ void RenderingServer::setRenderTarget(
 
 void RenderingServer::setWindow(std::unique_ptr<window::Window>&& f_window)
 {
+    if (!m_renderingApi || !m_renderingApi->isValid()) {
+        throw std::runtime_error(
+            "RenderingServer::setWindow() a valid renderingAPI instance is needed to set "
+            "up window"
+        );
+    }
     m_window = std::move(f_window);
+    m_renderTarget = f_window->getRenderTarget(m_renderingApi.get());
 }
 
 void RenderingServer::setRenderingApi(
