@@ -1,1 +1,1 @@
-target_sources(${PROJECT_NAME} PRIVATE "src/render_target.cpp")
+target_sources(${RENDERER_LIB_NAME} PRIVATE "src/render_target.cpp")

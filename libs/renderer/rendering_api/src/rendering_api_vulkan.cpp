@@ -10,5 +10,19 @@ std::shared_ptr<rendering_device::RenderingDevice>
     return std::make_shared<rendering_device::RenderingDeviceVulkan>();
 }
 
+RenderingApiVulkan& RenderingApiVulkan::create()
+{
+    vk::ApplicationInfo l_applicationInfo{
+        .apiVersion = vk::ApiVersion14
+    };
+
+    m_valid = true;
+    return *this;
+}
+
+RenderingApiVulkan::~RenderingApiVulkan()
+{
+}
+
 }   // namespace rendering_api
 }   // namespace renderer

@@ -13,7 +13,10 @@ public:
 
     virtual std::shared_ptr<rendering_device::RenderingDevice> getMainRenderingDevice();
     virtual std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() = 0;
-private:
+
+    bool isValid() const;
+protected:
+    bool m_valid{false};
     std::shared_ptr<rendering_device::RenderingDevice> m_mainRenderingDevice{nullptr};
 };
 }   // namespace rendering_api

@@ -11,5 +11,10 @@ std::shared_ptr<rendering_device::RenderingDevice> RenderingApi::getMainRenderin
     return m_mainRenderingDevice;
 }
 
+bool RenderingApi::isValid() const
+{
+    return m_valid;
+}
+
 }   // namespace rendering_api
 }   // namespace renderer
