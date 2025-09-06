@@ -5,6 +5,7 @@
 
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <vector>
 
 namespace renderer {
 namespace window {
@@ -17,6 +18,8 @@ public:
     Window& create() override final;
     bool isOpen() override final;
     void update() override final;
+
+    static std::vector<const char*> getRequiredInstanceExtensionsVulkan();
 
     ~GLFWWindow() override final;
 private:

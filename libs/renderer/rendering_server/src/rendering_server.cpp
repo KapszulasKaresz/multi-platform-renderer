@@ -54,6 +54,11 @@ void RenderingServer::frame()
     if (!m_renderingApi) {
         throw std::runtime_error("RenderingServer::frame() no rendering API is set");
     }
+
+    if (!m_renderingApi->isValid()) {
+        throw std::runtime_error("RenderingServer::frame() renderin API is invalid");
+    }
+
     auto l_renderingDevice = m_renderingApi->getMainRenderingDevice();
 }
 

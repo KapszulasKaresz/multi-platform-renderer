@@ -38,6 +38,14 @@ void GLFWWindow::update()
     glfwPollEvents();
 }
 
+std::vector<const char*> GLFWWindow::getRequiredInstanceExtensionsVulkan()
+{
+    uint32_t l_extensionCount = 0;
+    auto l_extension = glfwGetRequiredInstanceExtensions(&l_extensionCount);
+
+    return std::vector(l_extension, l_extension + l_extensionCount);
+}
+
 GLFWWindow::~GLFWWindow()
 {
     glfwDestroyWindow(m_window);

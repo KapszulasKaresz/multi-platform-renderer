@@ -11,15 +11,29 @@ namespace rendering_api {
 
 class RenderingApiVulkan : public RenderingApi {
 public:
+    RenderingApiVulkan() = default;
 
-    std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() override final;
-    
+    std::shared_ptr<rendering_device::RenderingDevice>
+        createRenderingDevice() override final;
+
+    RenderingApiVulkan& enableValidationLayers(bool f_enable);
+    RenderingApiVulkan& addValidationLayer(const char* f_validationLayerName);
+    RenderingApiVulkan& addExtension(const char* f_extensionName);
+    RenderingApiVulkan& addExtensions(std::vector<const char*>& f_extensionNames);
     RenderingApiVulkan& create();
 
     ~RenderingApiVulkan();
-private:
-    vk::raii::Instance m_instance{nullptr};
 
+private:
+    void createInstance();
+
+    vk::raii::Instance m_instance{ nullptr };
+    vk::raii::Context  m_context{};
+
+    bool                     m_validationLayersEnabled{ false };
+    std::vector<const char*> m_validationLayers{};
+
+    std::vector<const char*> m_extensions{};
 };
 }   // namespace rendering_api
 }   // namespace renderer
