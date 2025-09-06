@@ -90,7 +90,13 @@ void RenderingApiVulkan::createInstance()
         }
     }
 
-    vk::InstanceCreateInfo l_createInfo({}, &l_applicationInfo, {}, {});
+    vk::InstanceCreateInfo l_createInfo{
+        .pApplicationInfo        = &l_applicationInfo,
+        .enabledLayerCount       = static_cast<uint32_t>(m_validationLayers.size()),
+        .ppEnabledLayerNames     = m_validationLayers.data(),
+        .enabledExtensionCount   = static_cast<uint32_t>(m_extensions.size()),
+        .ppEnabledExtensionNames = m_extensions.data()
+    };
 
     m_instance = vk::raii::Instance(m_context, l_createInfo);
 }
