@@ -6,11 +6,10 @@ namespace renderer {
 namespace window {
 int GLFWWindow::s_numberOfWindows{ 0 };
 
-std::shared_ptr<render_target::RenderTarget> GLFWWindow::getRenderTarget(
+std::shared_ptr<render_target::RenderTargetWindow> GLFWWindow::getRenderTarget(
     rendering_api::RenderingApi* f_renderingApi
 ) const
 {
-    std::shared_ptr<render_target::RenderTarget> l_renderTarget;
     switch (f_renderingApi->getRenderingAPIType()) {
         case rendering_api::RENDERING_API_TYPE_VULKAN: {
             break;
@@ -24,7 +23,7 @@ std::shared_ptr<render_target::RenderTarget> GLFWWindow::getRenderTarget(
         }
     }
 
-    return l_renderTarget;
+    return m_renderTarget;
 }
 
 Window& GLFWWindow::create()

@@ -6,7 +6,7 @@
 
 #include <glm/vec2.hpp>
 
-#include "renderer/render_target/inc/render_target.hpp"
+#include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/rendering_api/inc/rendering_api.hpp"
 
 namespace renderer {
@@ -15,10 +15,10 @@ class Window {
 public:
     Window() = default;
 
-    virtual std::shared_ptr<render_target::RenderTarget> getRenderTarget(
+    virtual std::shared_ptr<render_target::RenderTargetWindow> getRenderTarget(
         rendering_api::RenderingApi* f_renderingApi
-    ) const                                                                      = 0;
-    virtual std::shared_ptr<render_target::RenderTarget> getRenderTarget() const;
+    );
+    virtual std::shared_ptr<render_target::RenderTargetWindow> getRenderTarget() const;
 
     Window& setSize(const glm::ivec2& f_size);
     Window& setTitle(const std::string& f_title);
@@ -32,10 +32,10 @@ public:
     virtual ~Window() = default;
 
 protected:
-    glm::ivec2                                   m_size{ 600, 600 };
-    bool                                         m_created{ false };
-    std::string                                  m_title{ "empty window" };
-    std::shared_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
+    glm::ivec2                                         m_size{ 600, 600 };
+    bool                                               m_created{ false };
+    std::string                                        m_title{ "empty window" };
+    std::shared_ptr<render_target::RenderTargetWindow> m_renderTarget{ nullptr };
 };
 }   // namespace window
 }   // namespace renderer

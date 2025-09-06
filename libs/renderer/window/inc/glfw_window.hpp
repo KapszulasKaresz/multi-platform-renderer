@@ -13,8 +13,6 @@ class GLFWWindow : public Window{
 public:
     GLFWWindow() = default;
 
-    std::shared_ptr<render_target::RenderTarget> getRenderTarget(rendering_api::RenderingApi* f_renderingApi) const override final;
-
     Window& create() override final;
     bool isOpen() override final;
     void update() override final;

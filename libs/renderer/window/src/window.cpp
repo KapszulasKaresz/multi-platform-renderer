@@ -4,7 +4,16 @@
 
 namespace renderer {
 namespace window {
-std::shared_ptr<render_target::RenderTarget> Window::getRenderTarget() const
+std::shared_ptr<render_target::RenderTargetWindow> Window::getRenderTarget(
+    rendering_api::RenderingApi* f_renderingApi
+)
+{
+    m_renderTarget = f_renderingApi->getMainRenderingDevice()->createRenderTargetWindow(this);
+
+    return m_renderTarget;
+}
+
+std::shared_ptr<render_target::RenderTargetWindow> Window::getRenderTarget() const
 {
     if (m_renderTarget) {
         return m_renderTarget;
