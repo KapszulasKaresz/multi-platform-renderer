@@ -5,6 +5,8 @@
 #include <string>
 
 #include <glm/vec2.hpp>
+#include <vulkan/vulkan_raii.hpp>
+#include <vulkan/vulkan.h>
 
 
 namespace renderer {
@@ -30,6 +32,7 @@ public:
 
     virtual bool isValid() const;
 
+    virtual VkSurfaceKHR createVulkanSurface(const vk::raii::Instance& f_instance) = 0;
     virtual Window& create() = 0;
     virtual bool    isOpen() = 0;
     virtual void    update() = 0;

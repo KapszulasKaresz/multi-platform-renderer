@@ -16,7 +16,7 @@ namespace rendering_device {
 class RenderingDevice {
 public:
     virtual std::shared_ptr<render_target::RenderTargetWindow> createRenderTargetWindow(
-        const window::Window* f_window
+        window::Window* f_window
     ) = 0;
 
 private:

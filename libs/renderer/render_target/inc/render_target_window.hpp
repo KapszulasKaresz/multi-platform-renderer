@@ -4,12 +4,16 @@
 #include "renderer/render_target/inc/render_target.hpp"
 
 namespace renderer {
+namespace window {
+    class Window;
+}
 namespace render_target {
 
 class RenderTargetWindow : public RenderTarget{
 public:
 
-private:
+protected:
+    window::Window* m_window;
 };
 
 }   // namespace render_target

@@ -2,6 +2,8 @@
 
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
+#include <iostream>
+
 namespace renderer {
 namespace rendering_api {
 RenderingApiVulkan::RenderingApiVulkan() : RenderingApi()
@@ -12,7 +14,7 @@ RenderingApiVulkan::RenderingApiVulkan() : RenderingApi()
 std::shared_ptr<rendering_device::RenderingDevice>
     RenderingApiVulkan::createRenderingDevice()
 {
-    return std::make_shared<rendering_device::RenderingDeviceVulkan>();
+    return std::make_shared<rendering_device::RenderingDeviceVulkan>(this);
 }
 
 RenderingApiVulkan& RenderingApiVulkan::enableValidationLayers(bool f_enable)
@@ -48,9 +50,15 @@ RenderingApiVulkan& RenderingApiVulkan::addExtensions(
 RenderingApiVulkan& RenderingApiVulkan::create()
 {
     createInstance();
+    setupDebugMessenger();
 
     m_valid = true;
     return *this;
+}
+
+vk::raii::Instance& RenderingApiVulkan::getNativeHandle()
+{
+    return m_instance;
 }
 
 void RenderingApiVulkan::createInstance()
@@ -104,6 +112,41 @@ void RenderingApiVulkan::createInstance()
     };
 
     m_instance = vk::raii::Instance(m_context, l_createInfo);
+}
+
+namespace {
+    VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT f_severity, vk::DebugUtilsMessageTypeFlagsEXT f_type, const vk::DebugUtilsMessengerCallbackDataEXT* f_CallbackData, void*) {
+        if (f_severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError || f_severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning) {
+            std::cout << "validation layer: type " << to_string(f_type) << " msg: " << f_CallbackData->pMessage << std::endl;
+        }
+
+        return vk::False;
+    }
+}
+
+void RenderingApiVulkan::setupDebugMessenger()
+{
+    if (!m_validationLayersEnabled) {
+        return;
+    }
+
+    vk::DebugUtilsMessageSeverityFlagsEXT l_severityFlags(
+        vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
+        | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
+        | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError
+    );
+    vk::DebugUtilsMessageTypeFlagsEXT l_messageTypeFlags(
+        vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
+        | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance
+        | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
+    );
+    vk::DebugUtilsMessengerCreateInfoEXT l_debugUtilsMessengerCreateInfoEXT{
+        .messageSeverity = l_severityFlags,
+        .messageType     = l_messageTypeFlags,
+        .pfnUserCallback = &debugCallback
+    };
+    m_debugMessenger =
+        m_instance.createDebugUtilsMessengerEXT(l_debugUtilsMessengerCreateInfoEXT);
 }
 
 RenderingApiVulkan::~RenderingApiVulkan() {}

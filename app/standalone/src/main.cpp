@@ -6,6 +6,8 @@
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 
+#include <vulkan/vulkan.hpp>
+
 int main(int argc, const char* argv[])
 {
     try {
@@ -24,6 +26,7 @@ int main(int argc, const char* argv[])
         l_renderingApi->enableValidationLayers(true)
             .addValidationLayer("VK_LAYER_KHRONOS_validation")
             .addExtensions(l_glfwExtension)
+            .addExtension(vk::EXTDebugUtilsExtensionName)
             .create();
 
         l_renderingServer.setRenderingApi(std::move(l_renderingApi));

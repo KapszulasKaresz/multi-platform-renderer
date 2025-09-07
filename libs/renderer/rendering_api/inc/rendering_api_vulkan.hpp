@@ -22,13 +22,17 @@ public:
     RenderingApiVulkan& addExtensions(std::vector<const char*>& f_extensionNames);
     RenderingApiVulkan& create();
 
+    vk::raii::Instance& getNativeHandle();
+
     ~RenderingApiVulkan();
 
 private:
     void createInstance();
+    void setupDebugMessenger();
 
-    vk::raii::Instance m_instance{ nullptr };
-    vk::raii::Context  m_context{};
+    vk::raii::Instance               m_instance{ nullptr };
+    vk::raii::Context                m_context{};
+    vk::raii::DebugUtilsMessengerEXT m_debugMessenger{ nullptr };
 
     bool                     m_validationLayersEnabled{ false };
     std::vector<const char*> m_validationLayers{};

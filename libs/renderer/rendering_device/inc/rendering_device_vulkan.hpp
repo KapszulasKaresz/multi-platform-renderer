@@ -4,16 +4,21 @@
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
 namespace renderer {
+namespace rendering_api {
+class RenderingApiVulkan;
+}   // namespace rendering_api
+
 namespace rendering_device {
 class RenderingDeviceVulkan : public RenderingDevice {
 public:
-    RenderingDeviceVulkan();
+    RenderingDeviceVulkan(rendering_api::RenderingApiVulkan* f_parentApi);
 
     std::shared_ptr<render_target::RenderTargetWindow> createRenderTargetWindow(
-        const window::Window* f_window
+        window::Window* f_window
     ) override final;
 
 private:
+    rendering_api::RenderingApiVulkan* m_parentApi{ nullptr };
 };
 
 }   // namespace rendering_device

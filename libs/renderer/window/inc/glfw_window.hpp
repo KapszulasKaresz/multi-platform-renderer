@@ -13,6 +13,7 @@ class GLFWWindow : public Window{
 public:
     GLFWWindow() = default;
 
+    VkSurfaceKHR createVulkanSurface(const vk::raii::Instance& f_instance) override final;
     Window& create() override final;
     bool isOpen() override final;
     void update() override final;

@@ -6,6 +6,18 @@ namespace renderer {
 namespace window {
 int GLFWWindow::s_numberOfWindows{ 0 };
 
+VkSurfaceKHR GLFWWindow::createVulkanSurface(const vk::raii::Instance& f_instance)
+{
+    VkSurfaceKHR l_surface;
+    if (glfwCreateWindowSurface(*f_instance, m_window, nullptr, &l_surface) != 0) {
+        throw std::runtime_error(
+            "GLFWWindow::createVulkanSurface(const vk::raii::Instance& f_instance) "
+            "failed to create window surface!"
+        );
+    }
+    return l_surface;
+}
+
 Window& GLFWWindow::create()
 {
     if (s_numberOfWindows == 0) {
@@ -17,7 +29,6 @@ Window& GLFWWindow::create()
 
     m_window = glfwCreateWindow(m_size.x, m_size.y, m_title.c_str(), nullptr, nullptr);
     glfwSetWindowUserPointer(m_window, this);
-
     s_numberOfWindows++;
     m_created = true;
     return *this;
