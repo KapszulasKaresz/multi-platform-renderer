@@ -14,6 +14,9 @@ public:
     RenderingApiVulkan();
 
     std::shared_ptr<rendering_device::RenderingDevice>
+        getMainRenderingDevice() override final;
+
+    std::shared_ptr<rendering_device::RenderingDevice>
         createRenderingDevice() override final;
 
     RenderingApiVulkan& enableValidationLayers(bool f_enable);

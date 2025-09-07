@@ -1,14 +1,44 @@
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 
-#include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
-
 #include <iostream>
+
+#include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
 namespace renderer {
 namespace rendering_api {
 RenderingApiVulkan::RenderingApiVulkan() : RenderingApi()
 {
     m_apiType = RENDERING_API_TYPE_VULKAN;
+}
+
+std::shared_ptr<rendering_device::RenderingDevice>
+    RenderingApiVulkan::getMainRenderingDevice()
+{
+    if (!m_mainRenderingDevice) {
+        auto l_renderingDevice = createRenderingDevice();
+        auto l_renderingDeviceVulkanRaw =
+            dynamic_cast<rendering_device::RenderingDeviceVulkan*>(
+                l_renderingDevice.get()
+            );
+        if (l_renderingDeviceVulkanRaw == nullptr) {
+            throw std::
+                runtime_error(
+                    "RenderingApiVulkan::getMainRenderingDevice() somehow "
+                    "renderingdevice " "isn't a vulkan rendering device"
+                );
+        }
+        l_renderingDeviceVulkanRaw->addQueue(vk::QueueFlagBits::eGraphics)
+            .addQueue(vk::QueueFlagBits::eCompute)
+            .addExtension(vk::KHRSwapchainExtensionName)
+            .addExtension(vk::KHRSpirv14ExtensionName)
+            .addExtension(vk::KHRSynchronization2ExtensionName)
+            .addExtension(vk::KHRCreateRenderpass2ExtensionName)
+            .create();
+
+        m_mainRenderingDevice = l_renderingDevice;
+    }
+
+    return m_mainRenderingDevice;
 }
 
 std::shared_ptr<rendering_device::RenderingDevice>
@@ -115,14 +145,23 @@ void RenderingApiVulkan::createInstance()
 }
 
 namespace {
-    VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(vk::DebugUtilsMessageSeverityFlagBitsEXT f_severity, vk::DebugUtilsMessageTypeFlagsEXT f_type, const vk::DebugUtilsMessengerCallbackDataEXT* f_CallbackData, void*) {
-        if (f_severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError || f_severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning) {
-            std::cout << "validation layer: type " << to_string(f_type) << " msg: " << f_CallbackData->pMessage << std::endl;
-        }
-
-        return vk::False;
+VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(
+    vk::DebugUtilsMessageSeverityFlagBitsEXT      f_severity,
+    vk::DebugUtilsMessageTypeFlagsEXT             f_type,
+    const vk::DebugUtilsMessengerCallbackDataEXT* f_CallbackData,
+    void*
+)
+{
+    if (f_severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eError
+        || f_severity == vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning)
+    {
+        std::cout << "validation layer: type " << to_string(f_type)
+                  << " msg: " << f_CallbackData->pMessage << std::endl;
     }
+
+    return vk::False;
 }
+}   // namespace
 
 void RenderingApiVulkan::setupDebugMessenger()
 {

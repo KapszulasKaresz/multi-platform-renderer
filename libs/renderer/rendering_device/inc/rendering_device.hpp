@@ -19,7 +19,9 @@ public:
         window::Window* f_window
     ) = 0;
 
-private:
+    virtual bool isValid();
+protected:
+    bool m_valid{ false };
 };
 
 }   // namespace rendering_device
