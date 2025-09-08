@@ -18,23 +18,21 @@ render_target::RenderTargetWindow* RenderingDeviceVulkan::getRenderTargetWindow(
 {
     if (!isValid()) {
         throw std::runtime_error(
-            "RenderingDeviceVulkan::createRenderTargetWindow() device needs to be valid"
+            "RenderingDeviceVulkan::getRenderTargetWindow() device needs to be valid"
         );
     }
 
     if (!m_window) {
         throw std::
             runtime_error(
-                "RenderingDeviceVulkan::createRenderTargetWindow() needs a window "
-                "attached " "to the device"
+                "RenderingDeviceVulkan::getRenderTargetWindow() needs a window "
+                "attached to the device"
             );
     }
 
     if (!m_renderTargetWindow) {
-        m_renderTargetWindow = std::make_unique<render_target::RenderTargetWindowVulkan>();
-        m_renderTargetWindow->setSurface(
-            m_window->createVulkanSurface(m_parentApi->getNativeHandle()),
-            m_parentApi->getNativeHandle()
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::getRenderTargetWindow() no render target window is available"
         );
     }
 
@@ -104,9 +102,22 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::setWindow(window::Window* f_window
 
 RenderingDeviceVulkan& RenderingDeviceVulkan::create()
 {
+    createRenderTargetWindow();
     pickPhysicalDevice();
     m_valid = true;
     return *this;
+}
+
+void RenderingDeviceVulkan::createRenderTargetWindow()
+{
+    if (!m_window) {
+        return;
+    }
+    m_renderTargetWindow = std::make_unique<render_target::RenderTargetWindowVulkan>();
+    m_renderTargetWindow->setSurface(
+        m_window->createVulkanSurface(m_parentApi->getNativeHandle()),
+        m_parentApi->getNativeHandle()
+    );
 }
 
 namespace {
@@ -202,7 +213,6 @@ void RenderingDeviceVulkan::createLogicalDevice()
 {
     std::vector<vk::QueueFamilyProperties> l_queueFamilyProperties =
         m_physicalDevice.getQueueFamilyProperties();
-
 }
 
 }   // namespace rendering_device

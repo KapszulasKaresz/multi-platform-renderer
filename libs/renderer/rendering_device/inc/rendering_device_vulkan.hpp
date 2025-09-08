@@ -40,6 +40,7 @@ public:
     RenderingDeviceVulkan& create();
 
 private:
+    void createRenderTargetWindow();
     void pickPhysicalDevice();
     void createLogicalDevice();
 
