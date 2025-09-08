@@ -15,9 +15,9 @@ class Window;
 namespace rendering_device {
 class RenderingDevice {
 public:
-    virtual std::shared_ptr<render_target::RenderTargetWindow> createRenderTargetWindow(
-        window::Window* f_window
-    ) = 0;
+    virtual render_target::RenderTargetWindow* getRenderTargetWindow() = 0;
+
+    virtual RenderingDevice& setWindow(window::Window* f_window) = 0;
 
     virtual bool isValid();
 protected:

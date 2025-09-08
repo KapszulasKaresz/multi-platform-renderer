@@ -14,22 +14,31 @@ RenderingDeviceVulkan::RenderingDeviceVulkan(
       m_parentApi(f_parentApi)
 {}
 
-std::shared_ptr<render_target::RenderTargetWindow>
-    RenderingDeviceVulkan::createRenderTargetWindow(window::Window* f_window)
+render_target::RenderTargetWindow* RenderingDeviceVulkan::getRenderTargetWindow()
 {
     if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::createRenderTargetWindow() device needs to be valid"
+        );
+    }
+
+    if (!m_window) {
         throw std::
             runtime_error(
-                "RenderingDeviceVulkan::createRenderTargetWindow(window::Window* "
-                "f_window) " "device needs to be valid"
+                "RenderingDeviceVulkan::createRenderTargetWindow() needs a window "
+                "attached " "to the device"
             );
     }
-    auto l_renderingWindow = std::make_shared<render_target::RenderTargetWindowVulkan>();
-    l_renderingWindow->setSurface(
-        f_window->createVulkanSurface(m_parentApi->getNativeHandle()),
-        m_parentApi->getNativeHandle()
-    );
-    return l_renderingWindow;
+
+    if (!m_renderTargetWindow) {
+        m_renderTargetWindow = std::make_unique<render_target::RenderTargetWindowVulkan>();
+        m_renderTargetWindow->setSurface(
+            m_window->createVulkanSurface(m_parentApi->getNativeHandle()),
+            m_parentApi->getNativeHandle()
+        );
+    }
+
+    return m_renderTargetWindow.get();
 }
 
 RenderingDeviceVulkan& RenderingDeviceVulkan::addExtension(const char* f_extensionName)
@@ -84,6 +93,12 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::setFeatures(FeatureChain f_feature
             );
     }
     m_requiredFeatures = f_featureChain;
+    return *this;
+}
+
+RenderingDeviceVulkan& RenderingDeviceVulkan::setWindow(window::Window* f_window)
+{
+    m_window = f_window;
     return *this;
 }
 
@@ -181,6 +196,13 @@ void RenderingDeviceVulkan::pickPhysicalDevice()
             "RenderingDeviceVulkan::pickPhysicalDevice() failed to find a suitable GPU!"
         );
     }
+}
+
+void RenderingDeviceVulkan::createLogicalDevice()
+{
+    std::vector<vk::QueueFamilyProperties> l_queueFamilyProperties =
+        m_physicalDevice.getQueueFamilyProperties();
+
 }
 
 }   // namespace rendering_device

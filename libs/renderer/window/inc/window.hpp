@@ -22,11 +22,6 @@ class Window {
 public:
     Window() = default;
 
-    virtual std::shared_ptr<render_target::RenderTargetWindow> getRenderTarget(
-        rendering_api::RenderingApi* f_renderingApi
-    );
-    virtual std::shared_ptr<render_target::RenderTargetWindow> getRenderTarget() const;
-
     Window& setSize(const glm::ivec2& f_size);
     Window& setTitle(const std::string& f_title);
 

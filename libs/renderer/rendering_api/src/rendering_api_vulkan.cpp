@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
+#include "renderer/render_target/inc/render_target_window_vulkan.hpp"
+#include "renderer/window/inc/window.hpp"
 
 namespace renderer {
 namespace rendering_api {
@@ -35,13 +37,15 @@ std::shared_ptr<rendering_device::RenderingDevice>
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
-                    {},                                                     // vk::PhysicalDeviceFeatures2
-                    {},                                                     // vk::PhysicalDeviceVulkan11Features
-                    {},                                                     // vk::PhysicalDeviceVulkan12Features
-                    { .synchronization2 = true, .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
-                    {},                                                     // vk::PhysicalDeviceVulkan14Features
-                    { .extendedDynamicState =  true }                       // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
-                }
+                    {}, // vk::PhysicalDeviceFeatures2
+                    {}, // vk::PhysicalDeviceVulkan11Features
+                    {}, // vk::PhysicalDeviceVulkan12Features
+                    { .synchronization2 = true,
+                     .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
+                    {}, // vk::PhysicalDeviceVulkan14Features
+                    { .extendedDynamicState =
+                          true }  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+        }
             )
             .create();
 
@@ -49,6 +53,55 @@ std::shared_ptr<rendering_device::RenderingDevice>
     }
 
     return m_mainRenderingDevice;
+}
+
+void RenderingApiVulkan::createMainRenderingDeviceWindow(
+    window::Window* f_window
+)
+{
+    if (!m_mainRenderingDevice) {
+        auto l_renderingDevice = createRenderingDevice();
+        auto l_renderingDeviceVulkanRaw =
+            dynamic_cast<rendering_device::RenderingDeviceVulkan*>(
+                l_renderingDevice.get()
+            );
+        if (l_renderingDeviceVulkanRaw == nullptr) {
+            throw std::
+                runtime_error(
+                    "RenderingApiVulkan::createMainRenderingDeviceWindow() somehow "
+                    "renderingdevice " "isn't a vulkan rendering device"
+                );
+        }
+        l_renderingDeviceVulkanRaw->addQueue(vk::QueueFlagBits::eGraphics)
+            .addQueue(vk::QueueFlagBits::eCompute)
+            .addExtension(vk::KHRSwapchainExtensionName)
+            .addExtension(vk::KHRSpirv14ExtensionName)
+            .addExtension(vk::KHRSynchronization2ExtensionName)
+            .addExtension(vk::KHRCreateRenderpass2ExtensionName)
+            .setFeatures(
+                rendering_device::RenderingDeviceVulkan::FeatureChain{
+                    {}, // vk::PhysicalDeviceFeatures2
+                    {}, // vk::PhysicalDeviceVulkan11Features
+                    {}, // vk::PhysicalDeviceVulkan12Features
+                    { .synchronization2 = true,
+                     .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
+                    {}, // vk::PhysicalDeviceVulkan14Features
+                    { .extendedDynamicState =
+                          true }  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+                }
+            )
+            .setWindow(f_window)
+            .create();
+
+        m_mainRenderingDevice = l_renderingDevice;
+    }
+    else {
+        throw std::
+            runtime_error(
+                "RenderingApiVulkan::createMainRenderingDeviceWindow() main "
+                "renderingdevice " "already created"
+            );
+    }
 }
 
 std::shared_ptr<rendering_device::RenderingDevice>

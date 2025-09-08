@@ -1,10 +1,10 @@
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 
+#include <stdexcept>
+
 #include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/rendering_api/inc/rendering_api.hpp"
 #include "renderer/window/inc/window.hpp"
-
-#include <stdexcept>
 
 namespace renderer {
 namespace rendering_server {
@@ -27,26 +27,13 @@ RenderMode RenderingServer::getRenderMode() const
     return m_renderMode;
 }
 
-void RenderingServer::setRenderTarget(
-    std::unique_ptr<render_target::RenderTarget>&& f_renderTarget
-)
+RenderingServer& RenderingServer::setWindow(std::unique_ptr<window::Window>&& f_window)
 {
-    m_renderTarget = std::move(f_renderTarget);
-}
-
-void RenderingServer::setWindow(std::unique_ptr<window::Window>&& f_window)
-{
-    if (!m_renderingApi || !m_renderingApi->isValid()) {
-        throw std::runtime_error(
-            "RenderingServer::setWindow() a valid renderingAPI instance is needed to set "
-            "up window"
-        );
-    }
     m_window = std::move(f_window);
-    m_renderTarget = m_window->getRenderTarget(m_renderingApi.get());
+    return *this;
 }
 
-void RenderingServer::setRenderingApi(
+RenderingServer& RenderingServer::setRenderingApi(
     std::unique_ptr<rendering_api::RenderingApi>&& f_renderingApi
 )
 {
@@ -58,16 +45,38 @@ void RenderingServer::setRenderingApi(
             "RenderingServer::setRenderingApi() you can only set rendering API once"
         );
     }
+
+    return *this;
+}
+
+RenderingServer& RenderingServer::create()
+{
+    if (!m_renderingApi) {
+        throw std::runtime_error("RenderingServer::create() no rendering API is set");
+    }
+
+    if (!m_renderingApi->isValid()) {
+        throw std::runtime_error("RenderingServer::create() renderin API is invalid");
+    }
+
+    if (m_window) {
+        m_renderingApi->createMainRenderingDeviceWindow(m_window.get());
+    }
+    else {
+        auto _ignoreReturn = m_renderingApi->getMainRenderingDevice();
+    }
+
+    m_created = true;
+
+    return *this;
 }
 
 void RenderingServer::frame()
 {
-    if (!m_renderingApi) {
-        throw std::runtime_error("RenderingServer::frame() no rendering API is set");
-    }
-
-    if (!m_renderingApi->isValid()) {
-        throw std::runtime_error("RenderingServer::frame() renderin API is invalid");
+    if (!m_created) {
+        throw std::runtime_error(
+            "RenderingServer::frame() rendering server isn't created yet"
+        );
     }
 
     auto l_renderingDevice = m_renderingApi->getMainRenderingDevice();
@@ -75,6 +84,12 @@ void RenderingServer::frame()
 
 void RenderingServer::mainLoop()
 {
+    if (!m_created) {
+        throw std::runtime_error(
+            "RenderingServer::mainLoop() rendering server isn't created yet"
+        );
+    }
+
     if (m_renderMode != RENDER_MODE_LOOP) {
         throw std::runtime_error(
             "RenderingServer::mainLoop() renderingMode is not RENDER_MODE_LOOP"

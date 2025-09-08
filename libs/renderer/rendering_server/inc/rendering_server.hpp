@@ -13,8 +13,8 @@ class Window;
 }   // namespace window
 
 namespace rendering_api {
-    class RenderingApi;
-}
+class RenderingApi;
+}   // namespace rendering_api
 
 namespace rendering_server {
 
@@ -37,9 +37,11 @@ public:
     void       setRenderMode(RenderMode f_renderMode);
     RenderMode getRenderMode() const;
 
-    void setRenderTarget(std::unique_ptr<render_target::RenderTarget>&& f_renderTarget);
-    void setWindow(std::unique_ptr<window::Window>&& f_renderTarget);
-    void setRenderingApi(std::unique_ptr<rendering_api::RenderingApi>&& f_renderingApi);
+    RenderingServer& setWindow(std::unique_ptr<window::Window>&& f_renderTarget);
+    RenderingServer& setRenderingApi(
+        std::unique_ptr<rendering_api::RenderingApi>&& f_renderingApi
+    );
+    RenderingServer& create();
 
     void frame();
     void mainLoop();
@@ -47,8 +49,8 @@ public:
 private:
     RenderMode m_renderMode{ RENDER_MODE_LOOP };
     bool       m_mainLoopRunning{ false };
+    bool       m_created{ false };
 
-    std::shared_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
     std::unique_ptr<window::Window>              m_window{ nullptr };
     std::unique_ptr<rendering_api::RenderingApi> m_renderingApi{ nullptr };
 };

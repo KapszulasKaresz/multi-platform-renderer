@@ -7,27 +7,6 @@
 
 namespace renderer {
 namespace window {
-std::shared_ptr<render_target::RenderTargetWindow> Window::getRenderTarget(
-    rendering_api::RenderingApi* f_renderingApi
-)
-{
-    m_renderTarget = f_renderingApi->getMainRenderingDevice()->createRenderTargetWindow(this);
-
-    return m_renderTarget;
-}
-
-std::shared_ptr<render_target::RenderTargetWindow> Window::getRenderTarget() const
-{
-    if (m_renderTarget) {
-        return m_renderTarget;
-    }
-    else {
-        throw std::runtime_error(
-            "Window::getRenderTarget() you cannot get the renderTarget without creating "
-            "first with the renderingApi"
-        );
-    }
-}
 
 Window& Window::setSize(const glm::ivec2& f_size)
 {

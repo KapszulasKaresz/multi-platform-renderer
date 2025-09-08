@@ -16,6 +16,10 @@ public:
     std::shared_ptr<rendering_device::RenderingDevice>
         getMainRenderingDevice() override final;
 
+    void createMainRenderingDeviceWindow(
+        window::Window* f_window
+    ) override final;
+
     std::shared_ptr<rendering_device::RenderingDevice>
         createRenderingDevice() override final;
 

@@ -3,6 +3,7 @@
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
+#include <cstdint>
 
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
@@ -11,22 +12,23 @@ namespace rendering_api {
 class RenderingApiVulkan;
 }   // namespace rendering_api
 
+namespace render_target {
+class RenderTarget;
+class RenderTargetWindowVulkan;
+}   // namespace render_target
+
 namespace rendering_device {
-#define VULKAN_FEATURE_CHAIN \
-    vk::PhysicalDeviceFeatures2, \
-    vk::PhysicalDeviceVulkan11Features, \
-    vk::PhysicalDeviceVulkan12Features, \
-    vk::PhysicalDeviceVulkan13Features, \
-    vk::PhysicalDeviceVulkan14Features, \
-    vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+#define VULKAN_FEATURE_CHAIN                                                    \
+    vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,            \
+        vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features, \
+        vk::PhysicalDeviceVulkan14Features,                                     \
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
 
 class RenderingDeviceVulkan : public RenderingDevice {
 public:
     RenderingDeviceVulkan(rendering_api::RenderingApiVulkan* f_parentApi);
 
-    std::shared_ptr<render_target::RenderTargetWindow> createRenderTargetWindow(
-        window::Window* f_window
-    ) override final;
+    render_target::RenderTargetWindow* getRenderTargetWindow() override final;
 
     using FeatureChain = vk::StructureChain<VULKAN_FEATURE_CHAIN>;
 
@@ -34,10 +36,12 @@ public:
     RenderingDeviceVulkan& addExtensions(std::vector<const char*>& f_extensionNames);
     RenderingDeviceVulkan& addQueue(vk::QueueFlagBits f_queueType);
     RenderingDeviceVulkan& setFeatures(FeatureChain f_featureChain);
+    RenderingDeviceVulkan& setWindow(window::Window* f_window) override final;
     RenderingDeviceVulkan& create();
 
 private:
     void pickPhysicalDevice();
+    void createLogicalDevice();
 
     rendering_api::RenderingApiVulkan* m_parentApi{ nullptr };
     vk::PhysicalDevice                 m_physicalDevice{ nullptr };
@@ -45,6 +49,11 @@ private:
     std::vector<const char*>       m_requiredExtension{};
     std::vector<vk::QueueFlagBits> m_requiredQueues{};
     FeatureChain                   m_requiredFeatures{};
+
+    window::Window*                                          m_window{ nullptr };
+    std::unique_ptr<render_target::RenderTargetWindowVulkan> m_renderTargetWindow{};
+
+    uint32_t m_queueIndex{ UINT32_MAX };
 };
 
 }   // namespace rendering_device

@@ -2,11 +2,11 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <vulkan/vulkan.hpp>
+
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
-
-#include <vulkan/vulkan.hpp>
 
 int main(int argc, const char* argv[])
 {
@@ -21,7 +21,8 @@ int main(int argc, const char* argv[])
         auto l_renderingApi =
             std::make_unique<renderer::rendering_api::RenderingApiVulkan>();
 
-        auto l_glfwExtension = renderer::window::GLFWWindow::getRequiredInstanceExtensionsVulkan();
+        auto l_glfwExtension =
+            renderer::window::GLFWWindow::getRequiredInstanceExtensionsVulkan();
 
         l_renderingApi->enableValidationLayers(true)
             .addValidationLayer("VK_LAYER_KHRONOS_validation")
@@ -29,8 +30,9 @@ int main(int argc, const char* argv[])
             .addExtension(vk::EXTDebugUtilsExtensionName)
             .create();
 
-        l_renderingServer.setRenderingApi(std::move(l_renderingApi));
-        l_renderingServer.setWindow(std::move(l_window));
+        l_renderingServer.setRenderingApi(std::move(l_renderingApi))
+            .setWindow(std::move(l_window))
+            .create();
 
         l_renderingServer.mainLoop();
     } catch (const std::runtime_error& l_error) {
