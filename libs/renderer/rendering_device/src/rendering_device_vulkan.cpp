@@ -67,10 +67,23 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::addQueue(vk::QueueFlagBits f_queue
         throw std::
             runtime_error(
                 "RenderingDeviceVulkan::addQueue(vk::QueueFlagBits f_queueType) you can "
-                "only " "add queues before device creation"
+                "only add queues before device creation"
             );
     }
     m_requiredQueues.push_back(f_queueType);
+    return *this;
+}
+
+RenderingDeviceVulkan& RenderingDeviceVulkan::setFeatures(FeatureChain f_featureChain)
+{
+    if (m_valid) {
+        throw std::
+            runtime_error(
+                "RenderingDeviceVulkan::setFeatures(FeatureChain f_featureChain) you can "
+                "only set features before device creation"
+            );
+    }
+    m_requiredFeatures = f_featureChain;
     return *this;
 }
 
@@ -80,6 +93,43 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     m_valid = true;
     return *this;
 }
+
+namespace {
+
+template <typename T>
+bool satisfies(const T& f_requested, const T& f_supported)
+{
+    constexpr size_t l_headerSize = offsetof(T, pNext) + sizeof(void*);
+    static_assert(std::is_standard_layout_v<T>, "Features must be POD");
+
+    const char* l_reqBytes = reinterpret_cast<const char*>(&f_requested);
+    const char* l_supBytes = reinterpret_cast<const char*>(&f_supported);
+
+    const VkBool32* l_reqFlags =
+        reinterpret_cast<const VkBool32*>(l_reqBytes + l_headerSize);
+    const VkBool32* l_supFlags =
+        reinterpret_cast<const VkBool32*>(l_supBytes + l_headerSize);
+
+    size_t l_count = (sizeof(T) - l_headerSize) / sizeof(VkBool32) - 1;
+    for (size_t i = 0; i < l_count; i++) {
+        if (l_reqFlags[i] && !l_supFlags[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <typename... Ts>
+bool satisfiesFeatures(
+    const vk::StructureChain<Ts...>& f_requested,
+    const vk::StructureChain<Ts...>& f_supported
+)
+{
+    return (
+        satisfies(f_requested.template get<Ts>(), f_supported.template get<Ts>()) && ...
+    );
+}
+}   // namespace
 
 void RenderingDeviceVulkan::pickPhysicalDevice()
 {
@@ -116,14 +166,9 @@ void RenderingDeviceVulkan::pickPhysicalDevice()
             }
         );
 
-        auto l_features = f_device.template getFeatures2<
-            vk::PhysicalDeviceFeatures2,
-            vk::PhysicalDeviceVulkan13Features,
-            vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>();
+        auto l_features = f_device.template getFeatures2<VULKAN_FEATURE_CHAIN>();
         bool l_supportsRequiredFeatures =
-            l_features.template get<vk::PhysicalDeviceVulkan13Features>().dynamicRendering
-            && l_features.template get<vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT>()
-                   .extendedDynamicState;
+            satisfiesFeatures(m_requiredFeatures, l_features);
 
         return l_supportsVulkan1_4 && l_supportsRequestedQueues
             && l_supportsAllRequiredExtensions && l_supportsRequiredFeatures;

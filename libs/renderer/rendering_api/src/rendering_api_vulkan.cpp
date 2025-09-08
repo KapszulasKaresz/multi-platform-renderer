@@ -33,6 +33,16 @@ std::shared_ptr<rendering_device::RenderingDevice>
             .addExtension(vk::KHRSpirv14ExtensionName)
             .addExtension(vk::KHRSynchronization2ExtensionName)
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
+            .setFeatures(
+                rendering_device::RenderingDeviceVulkan::FeatureChain{
+                    {},                                                     // vk::PhysicalDeviceFeatures2
+                    {},                                                     // vk::PhysicalDeviceVulkan11Features
+                    {},                                                     // vk::PhysicalDeviceVulkan12Features
+                    { .synchronization2 = true, .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
+                    {},                                                     // vk::PhysicalDeviceVulkan14Features
+                    { .extendedDynamicState =  true }                       // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+                }
+            )
             .create();
 
         m_mainRenderingDevice = l_renderingDevice;
