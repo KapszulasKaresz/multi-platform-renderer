@@ -11,6 +11,7 @@ namespace render_target {
 
 class RenderTargetWindow : public RenderTarget{
 public:
+    virtual RenderTargetWindow& setWindow(window::Window* f_window) = 0;
 
 protected:
     window::Window* m_window;

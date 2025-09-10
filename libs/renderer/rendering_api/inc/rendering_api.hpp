@@ -8,7 +8,7 @@
 namespace renderer {
 namespace window {
 class Window;
-}   // namespace render_target
+}   // namespace window
 
 namespace rendering_api {
 
@@ -23,13 +23,11 @@ public:
     RenderingApi() = default;
 
     virtual std::shared_ptr<rendering_device::RenderingDevice> getMainRenderingDevice();
-    virtual void createMainRenderingDeviceWindow(
-        window::Window* f_window
-    ) = 0;
+    virtual void createMainRenderingDeviceWindow(window::Window* f_window) = 0;
     virtual std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() = 0;
 
     RenderingAPIType getRenderingAPIType() const;
-    bool             isValid() const;
+    virtual bool     isValid() const;
 
 protected:
     bool             m_valid{ false };

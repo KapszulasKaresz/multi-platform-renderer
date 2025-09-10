@@ -104,10 +104,27 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::setWindow(window::Window* f_window
 
 RenderingDeviceVulkan& RenderingDeviceVulkan::create()
 {
-    createRenderTargetWindow();
     pickPhysicalDevice();
+    createLogicalDevice();
     m_valid = true;
+    createRenderTargetWindow();
     return *this;
+}
+
+vk::raii::PhysicalDevice& RenderingDeviceVulkan::getPhysicalDevice() {
+    if(!isValid())
+    {
+        throw std::runtime_error("RenderingDeviceVulkan::getPhysicalDevice() device isn't valid");
+    }
+    return m_physicalDevice;
+}
+
+vk::raii::Device& RenderingDeviceVulkan::getLogicalDevice() {
+    if(!isValid())
+    {
+        throw std::runtime_error("RenderingDeviceVulkan::getLogicalDevice() device isn't valid");
+    }
+    return m_device;
 }
 
 void RenderingDeviceVulkan::createRenderTargetWindow()
@@ -115,11 +132,14 @@ void RenderingDeviceVulkan::createRenderTargetWindow()
     if (!m_window) {
         return;
     }
-    m_renderTargetWindow = std::make_unique<render_target::RenderTargetWindowVulkan>();
-    m_renderTargetWindow->setSurface(
-        m_window->createVulkanSurface(m_parentApi->getNativeHandle()),
-        m_parentApi->getNativeHandle()
-    );
+    m_renderTargetWindow = std::make_unique<render_target::RenderTargetWindowVulkan>(this);
+    m_renderTargetWindow
+        ->setSurface(
+            m_window->createVulkanSurface(m_parentApi->getNativeHandle()),
+            m_parentApi->getNativeHandle()
+        )
+        .setWindow(m_window)
+        .create();
 }
 
 namespace {
@@ -241,22 +261,24 @@ void RenderingDeviceVulkan::createLogicalDevice()
         }
     }
     if (m_queueIndex == ~0) {
-        throw std::runtime_error(
-            "RenderingDeviceVulkan::createLogicalDevice() Could not find a queue withe "
-            "the required features"
-        );
+        throw std::
+            runtime_error(
+                "RenderingDeviceVulkan::createLogicalDevice() Could not find a queue "
+                "withe " "the required features"
+            );
     }
 
     // create a Device
     float                     l_queuePriority = 0.0f;
     vk::DeviceQueueCreateInfo l_deviceQueueCreateInfo{ .queueFamilyIndex = m_queueIndex,
-                                                     .queueCount       = 1,
-                                                     .pQueuePriorities = &l_queuePriority };
+                                                       .queueCount       = 1,
+                                                       .pQueuePriorities =
+                                                           &l_queuePriority };
     vk::DeviceCreateInfo      l_deviceCreateInfo{
-             .pNext                = &m_requiredFeatures.get<vk::PhysicalDeviceFeatures2>(),
-             .queueCreateInfoCount = 1,
-             .pQueueCreateInfos    = &l_deviceQueueCreateInfo,
-             .enabledExtensionCount = static_cast<uint32_t>(m_requiredExtension.size()),
+             .pNext = &m_requiredFeatures.get<vk::PhysicalDeviceFeatures2>(),
+             .queueCreateInfoCount    = 1,
+             .pQueueCreateInfos       = &l_deviceQueueCreateInfo,
+             .enabledExtensionCount   = static_cast<uint32_t>(m_requiredExtension.size()),
              .ppEnabledExtensionNames = m_requiredExtension.data()
     };
 

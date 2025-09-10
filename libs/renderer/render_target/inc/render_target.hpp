@@ -6,8 +6,10 @@ namespace render_target {
 
 class RenderTarget {
 public:
+    virtual bool isValid() const;
 
-private:
+protected:
+    bool m_valid{ false };
 };
 
 }   // namespace render_target

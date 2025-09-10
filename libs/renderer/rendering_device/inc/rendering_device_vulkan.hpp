@@ -40,6 +40,9 @@ public:
     RenderingDeviceVulkan& setWindow(window::Window* f_window) override final;
     RenderingDeviceVulkan& create();
 
+    vk::raii::PhysicalDevice& getPhysicalDevice();
+    vk::raii::Device&         getLogicalDevice();
+
 private:
     void createRenderTargetWindow();
     void pickPhysicalDevice();
