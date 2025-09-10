@@ -8,5 +8,10 @@ RenderTargetWindowVulkan& RenderTargetWindowVulkan::setSurface(VkSurfaceKHR f_su
     return *this;
 }
 
+vk::raii::SurfaceKHR& RenderTargetWindowVulkan::getSurface()
+{
+    return m_surface;
+}
+
 }   // namespace render_target
 }   // namespace renderer

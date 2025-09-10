@@ -14,6 +14,7 @@ public:
     RenderTargetWindowVulkan&
         setSurface(VkSurfaceKHR f_surface, const vk::raii::Instance& f_instance);
 
+    vk::raii::SurfaceKHR& getSurface();
 private:
     vk::raii::SurfaceKHR m_surface{ nullptr };
 };

@@ -1,9 +1,10 @@
 #ifndef RENDERING_DEVICE_VULKAN_HPP_INCLUDED
 #define RENDERING_DEVICE_VULKAN_HPP_INCLUDED
 
+#include <cstdint>
+
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
-#include <cstdint>
 
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
@@ -45,14 +46,18 @@ private:
     void createLogicalDevice();
 
     rendering_api::RenderingApiVulkan* m_parentApi{ nullptr };
-    vk::PhysicalDevice                 m_physicalDevice{ nullptr };
+    vk::raii::PhysicalDevice           m_physicalDevice{ nullptr };
+    vk::raii::Device                   m_device{ nullptr };
+    vk::raii::Queue                    m_queue{ nullptr };
 
     std::vector<const char*>       m_requiredExtension{};
     std::vector<vk::QueueFlagBits> m_requiredQueues{};
     FeatureChain                   m_requiredFeatures{};
 
     window::Window*                                          m_window{ nullptr };
-    std::unique_ptr<render_target::RenderTargetWindowVulkan> m_renderTargetWindow{};
+    std::unique_ptr<render_target::RenderTargetWindowVulkan> m_renderTargetWindow{
+        nullptr
+    };
 
     uint32_t m_queueIndex{ UINT32_MAX };
 };

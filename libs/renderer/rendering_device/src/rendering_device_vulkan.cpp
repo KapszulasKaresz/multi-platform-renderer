@@ -31,9 +31,11 @@ render_target::RenderTargetWindow* RenderingDeviceVulkan::getRenderTargetWindow(
     }
 
     if (!m_renderTargetWindow) {
-        throw std::runtime_error(
-            "RenderingDeviceVulkan::getRenderTargetWindow() no render target window is available"
-        );
+        throw std::
+            runtime_error(
+                "RenderingDeviceVulkan::getRenderTargetWindow() no render target window "
+                "is " "available"
+            );
     }
 
     return m_renderTargetWindow.get();
@@ -213,6 +215,53 @@ void RenderingDeviceVulkan::createLogicalDevice()
 {
     std::vector<vk::QueueFamilyProperties> l_queueFamilyProperties =
         m_physicalDevice.getQueueFamilyProperties();
+
+    vk::QueueFlags l_requiredMask{};
+    for (auto l_flag : m_requiredQueues) {
+        l_requiredMask |= l_flag;
+    }
+
+    for (uint32_t l_qfpIndex = 0; l_qfpIndex < l_queueFamilyProperties.size();
+         l_qfpIndex++)
+    {
+        if ((l_queueFamilyProperties[l_qfpIndex].queueFlags & l_requiredMask)) {
+            if (m_renderTargetWindow) {
+                if (m_physicalDevice.getSurfaceSupportKHR(
+                        l_qfpIndex, m_renderTargetWindow->getSurface()
+                    ))
+                {
+                    m_queueIndex = l_qfpIndex;
+                    break;
+                }
+            }
+            else {
+                m_queueIndex = l_qfpIndex;
+                break;
+            }
+        }
+    }
+    if (m_queueIndex == ~0) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::createLogicalDevice() Could not find a queue withe "
+            "the required features"
+        );
+    }
+
+    // create a Device
+    float                     l_queuePriority = 0.0f;
+    vk::DeviceQueueCreateInfo l_deviceQueueCreateInfo{ .queueFamilyIndex = m_queueIndex,
+                                                     .queueCount       = 1,
+                                                     .pQueuePriorities = &l_queuePriority };
+    vk::DeviceCreateInfo      l_deviceCreateInfo{
+             .pNext                = &m_requiredFeatures.get<vk::PhysicalDeviceFeatures2>(),
+             .queueCreateInfoCount = 1,
+             .pQueueCreateInfos    = &l_deviceQueueCreateInfo,
+             .enabledExtensionCount = static_cast<uint32_t>(m_requiredExtension.size()),
+             .ppEnabledExtensionNames = m_requiredExtension.data()
+    };
+
+    m_device = vk::raii::Device(m_physicalDevice, l_deviceCreateInfo);
+    m_queue  = vk::raii::Queue(m_device, m_queueIndex, 0);
 }
 
 }   // namespace rendering_device
