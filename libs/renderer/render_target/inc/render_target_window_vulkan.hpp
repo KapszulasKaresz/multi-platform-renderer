@@ -24,6 +24,8 @@ public:
 
     RenderTargetWindowVulkan&
         setSurface(VkSurfaceKHR f_surface, const vk::raii::Instance& f_instance);
+    
+    RenderTargetWindowVulkan& setDirectRenderTarget(bool f_directRenderTarget);
 
     RenderTargetWindowVulkan& create();
 
@@ -46,6 +48,7 @@ private:
 
     vk::raii::SurfaceKHR m_surface{ nullptr };
 
+    bool                            m_directRenderTarget{true};
     vk::raii::SwapchainKHR          m_swapChain{ nullptr };
     vk::Extent2D                    m_swapChainExtent{};
     vk::SurfaceFormatKHR            m_swapChainSurfaceFormat{};

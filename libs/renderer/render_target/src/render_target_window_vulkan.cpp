@@ -28,6 +28,21 @@ RenderTargetWindowVulkan& RenderTargetWindowVulkan::setSurface(
     return *this;
 }
 
+RenderTargetWindowVulkan& RenderTargetWindowVulkan::setDirectRenderTarget(
+    bool f_directRenderTarget
+)
+{
+    if (isValid()) {
+        throw std::runtime_error(
+            "RenderTargetWindowVulkan::setDirectRenderTarget(bool f_directRenderTarget) "
+            "you cannot set " "target directness on an already created target"
+        );
+    }
+
+    m_directRenderTarget = f_directRenderTarget;
+    return *this;
+}
+
 RenderTargetWindowVulkan& RenderTargetWindowVulkan::create()
 {
     createSwapChain();
@@ -55,7 +70,8 @@ void RenderTargetWindowVulkan::createSwapChain()
         .imageColorSpace  = m_swapChainSurfaceFormat.colorSpace,
         .imageExtent      = m_swapChainExtent,
         .imageArrayLayers = 1,
-        .imageUsage       = vk::ImageUsageFlagBits::eColorAttachment,
+        .imageUsage = m_directRenderTarget ? vk::ImageUsageFlagBits::eColorAttachment
+                                           : vk::ImageUsageFlagBits::eTransferDst,
         .imageSharingMode = vk::SharingMode::eExclusive,
         .preTransform     = l_surfaceCapabilities.currentTransform,
         .compositeAlpha   = vk::CompositeAlphaFlagBitsKHR::eOpaque,
