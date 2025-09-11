@@ -4,19 +4,20 @@
 #include <memory>
 #include <string>
 
-#include <glm/vec2.hpp>
-#include <vulkan/vulkan_raii.hpp>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_raii.hpp>
 
+#include <glm/vec2.hpp>
 
 namespace renderer {
 namespace render_target {
-    class RenderTargetWindow;
-}
+class RenderTargetWindow;
+}   // namespace render_target
 
 namespace rendering_api {
-    class RenderingApi;
-}
+class RenderingApi;
+}   // namespace rendering_api
+
 namespace window {
 class Window {
 public:
@@ -28,9 +29,13 @@ public:
     virtual bool isValid() const;
 
     virtual VkSurfaceKHR createVulkanSurface(const vk::raii::Instance& f_instance) = 0;
+
     virtual Window& create() = 0;
     virtual bool    isOpen() = 0;
     virtual void    update() = 0;
+
+    virtual int getWidth() const;
+    virtual int getHeight() const;
 
     virtual ~Window() = default;
 

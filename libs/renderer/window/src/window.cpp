@@ -25,5 +25,14 @@ bool Window::isValid() const
     return m_created;
 }
 
+int Window::getWidth() const
+{
+    return m_size.x;
+}
+int Window::getHeight() const
+{
+    return m_size.y;
+}
+
 }   // namespace window
 }   // namespace renderer

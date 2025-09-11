@@ -4,6 +4,7 @@
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/window/inc/window.hpp"
+#include "renderer/image/inc/image.hpp"
 
 namespace renderer {
 namespace rendering_device {
@@ -139,6 +140,8 @@ void RenderingDeviceVulkan::createRenderTargetWindow()
             m_parentApi->getNativeHandle()
         )
         .setWindow(m_window)
+        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8_SRGB)
+        .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
         .create();
 }
 
