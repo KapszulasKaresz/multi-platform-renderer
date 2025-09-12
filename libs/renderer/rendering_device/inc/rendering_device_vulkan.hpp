@@ -9,6 +9,10 @@
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
 namespace renderer {
+namespace image {
+class ImageVulkan;
+}   // namespace image
+
 namespace rendering_api {
 class RenderingApiVulkan;
 }   // namespace rendering_api
@@ -30,6 +34,7 @@ public:
     RenderingDeviceVulkan(rendering_api::RenderingApiVulkan* f_parentApi);
 
     render_target::RenderTargetWindow* getRenderTargetWindow() override final;
+    std::shared_ptr<image::Image>      createImage() override final;
 
     using FeatureChain = vk::StructureChain<VULKAN_FEATURE_CHAIN>;
 

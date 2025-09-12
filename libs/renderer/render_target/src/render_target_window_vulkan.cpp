@@ -83,6 +83,16 @@ void RenderTargetWindowVulkan::createSwapChain()
 
     m_swapChain =
         vk::raii::SwapchainKHR(m_parentDevice->getLogicalDevice(), l_swapChainCreateInfo);
+    for (auto l_rawImage : m_swapChain.getImages()) {
+        std::shared_ptr<image::ImageVulkan> l_image =
+            std::dynamic_pointer_cast<image::ImageVulkan>(m_parentDevice->createImage());
+        if (l_image) {
+            l_image->setFormat(m_format)
+                .setColorSpace(m_colorSpace)
+                .createFromSwapChainImage(l_rawImage);
+            m_swapChainImages.push_back(l_image);
+        }
+    }
 }
 
 vk::Extent2D RenderTargetWindowVulkan::chooseSwapExtent(

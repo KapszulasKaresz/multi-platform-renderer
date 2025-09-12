@@ -23,8 +23,18 @@ enum ColorSpace {
 
 class Image {
 public:
+    virtual bool isValid() const;
 
-private:
+    virtual Image& setFormat(image::ImageFormat f_format);
+    virtual Image& setColorSpace(image::ColorSpace f_colorSpace);
+
+    virtual Image& create() = 0;
+
+protected:
+    bool m_valid{ false };
+
+    image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
+    image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };
 };
 
 }   // namespace image

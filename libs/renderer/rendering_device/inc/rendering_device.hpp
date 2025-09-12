@@ -4,6 +4,10 @@
 #include <memory>
 
 namespace renderer {
+namespace image {
+class Image;
+}   // namespace image
+
 namespace render_target {
 class RenderTargetWindow;
 }   // namespace render_target
@@ -19,7 +23,10 @@ public:
 
     virtual RenderingDevice& setWindow(window::Window* f_window) = 0;
 
+    virtual std::shared_ptr<image::Image> createImage() = 0;
+
     virtual bool isValid();
+
 protected:
     bool m_valid{ false };
 };

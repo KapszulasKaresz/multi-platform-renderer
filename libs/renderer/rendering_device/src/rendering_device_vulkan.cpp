@@ -1,10 +1,10 @@
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
+#include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/window/inc/window.hpp"
-#include "renderer/image/inc/image.hpp"
 
 namespace renderer {
 namespace rendering_device {
@@ -40,6 +40,11 @@ render_target::RenderTargetWindow* RenderingDeviceVulkan::getRenderTargetWindow(
     }
 
     return m_renderTargetWindow.get();
+}
+
+std::shared_ptr<image::Image> RenderingDeviceVulkan::createImage()
+{
+    return std::make_shared<image::ImageVulkan>(this);
 }
 
 RenderingDeviceVulkan& RenderingDeviceVulkan::addExtension(const char* f_extensionName)
@@ -112,18 +117,22 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     return *this;
 }
 
-vk::raii::PhysicalDevice& RenderingDeviceVulkan::getPhysicalDevice() {
-    if(!isValid())
-    {
-        throw std::runtime_error("RenderingDeviceVulkan::getPhysicalDevice() device isn't valid");
+vk::raii::PhysicalDevice& RenderingDeviceVulkan::getPhysicalDevice()
+{
+    if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::getPhysicalDevice() device isn't valid"
+        );
     }
     return m_physicalDevice;
 }
 
-vk::raii::Device& RenderingDeviceVulkan::getLogicalDevice() {
-    if(!isValid())
-    {
-        throw std::runtime_error("RenderingDeviceVulkan::getLogicalDevice() device isn't valid");
+vk::raii::Device& RenderingDeviceVulkan::getLogicalDevice()
+{
+    if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::getLogicalDevice() device isn't valid"
+        );
     }
     return m_device;
 }
