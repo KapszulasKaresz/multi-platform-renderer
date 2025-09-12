@@ -1,6 +1,8 @@
 #ifndef IMAGE_HPP_INCLUDED
 #define IMAGE_HPP_INCLUDED
 
+#include "renderer/render_resource/inc/render_resource.hpp"
+
 namespace renderer {
 namespace image {
 
@@ -21,18 +23,14 @@ enum ColorSpace {
     COLOR_SPACE_MAX
 };
 
-class Image {
+class Image : public RenderResource {
 public:
-    virtual bool isValid() const;
-
     virtual Image& setFormat(image::ImageFormat f_format);
     virtual Image& setColorSpace(image::ColorSpace f_colorSpace);
 
     virtual Image& create() = 0;
 
 protected:
-    bool m_valid{ false };
-
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
     image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };
 };

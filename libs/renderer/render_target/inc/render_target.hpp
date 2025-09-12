@@ -1,21 +1,18 @@
 #ifndef RENDER_TARGET_HPP_INCLUDED
 #define RENDER_TARGET_HPP_INCLUDED
 #include "renderer/image/inc/image.hpp"
+#include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
 namespace render_target {
 
-class RenderTarget {
+class RenderTarget : public RenderResource {
 public:
-    virtual bool isValid() const;
-
-    RenderTarget& setFormat(image::ImageFormat f_format);
-    RenderTarget& setColorSpace(image::ColorSpace f_colorSpace);
+    RenderTarget&         setFormat(image::ImageFormat f_format);
+    RenderTarget&         setColorSpace(image::ColorSpace f_colorSpace);
     virtual RenderTarget& create() = 0;
 
 protected:
-    bool m_valid{ false };
-
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
     image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };
 };

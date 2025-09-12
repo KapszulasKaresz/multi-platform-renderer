@@ -10,6 +10,7 @@ include(cmake/dependencies.cmake)
 
 add_subdirectory(image)
 add_subdirectory(material)
+add_subdirectory(render_resource)
 add_subdirectory(render_target)
 add_subdirectory(rendering_api)
 add_subdirectory(rendering_device)

@@ -1,9 +1,9 @@
 #include "renderer/window/inc/window.hpp"
 
+#include <stdexcept>
+
 #include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/rendering_api/inc/rendering_api.hpp"
-
-#include <stdexcept>
 
 namespace renderer {
 namespace window {
@@ -20,15 +20,11 @@ Window& Window::setTitle(const std::string& f_title)
     return *this;
 }
 
-bool Window::isValid() const
-{
-    return m_created;
-}
-
 int Window::getWidth() const
 {
     return m_size.x;
 }
+
 int Window::getHeight() const
 {
     return m_size.y;

@@ -16,9 +16,7 @@ public:
     std::shared_ptr<rendering_device::RenderingDevice>
         getMainRenderingDevice() override final;
 
-    void createMainRenderingDeviceWindow(
-        window::Window* f_window
-    ) override final;
+    void createMainRenderingDeviceWindow(window::Window* f_window) override final;
 
     std::shared_ptr<rendering_device::RenderingDevice>
         createRenderingDevice() override final;
@@ -37,8 +35,8 @@ private:
     void createInstance();
     void setupDebugMessenger();
 
-    vk::raii::Instance               m_instance{ nullptr };
     vk::raii::Context                m_context{};
+    vk::raii::Instance               m_instance{ nullptr };
     vk::raii::DebugUtilsMessengerEXT m_debugMessenger{ nullptr };
 
     bool                     m_validationLayersEnabled{ false };

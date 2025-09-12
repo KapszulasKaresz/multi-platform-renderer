@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include "renderer/render_resource/inc/render_resource.hpp"
+
 namespace renderer {
 namespace render_target {
 class RenderTarget;
@@ -24,7 +26,7 @@ enum RenderMode {
     RENDER_MODE_MAX
 };
 
-class RenderingServer {
+class RenderingServer : public RenderResource {
 private:
     RenderingServer();
 
@@ -49,7 +51,6 @@ public:
 private:
     RenderMode m_renderMode{ RENDER_MODE_LOOP };
     bool       m_mainLoopRunning{ false };
-    bool       m_created{ false };
 
     std::unique_ptr<window::Window>              m_window{ nullptr };
     std::unique_ptr<rendering_api::RenderingApi> m_renderingApi{ nullptr };

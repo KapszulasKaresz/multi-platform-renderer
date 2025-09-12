@@ -30,7 +30,7 @@ Window& GLFWWindow::create()
     m_window = glfwCreateWindow(m_size.x, m_size.y, m_title.c_str(), nullptr, nullptr);
     glfwSetWindowUserPointer(m_window, this);
     s_numberOfWindows++;
-    m_created = true;
+    m_valid = true;
     return *this;
 }
 

@@ -16,10 +16,6 @@ RenderingAPIType RenderingApi::getRenderingAPIType() const
     return m_apiType;
 }
 
-bool RenderingApi::isValid() const
-{
-    return m_valid;
-}
 
 }   // namespace rendering_api
 }   // namespace renderer

@@ -9,6 +9,8 @@
 
 #include <glm/vec2.hpp>
 
+#include "renderer/render_resource/inc/render_resource.hpp"
+
 namespace renderer {
 namespace render_target {
 class RenderTargetWindow;
@@ -19,14 +21,12 @@ class RenderingApi;
 }   // namespace rendering_api
 
 namespace window {
-class Window {
+class Window : public RenderResource {
 public:
     Window() = default;
 
     Window& setSize(const glm::ivec2& f_size);
     Window& setTitle(const std::string& f_title);
-
-    virtual bool isValid() const;
 
     virtual VkSurfaceKHR createVulkanSurface(const vk::raii::Instance& f_instance) = 0;
 
@@ -40,10 +40,8 @@ public:
     virtual ~Window() = default;
 
 protected:
-    glm::ivec2                                         m_size{ 600, 600 };
-    bool                                               m_created{ false };
-    std::string                                        m_title{ "empty window" };
-    std::shared_ptr<render_target::RenderTargetWindow> m_renderTarget{ nullptr };
+    glm::ivec2  m_size{ 600, 600 };
+    std::string m_title{ "empty window" };
 };
 }   // namespace window
 }   // namespace renderer

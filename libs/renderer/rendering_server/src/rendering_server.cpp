@@ -66,14 +66,14 @@ RenderingServer& RenderingServer::create()
         auto _ignoreReturn = m_renderingApi->getMainRenderingDevice();
     }
 
-    m_created = true;
+    m_valid = true;
 
     return *this;
 }
 
 void RenderingServer::frame()
 {
-    if (!m_created) {
+    if (!m_valid) {
         throw std::runtime_error(
             "RenderingServer::frame() rendering server isn't created yet"
         );
@@ -84,7 +84,7 @@ void RenderingServer::frame()
 
 void RenderingServer::mainLoop()
 {
-    if (!m_created) {
+    if (!m_valid) {
         throw std::runtime_error(
             "RenderingServer::mainLoop() rendering server isn't created yet"
         );

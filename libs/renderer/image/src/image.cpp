@@ -4,10 +4,6 @@
 
 namespace renderer {
 namespace image {
-bool Image::isValid() const
-{
-    return m_valid;
-}
 
 Image& Image::setFormat(image::ImageFormat f_format)
 {

@@ -3,6 +3,8 @@
 
 #include <memory>
 
+#include "renderer/render_resource/inc/render_resource.hpp"
+
 namespace renderer {
 namespace image {
 class Image;
@@ -17,7 +19,7 @@ class Window;
 }   // namespace window
 
 namespace rendering_device {
-class RenderingDevice {
+class RenderingDevice : public RenderResource {
 public:
     virtual render_target::RenderTargetWindow* getRenderTargetWindow() = 0;
 
@@ -28,7 +30,6 @@ public:
     virtual bool isValid();
 
 protected:
-    bool m_valid{ false };
 };
 
 }   // namespace rendering_device

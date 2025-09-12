@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "renderer/render_resource/inc/render_resource.hpp"
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
 namespace renderer {
@@ -18,7 +19,7 @@ enum RenderingAPIType {
     RENDERING_API_TYPE_MAX
 };
 
-class RenderingApi {
+class RenderingApi : public RenderResource {
 public:
     RenderingApi() = default;
 
@@ -27,10 +28,8 @@ public:
     virtual std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() = 0;
 
     RenderingAPIType getRenderingAPIType() const;
-    virtual bool     isValid() const;
 
 protected:
-    bool             m_valid{ false };
     RenderingAPIType m_apiType{ RENDERING_API_TYPE_NONE };
     std::shared_ptr<rendering_device::RenderingDevice> m_mainRenderingDevice{ nullptr };
 };

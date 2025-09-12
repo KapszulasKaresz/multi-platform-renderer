@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
+#include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 #include "renderer/window/inc/window.hpp"
 
 namespace renderer {
@@ -55,9 +55,7 @@ std::shared_ptr<rendering_device::RenderingDevice>
     return m_mainRenderingDevice;
 }
 
-void RenderingApiVulkan::createMainRenderingDeviceWindow(
-    window::Window* f_window
-)
+void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_window)
 {
     if (!m_mainRenderingDevice) {
         auto l_renderingDevice = createRenderingDevice();
@@ -88,7 +86,7 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(
                     {}, // vk::PhysicalDeviceVulkan14Features
                     { .extendedDynamicState =
                           true }  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
-                }
+        }
             )
             .setWindow(f_window)
             .create();
