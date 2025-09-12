@@ -32,8 +32,8 @@ ImageVulkan& ImageVulkan::createFromSwapChainImage(vk::Image f_swapChainImage)
 
     m_swapchainImage = f_swapChainImage;
 
-    createImageView();
-    m_valid = true;
+    m_imageView = createImageView(*m_swapchainImage, vk::ImageAspectFlagBits::eColor);
+    m_valid     = true;
     return *this;
 }
 
@@ -102,17 +102,17 @@ vk::ColorSpaceKHR ImageVulkan::convertToVkColorSpace(const ColorSpace f_colorSpa
     }
 }
 
-void ImageVulkan::createImageView()
+vk::raii::ImageView
+    ImageVulkan::createImageView(vk::Image& f_image, vk::ImageAspectFlags f_aspectFlags)
 {
     vk::ImageViewCreateInfo l_imageViewCreateInfo{
-        .image            = m_image,
+        .image            = f_image,
         .viewType         = vk::ImageViewType::e2D,
         .format           = convertToVkFormat(m_format),
-        .subresourceRange = { vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 }
+        .subresourceRange = { f_aspectFlags, 0, 1, 0, 1 }
     };
 
-    m_imageView =
-        vk::raii::ImageView(m_parentDevice->getLogicalDevice(), l_imageViewCreateInfo);
+    return vk::raii::ImageView(m_parentDevice->getLogicalDevice(), l_imageViewCreateInfo);
 }
 }   // namespace image
 }   // namespace renderer

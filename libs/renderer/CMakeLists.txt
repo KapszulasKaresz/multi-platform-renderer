@@ -9,6 +9,7 @@ target_include_directories(${RENDERER_LIB_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/libs)
 include(cmake/dependencies.cmake)
 
 add_subdirectory(image)
+add_subdirectory(material)
 add_subdirectory(render_target)
 add_subdirectory(rendering_api)
 add_subdirectory(rendering_device)

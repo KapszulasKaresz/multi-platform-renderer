@@ -29,7 +29,8 @@ public:
     static vk::ColorSpaceKHR convertToVkColorSpace(const ColorSpace f_colorSpace);
 
 private:
-    void createImageView();
+    vk::raii::ImageView
+        createImageView(vk::Image& f_image, vk::ImageAspectFlags f_aspectFlags);
 
     rendering_device::RenderingDeviceVulkan* m_parentDevice;
 
