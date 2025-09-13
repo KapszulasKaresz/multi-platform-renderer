@@ -6,9 +6,21 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
+namespace scene {
+class TestScene;
+}   // namespace scene
+
+namespace material {
+class Material;
+}   // namespace material
+
 namespace render_target {
 class RenderTarget;
 }   // namespace render_target
+
+namespace rendering_device {
+class RenderingDevice;
+}   // namespace rendering_device
 
 namespace window {
 class Window;
@@ -40,10 +52,14 @@ public:
     RenderMode getRenderMode() const;
 
     RenderingServer& setWindow(std::unique_ptr<window::Window>&& f_renderTarget);
+    RenderingServer& setScene(std::shared_ptr<scene::TestScene> f_scene);
     RenderingServer& setRenderingApi(
         std::unique_ptr<rendering_api::RenderingApi>&& f_renderingApi
     );
     RenderingServer& create();
+
+    std::shared_ptr<rendering_device::RenderingDevice> getMainRenderingDevice();
+    std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice();
 
     void frame();
     void mainLoop();
@@ -54,6 +70,8 @@ private:
 
     std::unique_ptr<window::Window>              m_window{ nullptr };
     std::unique_ptr<rendering_api::RenderingApi> m_renderingApi{ nullptr };
+
+    std::shared_ptr<scene::TestScene> m_scene{ nullptr };
 };
 }   // namespace rendering_server
 }   // namespace renderer

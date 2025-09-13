@@ -33,8 +33,9 @@ class RenderingDeviceVulkan : public RenderingDevice {
 public:
     RenderingDeviceVulkan(rendering_api::RenderingApiVulkan* f_parentApi);
 
-    render_target::RenderTargetWindow* getRenderTargetWindow() override final;
-    std::shared_ptr<image::Image>      createImage() override final;
+    render_target::RenderTargetWindow*  getRenderTargetWindow() override final;
+    std::shared_ptr<image::Image>       createImage() override final;
+    std::shared_ptr<material::Material> createMaterial() override final;
 
     using FeatureChain = vk::StructureChain<VULKAN_FEATURE_CHAIN>;
 

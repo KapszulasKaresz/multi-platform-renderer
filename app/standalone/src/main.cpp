@@ -4,8 +4,11 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include "renderer/material/inc/material.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
+#include "renderer/rendering_device/inc/rendering_device.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
+#include "renderer/scene/inc/test_scene.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 
 int main(int argc, const char* argv[])
@@ -33,6 +36,14 @@ int main(int argc, const char* argv[])
         l_renderingServer.setRenderingApi(std::move(l_renderingApi))
             .setWindow(std::move(l_window))
             .create();
+
+        auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();
+        l_material->create();
+
+        auto l_scene = std::make_shared<renderer::scene::TestScene>();
+        l_scene->setMaterial(l_material).create();
+
+        l_renderingServer.setScene(l_scene);
 
         l_renderingServer.mainLoop();
     } catch (const std::runtime_error& l_error) {

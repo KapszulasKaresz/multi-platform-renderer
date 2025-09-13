@@ -6,6 +6,10 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
+namespace material {
+class Material;
+}   // namespace material
+
 namespace image {
 class Image;
 }   // namespace image
@@ -25,7 +29,8 @@ public:
 
     virtual RenderingDevice& setWindow(window::Window* f_window) = 0;
 
-    virtual std::shared_ptr<image::Image> createImage() = 0;
+    virtual std::shared_ptr<image::Image>       createImage()    = 0;
+    virtual std::shared_ptr<material::Material> createMaterial() = 0;
 
     virtual bool isValid();
 

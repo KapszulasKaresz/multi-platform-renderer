@@ -4,6 +4,7 @@
 
 #include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/rendering_api/inc/rendering_api.hpp"
+#include "renderer/scene/inc/test_scene.hpp"
 #include "renderer/window/inc/window.hpp"
 
 namespace renderer {
@@ -30,6 +31,12 @@ RenderMode RenderingServer::getRenderMode() const
 RenderingServer& RenderingServer::setWindow(std::unique_ptr<window::Window>&& f_window)
 {
     m_window = std::move(f_window);
+    return *this;
+}
+
+RenderingServer& RenderingServer::setScene(std::shared_ptr<scene::TestScene> f_scene)
+{
+    m_scene = f_scene;
     return *this;
 }
 
@@ -69,6 +76,17 @@ RenderingServer& RenderingServer::create()
     m_valid = true;
 
     return *this;
+}
+
+std::shared_ptr<rendering_device::RenderingDevice>
+    RenderingServer::getMainRenderingDevice()
+{
+    return m_renderingApi->getMainRenderingDevice();
+}
+
+std::shared_ptr<rendering_device::RenderingDevice> RenderingServer::createRenderingDevice()
+{
+    return m_renderingApi->createRenderingDevice();
 }
 
 void RenderingServer::frame()

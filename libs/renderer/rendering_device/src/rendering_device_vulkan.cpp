@@ -1,6 +1,7 @@
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
 #include "renderer/image/inc/image_vulkan.hpp"
+#include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
@@ -45,6 +46,11 @@ render_target::RenderTargetWindow* RenderingDeviceVulkan::getRenderTargetWindow(
 std::shared_ptr<image::Image> RenderingDeviceVulkan::createImage()
 {
     return std::make_shared<image::ImageVulkan>(this);
+}
+
+std::shared_ptr<material::Material> RenderingDeviceVulkan::createMaterial()
+{
+    return std::make_shared<material::MaterialVulkan>(this);
 }
 
 RenderingDeviceVulkan& RenderingDeviceVulkan::addExtension(const char* f_extensionName)
