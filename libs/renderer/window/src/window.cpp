@@ -30,5 +30,15 @@ int Window::getHeight() const
     return m_size.y;
 }
 
+bool Window::isResized() const
+{
+    return m_framebufferResized;
+}
+
+void Window::resizeHandled(bool f_resized)
+{
+    m_framebufferResized = f_resized;
+}
+
 }   // namespace window
 }   // namespace renderer

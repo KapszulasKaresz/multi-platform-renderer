@@ -29,10 +29,17 @@ public:
 
     RenderTargetWindowVulkan& create();
 
-    vk::raii::SurfaceKHR& getSurface();
+    size_t                  getSwapchainImageCount() const;
+    void                    recreateSwapChain();
+    vk::raii::SwapchainKHR& acquireSwapchain();
+
+    vk::raii::SurfaceKHR&               getSurface();
+    std::shared_ptr<image::ImageVulkan> getSwapchainImage(int f_imageIndex);
 
 private:
-    void         createSwapChain();
+    void createSwapChain();
+    void cleanupSwapChain();
+
     vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& f_capabilities);
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<vk::SurfaceFormatKHR>& f_availableFormats

@@ -1,5 +1,6 @@
 #include "renderer/scene/inc/test_scene.hpp"
 
+#include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/material/inc/material.hpp"
 
 namespace renderer {
@@ -15,5 +16,7 @@ TestScene& TestScene::create()
     m_valid = true;
     return *this;
 }
+
+void TestScene::recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer) {}
 }   // namespace scene
 }   // namespace renderer

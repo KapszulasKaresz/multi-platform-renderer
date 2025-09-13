@@ -28,6 +28,9 @@ public:
     static vk::Format        convertToVkFormat(const ImageFormat f_format);
     static vk::ColorSpaceKHR convertToVkColorSpace(const ColorSpace f_colorSpace);
 
+    vk::Image     getImage();
+    vk::ImageView getImageView();
+
 private:
     vk::raii::ImageView
         createImageView(vk::Image& f_image, vk::ImageAspectFlags f_aspectFlags);

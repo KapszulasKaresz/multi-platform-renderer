@@ -7,5 +7,10 @@ bool RenderingDevice::isValid()
     return m_valid;
 }
 
+uint32_t RenderingDevice::getCurrentFrame()
+{
+    return m_currentFrame;
+}
+
 }   // namespace rendering_device
 }   // namespace renderer

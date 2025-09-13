@@ -1,5 +1,6 @@
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
+#include "renderer/command_buffer/inc/command_buffer_vulkan.hpp"
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window.hpp"
@@ -51,6 +52,93 @@ std::shared_ptr<image::Image> RenderingDeviceVulkan::createImage()
 std::shared_ptr<material::Material> RenderingDeviceVulkan::createMaterial()
 {
     return std::make_shared<material::MaterialVulkan>(this);
+}
+
+std::shared_ptr<command_buffer::CommandBuffer> RenderingDeviceVulkan::createCommandBuffer()
+{
+    auto l_commandBuffer =
+        std::make_shared<command_buffer::CommandBufferVulkan>(this, m_commandPool);
+    l_commandBuffer->create();
+    return l_commandBuffer;
+}
+
+std::shared_ptr<command_buffer::CommandBuffer>
+    RenderingDeviceVulkan::getRenderingCommandBuffer()
+{
+    if (!m_renderingCommandBuffer) {
+        m_renderingCommandBuffer =
+            std::make_shared<command_buffer::CommandBufferVulkan>(this, m_commandPool);
+        m_renderingCommandBuffer->setBufferCount(m_maxFramesInFlight)
+            .setRendering(true)
+            .create();
+    }
+    return m_renderingCommandBuffer;
+}
+
+bool RenderingDeviceVulkan::preFrame()
+{
+    while (
+        vk::Result::eTimeout
+        == m_device.waitForFences(*m_inFlightFences[m_currentFrame], vk::True, UINT64_MAX)
+    )
+        ;
+
+    auto [l_result, l_imageIndex] =
+        m_renderTargetWindow->acquireSwapchain().acquireNextImage(
+            UINT64_MAX, *m_presentCompleteSemaphore[m_semaphoreIndex], nullptr
+        );
+    m_currentImageIndex = l_imageIndex;
+
+    if (l_result == vk::Result::eErrorOutOfDateKHR) {
+        m_renderTargetWindow->recreateSwapChain();
+        return false;
+    }
+    if (l_result != vk::Result::eSuccess && l_result != vk::Result::eSuboptimalKHR) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::preFrame() failed to acquire swap chain image!"
+        );
+    }
+    m_device.resetFences(*m_inFlightFences[m_currentFrame]);
+
+    return true;
+}
+
+void RenderingDeviceVulkan::postFrame()
+{
+    const vk::PresentInfoKHR l_presentInfoKHR{
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores    = &*m_renderFinishedSemaphore[m_currentImageIndex],
+        .swapchainCount     = 1,
+        .pSwapchains        = &*m_renderTargetWindow->acquireSwapchain(),
+        .pImageIndices      = &m_currentImageIndex
+    };
+    vk::Result l_result;
+
+    try {
+        l_result = m_queue.presentKHR(l_presentInfoKHR);
+        if (l_result == vk::Result::eErrorOutOfDateKHR
+            || l_result == vk::Result::eSuboptimalKHR || m_window->isResized())
+        {
+            m_window->resizeHandled();
+            m_renderTargetWindow->recreateSwapChain();
+        }
+        else if (l_result != vk::Result::eSuccess) {
+            throw std::runtime_error(
+                "RenderingDeviceVulkan::postFrame() failed to present swap chain image!"
+            );
+        }
+    } catch (vk::OutOfDateKHRError l_error) {
+        m_window->resizeHandled();
+        m_renderTargetWindow->recreateSwapChain();
+    }
+
+    m_semaphoreIndex = (m_semaphoreIndex + 1) % m_presentCompleteSemaphore.size();
+    m_currentFrame   = (m_currentFrame + 1) % m_maxFramesInFlight;
+}
+
+void RenderingDeviceVulkan::finishRendering()
+{
+    m_device.waitIdle();
 }
 
 RenderingDeviceVulkan& RenderingDeviceVulkan::addExtension(const char* f_extensionName)
@@ -120,7 +208,49 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     createLogicalDevice();
     m_valid = true;
     createRenderTargetWindow();
+    createCommandPool();
+    createSyncObjects();
     return *this;
+}
+
+void RenderingDeviceVulkan::submitCommandBuffer(
+    command_buffer::CommandBufferVulkan* f_buffer
+)
+{
+    auto& l_commandBuffers = f_buffer->getNativeHandle();
+
+    std::vector<vk::CommandBuffer> l_rawCmdBuffers;
+    l_rawCmdBuffers.reserve(l_commandBuffers.size());
+
+    for (const auto& cb : l_commandBuffers) {
+        l_rawCmdBuffers.push_back(*cb);
+    }
+    vk::SubmitInfo l_submitInfo{ .commandBufferCount =
+                                     static_cast<uint32_t>(l_rawCmdBuffers.size()),
+                                 .pCommandBuffers = l_rawCmdBuffers.data() };
+
+    m_queue.submit(l_submitInfo, nullptr);
+    m_queue.waitIdle();
+}
+
+void RenderingDeviceVulkan::submitRenderCommandBuffer(
+    command_buffer::CommandBufferVulkan* f_buffer
+)
+{
+    auto&                  l_buffers = f_buffer->getNativeHandle();
+    vk::PipelineStageFlags l_waitDestinationStageMask(
+        vk::PipelineStageFlagBits::eColorAttachmentOutput
+    );
+    const vk::SubmitInfo l_submitInfo{
+        .waitSemaphoreCount   = 1,
+        .pWaitSemaphores      = &*m_presentCompleteSemaphore[m_semaphoreIndex],
+        .pWaitDstStageMask    = &l_waitDestinationStageMask,
+        .commandBufferCount   = 1,
+        .pCommandBuffers      = &*l_buffers[m_currentFrame],
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores    = &*m_renderFinishedSemaphore[m_currentImageIndex]
+    };
+    m_queue.submit(l_submitInfo, *m_inFlightFences[m_currentFrame]);
 }
 
 vk::raii::PhysicalDevice& RenderingDeviceVulkan::getPhysicalDevice()
@@ -149,6 +279,11 @@ vk::Format RenderingDeviceVulkan::getSwapchainSurfaceFormat() const
         return vk::Format::eUndefined;
     }
     return image::ImageVulkan::convertToVkFormat(m_renderTargetWindow->getFormat());
+}
+
+std::shared_ptr<image::ImageVulkan> RenderingDeviceVulkan::getCurrentSwapChainImage()
+{
+    return m_renderTargetWindow->getSwapchainImage(m_currentImageIndex);
 }
 
 void RenderingDeviceVulkan::createRenderTargetWindow()
@@ -310,6 +445,36 @@ void RenderingDeviceVulkan::createLogicalDevice()
 
     m_device = vk::raii::Device(m_physicalDevice, l_deviceCreateInfo);
     m_queue  = vk::raii::Queue(m_device, m_queueIndex, 0);
+}
+
+void RenderingDeviceVulkan::createCommandPool()
+{
+    vk::CommandPoolCreateInfo l_poolInfo{
+        .flags            = vk::CommandPoolCreateFlagBits::eResetCommandBuffer,
+        .queueFamilyIndex = m_queueIndex
+    };
+    m_commandPool = vk::raii::CommandPool(m_device, l_poolInfo);
+}
+
+void RenderingDeviceVulkan::createSyncObjects()
+{
+    m_presentCompleteSemaphore.clear();
+    m_renderFinishedSemaphore.clear();
+    m_inFlightFences.clear();
+
+    if (m_renderTargetWindow) {
+        for (size_t i = 0; i < m_renderTargetWindow->getSwapchainImageCount(); i++) {
+            m_presentCompleteSemaphore.emplace_back(m_device, vk::SemaphoreCreateInfo());
+            m_renderFinishedSemaphore.emplace_back(m_device, vk::SemaphoreCreateInfo());
+        }
+    }
+
+
+    for (size_t i = 0; i < m_maxFramesInFlight; i++) {
+        m_inFlightFences.emplace_back(
+            m_device, vk::FenceCreateInfo{ .flags = vk::FenceCreateFlagBits::eSignaled }
+        );
+    }
 }
 
 }   // namespace rendering_device

@@ -9,6 +9,10 @@
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
 namespace renderer {
+namespace command_buffer {
+class CommandBufferVulkan;
+}   // namespace command_buffer
+
 namespace image {
 class ImageVulkan;
 }   // namespace image
@@ -33,9 +37,15 @@ class RenderingDeviceVulkan : public RenderingDevice {
 public:
     RenderingDeviceVulkan(rendering_api::RenderingApiVulkan* f_parentApi);
 
-    render_target::RenderTargetWindow*  getRenderTargetWindow() override final;
-    std::shared_ptr<image::Image>       createImage() override final;
-    std::shared_ptr<material::Material> createMaterial() override final;
+    render_target::RenderTargetWindow*             getRenderTargetWindow() override final;
+    std::shared_ptr<image::Image>                  createImage() override final;
+    std::shared_ptr<material::Material>            createMaterial() override final;
+    std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() override final;
+    std::shared_ptr<command_buffer::CommandBuffer>
+         getRenderingCommandBuffer() override final;
+    bool preFrame() override final;
+    void postFrame() override final;
+    void finishRendering() override final;
 
     using FeatureChain = vk::StructureChain<VULKAN_FEATURE_CHAIN>;
 
@@ -46,15 +56,21 @@ public:
     RenderingDeviceVulkan& setWindow(window::Window* f_window) override final;
     RenderingDeviceVulkan& create();
 
+    void submitCommandBuffer(command_buffer::CommandBufferVulkan* f_buffer);
+    void submitRenderCommandBuffer(command_buffer::CommandBufferVulkan* f_buffer);
+
     vk::raii::PhysicalDevice& getPhysicalDevice();
     vk::raii::Device&         getLogicalDevice();
 
-    vk::Format getSwapchainSurfaceFormat() const;
+    vk::Format                          getSwapchainSurfaceFormat() const;
+    std::shared_ptr<image::ImageVulkan> getCurrentSwapChainImage();
 
 private:
     void createRenderTargetWindow();
     void pickPhysicalDevice();
     void createLogicalDevice();
+    void createCommandPool();
+    void createSyncObjects();
 
     rendering_api::RenderingApiVulkan* m_parentApi{ nullptr };
     vk::raii::PhysicalDevice           m_physicalDevice{ nullptr };
@@ -70,7 +86,16 @@ private:
         nullptr
     };
 
+    vk::raii::CommandPool                                m_commandPool{ nullptr };
+    std::shared_ptr<command_buffer::CommandBufferVulkan> m_renderingCommandBuffer{};
+
+    std::vector<vk::raii::Semaphore> m_presentCompleteSemaphore{};
+    std::vector<vk::raii::Semaphore> m_renderFinishedSemaphore{};
+    std::vector<vk::raii::Fence>     m_inFlightFences{};
+
     uint32_t m_queueIndex{ UINT32_MAX };
+    uint32_t m_semaphoreIndex{ 0 };
+    uint32_t m_currentImageIndex{ 0 };
 };
 
 }   // namespace rendering_device

@@ -50,9 +50,43 @@ RenderTargetWindowVulkan& RenderTargetWindowVulkan::create()
     return *this;
 }
 
+size_t RenderTargetWindowVulkan::getSwapchainImageCount() const
+{
+    return m_swapChainImages.size();
+}
+
+void RenderTargetWindowVulkan::recreateSwapChain()
+{
+    m_window->waitTillShown();
+
+    m_parentDevice->getLogicalDevice().waitIdle();
+
+    cleanupSwapChain();
+    createSwapChain();
+}
+
+vk::raii::SwapchainKHR& RenderTargetWindowVulkan::acquireSwapchain()
+{
+    return m_swapChain;
+}
+
 vk::raii::SurfaceKHR& RenderTargetWindowVulkan::getSurface()
 {
     return m_surface;
+}
+
+std::shared_ptr<image::ImageVulkan> RenderTargetWindowVulkan::getSwapchainImage(
+    int f_imageIndex
+)
+{
+    if (f_imageIndex >= m_swapChainImages.size()) {
+        throw std::
+            runtime_error(
+                "RenderTargetWindowVulkan::getSwapchainImage(int f_imageIndex) image "
+                "index " "is greater than the amount of swapchain images"
+            );
+    }
+    return m_swapChainImages[f_imageIndex];
 }
 
 void RenderTargetWindowVulkan::createSwapChain()
@@ -93,6 +127,12 @@ void RenderTargetWindowVulkan::createSwapChain()
             m_swapChainImages.push_back(l_image);
         }
     }
+}
+
+void RenderTargetWindowVulkan::cleanupSwapChain()
+{
+    m_swapChainImages.clear();
+    m_swapChain = nullptr;
 }
 
 vk::Extent2D RenderTargetWindowVulkan::chooseSwapExtent(

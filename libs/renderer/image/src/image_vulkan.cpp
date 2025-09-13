@@ -102,6 +102,16 @@ vk::ColorSpaceKHR ImageVulkan::convertToVkColorSpace(const ColorSpace f_colorSpa
     }
 }
 
+vk::Image ImageVulkan::getImage()
+{
+    return m_swapchainImage.value_or(m_image);
+}
+
+vk::ImageView ImageVulkan::getImageView()
+{
+    return m_imageView;
+}
+
 vk::raii::ImageView
     ImageVulkan::createImageView(vk::Image& f_image, vk::ImageAspectFlags f_aspectFlags)
 {

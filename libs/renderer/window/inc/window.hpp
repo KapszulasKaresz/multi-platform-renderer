@@ -30,18 +30,22 @@ public:
 
     virtual VkSurfaceKHR createVulkanSurface(const vk::raii::Instance& f_instance) = 0;
 
-    virtual Window& create() = 0;
-    virtual bool    isOpen() = 0;
-    virtual void    update() = 0;
+    virtual Window& create()        = 0;
+    virtual bool    isOpen()        = 0;
+    virtual void    update()        = 0;
+    virtual void    waitTillShown() = 0;
 
-    virtual int getWidth() const;
-    virtual int getHeight() const;
+    virtual int  getWidth() const;
+    virtual int  getHeight() const;
+    virtual bool isResized() const;
+    virtual void resizeHandled(bool f_resized = false);
 
     virtual ~Window() = default;
 
 protected:
     glm::ivec2  m_size{ 600, 600 };
     std::string m_title{ "empty window" };
+    bool        m_framebufferResized{ false };
 };
 }   // namespace window
 }   // namespace renderer

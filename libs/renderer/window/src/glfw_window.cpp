@@ -29,6 +29,7 @@ Window& GLFWWindow::create()
 
     m_window = glfwCreateWindow(m_size.x, m_size.y, m_title.c_str(), nullptr, nullptr);
     glfwSetWindowUserPointer(m_window, this);
+    glfwSetFramebufferSizeCallback(m_window, framebufferResizeCallback);
     s_numberOfWindows++;
     m_valid = true;
     return *this;
@@ -42,6 +43,16 @@ bool GLFWWindow::isOpen()
 void GLFWWindow::update()
 {
     glfwPollEvents();
+}
+
+void GLFWWindow::waitTillShown()
+{
+    int l_width = 0, l_height = 0;
+    glfwGetFramebufferSize(m_window, &l_width, &l_height);
+    while (l_width == 0 || l_height == 0) {
+        glfwGetFramebufferSize(m_window, &l_width, &l_height);
+        glfwWaitEvents();
+    }
 }
 
 std::vector<const char*> GLFWWindow::getRequiredInstanceExtensionsVulkan()
@@ -60,5 +71,14 @@ GLFWWindow::~GLFWWindow()
         glfwTerminate();
     }
 }
+
+void GLFWWindow::framebufferResizeCallback(GLFWwindow* f_window, int f_width, int f_height)
+{
+    auto l_window = reinterpret_cast<GLFWWindow*>(glfwGetWindowUserPointer(f_window));
+    l_window->resizeHandled(true);
+    l_window->setSize(glm::ivec2(f_width, f_height));
+}
+
+
 }   // namespace window
 }   // namespace renderer

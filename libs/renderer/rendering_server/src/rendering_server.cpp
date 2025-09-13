@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/rendering_api/inc/rendering_api.hpp"
 #include "renderer/scene/inc/test_scene.hpp"
@@ -96,8 +97,19 @@ void RenderingServer::frame()
             "RenderingServer::frame() rendering server isn't created yet"
         );
     }
-
     auto l_renderingDevice = m_renderingApi->getMainRenderingDevice();
+
+    auto l_commandBuffer = l_renderingDevice->getRenderingCommandBuffer();
+    if (l_renderingDevice->preFrame()) {
+        l_commandBuffer->reset();
+        l_commandBuffer->begin();
+        l_commandBuffer->beginRendering();
+        m_scene->recordCommandBuffer(l_commandBuffer.get());
+        l_commandBuffer->endRendering();
+        l_commandBuffer->end();
+        l_commandBuffer->submit();
+        l_renderingDevice->postFrame();
+    }
 }
 
 void RenderingServer::mainLoop()
@@ -121,6 +133,7 @@ void RenderingServer::mainLoop()
             frame();
         }
         m_mainLoopRunning = false;
+        m_renderingApi->getMainRenderingDevice()->finishRendering();
     }
 }
 

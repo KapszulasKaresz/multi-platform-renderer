@@ -6,6 +6,10 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
+namespace command_buffer {
+class CommandBuffer;
+}   // namespace command_buffer
+
 namespace material {
 class Material;
 }   // namespace material
@@ -29,12 +33,21 @@ public:
 
     virtual RenderingDevice& setWindow(window::Window* f_window) = 0;
 
-    virtual std::shared_ptr<image::Image>       createImage()    = 0;
-    virtual std::shared_ptr<material::Material> createMaterial() = 0;
+    virtual std::shared_ptr<image::Image>                  createImage()         = 0;
+    virtual std::shared_ptr<material::Material>            createMaterial()      = 0;
+    virtual std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() = 0;
+    virtual std::shared_ptr<command_buffer::CommandBuffer> getRenderingCommandBuffer() = 0;
+    virtual bool preFrame()        = 0;
+    virtual void postFrame()       = 0;
+    virtual void finishRendering() = 0;
+
+    uint32_t getCurrentFrame();
 
     virtual bool isValid();
 
 protected:
+    int      m_maxFramesInFlight{ 2 };
+    uint32_t m_currentFrame{ 0 };
 };
 
 }   // namespace rendering_device
