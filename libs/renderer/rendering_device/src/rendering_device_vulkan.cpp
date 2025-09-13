@@ -127,7 +127,7 @@ void RenderingDeviceVulkan::postFrame()
                 "RenderingDeviceVulkan::postFrame() failed to present swap chain image!"
             );
         }
-    } catch (vk::OutOfDateKHRError l_error) {
+    } catch (const vk::OutOfDateKHRError&) {
         m_window->resizeHandled();
         m_renderTargetWindow->recreateSwapChain();
     }
