@@ -38,7 +38,8 @@ std::shared_ptr<rendering_device::RenderingDevice>
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
                     {}, // vk::PhysicalDeviceFeatures2
-                    {}, // vk::PhysicalDeviceVulkan11Features
+                    { .shaderDrawParameters =
+                          true }, // vk::PhysicalDeviceVulkan11Features
                     {}, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
@@ -79,7 +80,8 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
                     {}, // vk::PhysicalDeviceFeatures2
-                    {}, // vk::PhysicalDeviceVulkan11Features
+                    { .shaderDrawParameters =
+                          true }, // vk::PhysicalDeviceVulkan11Features
                     {}, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features

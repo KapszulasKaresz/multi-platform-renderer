@@ -12,6 +12,8 @@ public:
     RenderTarget&         setColorSpace(image::ColorSpace f_colorSpace);
     virtual RenderTarget& create() = 0;
 
+    virtual image::ImageFormat getFormat() const;
+
 protected:
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
     image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };

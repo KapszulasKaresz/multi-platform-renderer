@@ -32,5 +32,11 @@ RenderTarget& RenderTarget::setColorSpace(image::ColorSpace f_colorSpace)
     m_colorSpace = f_colorSpace;
     return *this;
 }
+
+image::ImageFormat RenderTarget::getFormat() const
+{
+    return m_format;
+}
+
 }   // namespace render_target
 }   // namespace renderer

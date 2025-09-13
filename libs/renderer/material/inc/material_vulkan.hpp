@@ -19,9 +19,15 @@ public:
     MaterialVulkan& create();
 
 private:
+    void createPipeline();
+
+    [[nodiscard]]
+    vk::raii::ShaderModule createShaderModule(const std::vector<char>& f_code) const;
+
     rendering_device::RenderingDeviceVulkan* m_parentDevice{ nullptr };
 
-    vk::raii::Pipeline m_graphicsPipeline{ nullptr };
+    vk::raii::PipelineLayout m_pipelineLayout{ nullptr };
+    vk::raii::Pipeline       m_graphicsPipeline{ nullptr };
 };
 }   // namespace material
 }   // namespace  renderer

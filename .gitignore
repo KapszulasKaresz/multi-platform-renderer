@@ -11,3 +11,5 @@ CMakeUserPresets.json
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+
+*.spv

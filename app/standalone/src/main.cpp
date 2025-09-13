@@ -38,7 +38,7 @@ int main(int argc, const char* argv[])
             .create();
 
         auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();
-        l_material->create();
+        l_material->setShader("res/shaders/slang.spv").create();
 
         auto l_scene = std::make_shared<renderer::scene::TestScene>();
         l_scene->setMaterial(l_material).create();

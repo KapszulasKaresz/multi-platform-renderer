@@ -143,6 +143,14 @@ vk::raii::Device& RenderingDeviceVulkan::getLogicalDevice()
     return m_device;
 }
 
+vk::Format RenderingDeviceVulkan::getSwapchainSurfaceFormat() const
+{
+    if (!m_renderTargetWindow) {
+        return vk::Format::eUndefined;
+    }
+    return image::ImageVulkan::convertToVkFormat(m_renderTargetWindow->getFormat());
+}
+
 void RenderingDeviceVulkan::createRenderTargetWindow()
 {
     if (!m_window) {

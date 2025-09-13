@@ -49,6 +49,8 @@ public:
     vk::raii::PhysicalDevice& getPhysicalDevice();
     vk::raii::Device&         getLogicalDevice();
 
+    vk::Format getSwapchainSurfaceFormat() const;
+
 private:
     void createRenderTargetWindow();
     void pickPhysicalDevice();
