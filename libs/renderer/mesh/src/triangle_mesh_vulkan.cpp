@@ -54,7 +54,7 @@ void TriangleMeshVulkan::createVertexBuffer()
 
     l_stagingBuffer.upload(m_vertices.data(), l_dataSize);
 
-    auto l_commandBuffer = m_parentDevice->createCommandBuffer();
+    auto l_commandBuffer = m_parentDevice->createSingleUseCommandBuffer();
     command_buffer::CommandBufferVulkan* l_commandBufferVulkan =
         dynamic_cast<command_buffer::CommandBufferVulkan*>(l_commandBuffer.get());
 
@@ -86,7 +86,7 @@ void TriangleMeshVulkan::createIndexBuffer()
 
     l_stagingBuffer.upload(m_indices.data(), l_dataSize);
 
-    auto l_commandBuffer = m_parentDevice->createCommandBuffer();
+    auto l_commandBuffer = m_parentDevice->createSingleUseCommandBuffer();
     command_buffer::CommandBufferVulkan* l_commandBufferVulkan =
         dynamic_cast<command_buffer::CommandBufferVulkan*>(l_commandBuffer.get());
 

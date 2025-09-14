@@ -44,6 +44,7 @@ public:
     std::shared_ptr<image::Image>                  createImage() override final;
     std::shared_ptr<material::Material>            createMaterial() override final;
     std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() override final;
+    std::shared_ptr<command_buffer::CommandBuffer> createSingleUseCommandBuffer();
     std::shared_ptr<command_buffer::CommandBuffer>
                                         getRenderingCommandBuffer() override final;
     std::shared_ptr<mesh::TriangleMesh> createTriangleMesh() override final;

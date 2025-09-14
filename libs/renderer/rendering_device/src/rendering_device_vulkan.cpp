@@ -64,6 +64,15 @@ std::shared_ptr<command_buffer::CommandBuffer> RenderingDeviceVulkan::createComm
 }
 
 std::shared_ptr<command_buffer::CommandBuffer>
+    RenderingDeviceVulkan::createSingleUseCommandBuffer()
+{
+    auto l_commandBuffer =
+        std::make_shared<command_buffer::CommandBufferVulkan>(this, m_commandPool);
+    l_commandBuffer->setUsage(true).create();
+    return l_commandBuffer;
+}
+
+std::shared_ptr<command_buffer::CommandBuffer>
     RenderingDeviceVulkan::getRenderingCommandBuffer()
 {
     if (!m_renderingCommandBuffer) {

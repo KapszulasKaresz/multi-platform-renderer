@@ -26,6 +26,7 @@ public:
 
     CommandBufferVulkan& setBufferCount(uint32_t f_count);
     CommandBufferVulkan& setRendering(bool f_rendering);
+    CommandBufferVulkan& setUsage(bool f_usage);
     CommandBufferVulkan& create();
 
     CommandBufferVulkan& submit() override final;
@@ -67,6 +68,9 @@ protected:
     uint32_t m_bufferCount{ 1 };
 
     bool m_rendering{ false };
+
+    bool m_singleUse{ false };
+    bool m_used{ false };
 
     std::shared_ptr<render_target::RenderTarget> m_currentRenderTarget{ nullptr };
 

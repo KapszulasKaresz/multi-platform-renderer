@@ -38,6 +38,12 @@ CommandBufferVulkan& CommandBufferVulkan::setRendering(bool f_rendering)
     return *this;
 }
 
+CommandBufferVulkan& CommandBufferVulkan::setUsage(bool f_usage)
+{
+    m_singleUse = f_usage;
+    return *this;
+}
+
 CommandBufferVulkan& CommandBufferVulkan::create()
 {
     createCommandBuffer();
@@ -47,12 +53,19 @@ CommandBufferVulkan& CommandBufferVulkan::create()
 
 CommandBufferVulkan& CommandBufferVulkan::submit()
 {
+    if (m_singleUse && m_used) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::submit() you want to resubmit a single use command "
+            "buffer"
+        );
+    }
     if (m_rendering) {
         m_parentDevice->submitRenderCommandBuffer(this);
     }
     else {
         m_parentDevice->submitCommandBuffer(this);
     }
+    m_used = true;
     return *this;
 }
 
@@ -66,10 +79,13 @@ CommandBufferVulkan& CommandBufferVulkan::reset()
 CommandBufferVulkan& CommandBufferVulkan::begin()
 {
     auto& l_commanBuffer = selectCurrentCommandBuffer();
+
+
     l_commanBuffer.begin(
-        m_rendering ? vk::CommandBufferBeginInfo{}
-                    : vk::CommandBufferBeginInfo{
-                          .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit }
+        m_singleUse
+            ? vk::CommandBufferBeginInfo{ .flags = vk::CommandBufferUsageFlagBits::
+                                              eOneTimeSubmit }
+            : vk::CommandBufferBeginInfo{}
     );
     return *this;
 }
