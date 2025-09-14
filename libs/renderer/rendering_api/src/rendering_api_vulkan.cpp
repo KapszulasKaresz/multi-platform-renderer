@@ -26,7 +26,7 @@ std::shared_ptr<rendering_device::RenderingDevice>
             throw std::
                 runtime_error(
                     "RenderingApiVulkan::getMainRenderingDevice() somehow "
-                    "renderingdevice " "isn't a vulkan rendering device"
+                    "renderingdevice isn't a vulkan rendering device"
                 );
         }
         l_renderingDeviceVulkanRaw->addQueue(vk::QueueFlagBits::eGraphics)

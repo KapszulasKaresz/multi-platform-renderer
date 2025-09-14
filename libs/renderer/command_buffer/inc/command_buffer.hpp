@@ -6,6 +6,10 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
+namespace mesh {
+class TriangleMesh;
+}   // namespace mesh
+
 namespace material {
 class Material;
 }   // namespace material
@@ -28,14 +32,6 @@ struct ViewportInfo {
     bool m_fullScreen{ false };
 };
 
-// This struct is temporary until meshes are implemented
-struct DrawInfo {
-    uint32_t m_vertexCount{ 0 };
-    uint32_t m_instanceCount{ 0 };
-    uint32_t m_firstVertex{ 0 };
-    uint32_t m_firstInstance{ 0 };
-};
-
 class CommandBuffer : public RenderResource {
 public:
     virtual CommandBuffer& submit()                                                 = 0;
@@ -45,8 +41,8 @@ public:
     virtual CommandBuffer& beginRendering(const RenderBeginInfo& f_renderBeginInfo) = 0;
     virtual CommandBuffer& endRendering()                                           = 0;
     virtual CommandBuffer& useMaterial(std::shared_ptr<material::Material> f_material) = 0;
-    virtual CommandBuffer& useViewport(const ViewportInfo& f_viewportInfo) = 0;
-    virtual CommandBuffer& draw(const DrawInfo& f_drawInfo)                = 0;
+    virtual CommandBuffer& useViewport(const ViewportInfo& f_viewportInfo)  = 0;
+    virtual CommandBuffer& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) = 0;
 };
 }   // namespace command_buffer
 }   // namespace renderer

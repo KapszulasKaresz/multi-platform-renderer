@@ -6,6 +6,8 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
+#include <vk_mem_alloc.h>
+
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
 namespace renderer {
@@ -43,7 +45,9 @@ public:
     std::shared_ptr<material::Material>            createMaterial() override final;
     std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() override final;
     std::shared_ptr<command_buffer::CommandBuffer>
-         getRenderingCommandBuffer() override final;
+                                        getRenderingCommandBuffer() override final;
+    std::shared_ptr<mesh::TriangleMesh> createTriangleMesh() override final;
+
     bool preFrame() override final;
     void postFrame() override final;
     void finishRendering() override final;
@@ -62,9 +66,12 @@ public:
 
     vk::raii::PhysicalDevice& getPhysicalDevice();
     vk::raii::Device&         getLogicalDevice();
+    VmaAllocator&             getVmaAllocator();
 
     vk::Format getSwapchainSurfaceFormat() const;
     uint32_t   getCurrentImageIndex() const;
+
+    ~RenderingDeviceVulkan();
 
 private:
     void createRenderTargetWindow();
@@ -72,6 +79,7 @@ private:
     void createLogicalDevice();
     void createCommandPool();
     void createSyncObjects();
+    void createVmaAllocator();
 
     rendering_api::RenderingApiVulkan* m_parentApi{ nullptr };
     vk::raii::PhysicalDevice           m_physicalDevice{ nullptr };
@@ -97,6 +105,8 @@ private:
     uint32_t m_queueIndex{ UINT32_MAX };
     uint32_t m_semaphoreIndex{ 0 };
     uint32_t m_currentImageIndex{ 0 };
+
+    VmaAllocator m_allocator{};
 };
 
 }   // namespace rendering_device

@@ -1,5 +1,6 @@
 #include "renderer/material/inc/material_vulkan.hpp"
 
+#include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 #include "renderer/utils/inc/utils.hpp"
 
@@ -40,7 +41,16 @@ void MaterialVulkan::createPipeline()
     vk::PipelineShaderStageCreateInfo l_shaderStages[] = { l_vertShaderStageInfo,
                                                            l_fragShaderStageInfo };
 
-    vk::PipelineVertexInputStateCreateInfo   l_vertexInputInfo;
+    auto l_bindingDescription    = mesh::Vertex::getBindingDescription();
+    auto l_attributeDescriptions = mesh::Vertex::getAttributeDescriptions();
+    vk::PipelineVertexInputStateCreateInfo l_vertexInputInfo{
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions    = &l_bindingDescription,
+        .vertexAttributeDescriptionCount =
+            static_cast<uint32_t>(l_attributeDescriptions.size()),
+        .pVertexAttributeDescriptions = l_attributeDescriptions.data()
+    };
+
     vk::PipelineInputAssemblyStateCreateInfo l_inputAssembly{
         .topology = vk::PrimitiveTopology::eTriangleList
     };

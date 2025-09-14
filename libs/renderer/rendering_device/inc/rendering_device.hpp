@@ -14,6 +14,11 @@ namespace material {
 class Material;
 }   // namespace material
 
+namespace mesh {
+
+class TriangleMesh;
+}   // namespace mesh
+
 namespace image {
 class Image;
 }   // namespace image
@@ -37,6 +42,8 @@ public:
     virtual std::shared_ptr<material::Material>            createMaterial()      = 0;
     virtual std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() = 0;
     virtual std::shared_ptr<command_buffer::CommandBuffer> getRenderingCommandBuffer() = 0;
+    virtual std::shared_ptr<mesh::TriangleMesh> createTriangleMesh() = 0;
+
     virtual bool preFrame()        = 0;
     virtual void postFrame()       = 0;
     virtual void finishRendering() = 0;

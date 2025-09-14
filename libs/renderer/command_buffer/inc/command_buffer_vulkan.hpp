@@ -5,6 +5,7 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include "renderer/command_buffer/inc/command_buffer.hpp"
+#include "renderer/utils/inc/vulkan_buffer_utils.hpp"
 
 namespace renderer {
 namespace image {
@@ -39,7 +40,13 @@ public:
         std::shared_ptr<material::Material> f_material
     ) override final;
     CommandBufferVulkan& useViewport(const ViewportInfo& f_viewportInfo) override final;
-    CommandBufferVulkan& draw(const DrawInfo& f_drawInfo) override final;
+    CommandBufferVulkan& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
+
+    CommandBufferVulkan& copyBuffer(
+        utils::VmaBuffer& f_srcBuffer,
+        utils::VmaBuffer& f_destBuffer,
+        vk::DeviceSize    f_size
+    );
 
     CommandBufferVulkan& transitionImageLayout(
         image::ImageVulkan*     f_image,

@@ -40,8 +40,11 @@ int main(int argc, const char* argv[])
         auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();
         l_material->setShader("res/shaders/slang.spv").create();
 
+        auto l_mesh = l_renderingServer.getMainRenderingDevice()->createTriangleMesh();
+        l_mesh->create();
+
         auto l_scene = std::make_shared<renderer::scene::TestScene>();
-        l_scene->setMaterial(l_material).create();
+        l_scene->setMaterial(l_material).setMesh(l_mesh).create();
 
         l_renderingServer.setScene(l_scene);
 

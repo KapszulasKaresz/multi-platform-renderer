@@ -17,11 +17,6 @@ find_package(VulkanMemoryAllocator REQUIRED)
 target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
 target_link_libraries(${RENDERER_LIB_NAME} PUBLIC GPUOpen::VulkanMemoryAllocator)
 
-#volk
-find_package(volk REQUIRED)
-target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
-target_link_libraries(${RENDERER_LIB_NAME} PUBLIC volk::volk)
-
 #vulkan
 find_package(Vulkan REQUIRED)
 target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE

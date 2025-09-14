@@ -4,6 +4,7 @@
 
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
+#include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
 #include "renderer/render_target/inc/render_target.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
@@ -65,7 +66,11 @@ CommandBufferVulkan& CommandBufferVulkan::reset()
 CommandBufferVulkan& CommandBufferVulkan::begin()
 {
     auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.begin({});
+    l_commanBuffer.begin(
+        m_rendering ? vk::CommandBufferBeginInfo{}
+                    : vk::CommandBufferBeginInfo{
+                          .flags = vk::CommandBufferUsageFlagBits::eOneTimeSubmit }
+    );
     return *this;
 }
 
@@ -215,14 +220,39 @@ CommandBufferVulkan& CommandBufferVulkan::useViewport(const ViewportInfo& f_view
     return *this;
 }
 
-CommandBufferVulkan& CommandBufferVulkan::draw(const DrawInfo& f_drawInfo)
+CommandBufferVulkan& CommandBufferVulkan::draw(std::shared_ptr<mesh::TriangleMesh> f_mesh)
+{
+    auto&                     l_commanBuffer = selectCurrentCommandBuffer();
+    mesh::TriangleMeshVulkan* l_triangleMeshVulkan =
+        dynamic_cast<mesh::TriangleMeshVulkan*>(f_mesh.get());
+
+    if (!l_triangleMeshVulkan) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::draw((...) the mesh wasn't created using a vulkan "
+            "device"
+        );
+    }
+
+    l_commanBuffer.bindVertexBuffers(
+        0, vk::Buffer(l_triangleMeshVulkan->getVertexBuffer().get()), { 0 }
+    );
+    l_commanBuffer.bindIndexBuffer(
+        vk::Buffer(l_triangleMeshVulkan->getIndexBuffer().get()), 0, vk::IndexType::eUint32
+    );
+    l_commanBuffer.drawIndexed(l_triangleMeshVulkan->getIndicieCount(), 1, 0, 0, 0);
+
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
+    utils::VmaBuffer& f_srcBuffer,
+    utils::VmaBuffer& f_destBuffer,
+    vk::DeviceSize    f_size
+)
 {
     auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.draw(
-        f_drawInfo.m_vertexCount,
-        f_drawInfo.m_instanceCount,
-        f_drawInfo.m_firstVertex,
-        f_drawInfo.m_firstInstance
+    l_commanBuffer.copyBuffer(
+        f_srcBuffer.get(), f_destBuffer.get(), vk::BufferCopy(0, 0, f_size)
     );
     return *this;
 }

@@ -3,7 +3,7 @@
 #include "renderer/command_buffer/inc/command_buffer_vulkan.hpp"
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
-#include "renderer/render_target/inc/render_target_window.hpp"
+#include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/window/inc/window.hpp"
@@ -74,6 +74,11 @@ std::shared_ptr<command_buffer::CommandBuffer>
             .create();
     }
     return m_renderingCommandBuffer;
+}
+
+std::shared_ptr<mesh::TriangleMesh> RenderingDeviceVulkan::createTriangleMesh()
+{
+    return std::make_shared<mesh::TriangleMeshVulkan>(this);
 }
 
 bool RenderingDeviceVulkan::preFrame()
@@ -211,6 +216,7 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     createRenderTargetWindow();
     createCommandPool();
     createSyncObjects();
+    createVmaAllocator();
     return *this;
 }
 
@@ -272,6 +278,17 @@ vk::raii::Device& RenderingDeviceVulkan::getLogicalDevice()
         );
     }
     return m_device;
+}
+
+VmaAllocator& RenderingDeviceVulkan::getVmaAllocator()
+{
+    if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::getVmaAllocator() device isn't valid"
+        );
+    }
+
+    return m_allocator;
 }
 
 vk::Format RenderingDeviceVulkan::getSwapchainSurfaceFormat() const
@@ -476,6 +493,24 @@ void RenderingDeviceVulkan::createSyncObjects()
             m_device, vk::FenceCreateInfo{ .flags = vk::FenceCreateFlagBits::eSignaled }
         );
     }
+}
+
+void RenderingDeviceVulkan::createVmaAllocator()
+{
+    VmaAllocatorCreateInfo l_allocatorInfo{ .physicalDevice = *m_physicalDevice,
+                                            .device         = *m_device,
+                                            .instance = *m_parentApi->getNativeHandle() };
+
+    if (vmaCreateAllocator(&l_allocatorInfo, &m_allocator) != VK_SUCCESS) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::createVmaAllocator() Failed to create VMA allocator!"
+        );
+    }
+}
+
+RenderingDeviceVulkan::~RenderingDeviceVulkan()
+{
+    vmaDestroyAllocator(m_allocator);
 }
 
 }   // namespace rendering_device
