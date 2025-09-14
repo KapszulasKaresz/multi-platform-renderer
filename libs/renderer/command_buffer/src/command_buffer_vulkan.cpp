@@ -76,8 +76,7 @@ CommandBufferVulkan& CommandBufferVulkan::end()
 }
 
 CommandBufferVulkan& CommandBufferVulkan::beginRendering(
-    std::shared_ptr<render_target::RenderTarget> f_renderTarget,
-    glm::vec4                                    f_clearColor
+    const RenderBeginInfo& f_renderBeginInfo
 )
 {
     if (m_currentRenderTarget) {
@@ -87,7 +86,7 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
         );
     }
 
-    m_currentRenderTarget = f_renderTarget;
+    m_currentRenderTarget = f_renderBeginInfo.m_renderTarget;
     image::ImageVulkan* l_imageVulkan =
         dynamic_cast<image::ImageVulkan*>(m_currentRenderTarget->getImage().get());
 
@@ -111,7 +110,10 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
     auto& l_commanBuffer = selectCurrentCommandBuffer();
 
     // Dummy stuff for now
-    vk::ClearValue l_clearColor = vk::ClearColorValue(1.0f, 0.0f, 0.0f, 1.0f);
+    auto           l_clearColorVec = f_renderBeginInfo.m_clearColor;
+    vk::ClearValue l_clearColor    = vk::ClearColorValue(
+        l_clearColorVec.x, l_clearColorVec.y, l_clearColorVec.z, l_clearColorVec.w
+    );
     vk::RenderingAttachmentInfo l_attachmentInfo = {
         .imageView   = l_imageVulkan->getImageView(),
         .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,

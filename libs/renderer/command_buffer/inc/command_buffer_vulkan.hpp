@@ -32,8 +32,7 @@ public:
     CommandBufferVulkan& begin() override final;
     CommandBufferVulkan& end() override final;
     CommandBufferVulkan& beginRendering(
-        std::shared_ptr<render_target::RenderTarget> f_renderTarget,
-        glm::vec4 f_clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+        const RenderBeginInfo& f_renderBeginInfo
     ) override final;
     CommandBufferVulkan& endRendering() override final;
 
