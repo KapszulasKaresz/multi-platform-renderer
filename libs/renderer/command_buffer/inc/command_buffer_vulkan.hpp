@@ -35,6 +35,11 @@ public:
         const RenderBeginInfo& f_renderBeginInfo
     ) override final;
     CommandBufferVulkan& endRendering() override final;
+    CommandBufferVulkan& useMaterial(
+        std::shared_ptr<material::Material> f_material
+    ) override final;
+    CommandBufferVulkan& useViewport(const ViewportInfo& f_viewportInfo) override final;
+    CommandBufferVulkan& draw(const DrawInfo& f_drawInfo) override final;
 
     CommandBufferVulkan& transitionImageLayout(
         image::ImageVulkan*     f_image,

@@ -6,6 +6,10 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
+namespace material {
+class Material;
+}   // namespace material
+
 namespace render_target {
 class RenderTarget;
 }   // namespace render_target
@@ -13,7 +17,23 @@ class RenderTarget;
 namespace command_buffer {
 struct RenderBeginInfo {
     std::shared_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
-    glm::vec4 m_clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    glm::vec4                                    m_clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
+};
+
+struct ViewportInfo {
+    glm::vec2 m_positions{ 0.0f, 0.0f };
+    glm::vec2 m_size{ 0.0f, 0.0f };
+
+    // This ignores the m_size setting and uses the currently bound rendertarget size
+    bool m_fullScreen{ false };
+};
+
+// This struct is temporary until meshes are implemented
+struct DrawInfo {
+    uint32_t m_vertexCount{ 0 };
+    uint32_t m_instanceCount{ 0 };
+    uint32_t m_firstVertex{ 0 };
+    uint32_t m_firstInstance{ 0 };
 };
 
 class CommandBuffer : public RenderResource {
@@ -24,9 +44,12 @@ public:
     virtual CommandBuffer& end()                                                    = 0;
     virtual CommandBuffer& beginRendering(const RenderBeginInfo& f_renderBeginInfo) = 0;
     virtual CommandBuffer& endRendering()                                           = 0;
+    virtual CommandBuffer& useMaterial(std::shared_ptr<material::Material> f_material) = 0;
+    virtual CommandBuffer& useViewport(const ViewportInfo& f_viewportInfo) = 0;
+    virtual CommandBuffer& draw(const DrawInfo& f_drawInfo)                = 0;
 };
 }   // namespace command_buffer
-}   // namespace  renderer
+}   // namespace renderer
 
 
 #endif

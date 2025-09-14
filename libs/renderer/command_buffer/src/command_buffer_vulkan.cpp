@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "renderer/image/inc/image_vulkan.hpp"
+#include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/render_target/inc/render_target.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
@@ -161,6 +162,68 @@ CommandBufferVulkan& CommandBufferVulkan::endRendering()
     );
 
     m_currentRenderTarget = nullptr;
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::useMaterial(
+    std::shared_ptr<material::Material> f_material
+)
+{
+    material::MaterialVulkan* l_vulkanMaterial =
+        dynamic_cast<material::MaterialVulkan*>(f_material.get());
+
+    if (!l_vulkanMaterial) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::useMaterial(...) non vulkan material provided"
+        );
+    }
+
+    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    l_commanBuffer.bindPipeline(
+        vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
+    );
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::useViewport(const ViewportInfo& f_viewportInfo)
+{
+    glm::vec2 l_size = f_viewportInfo.m_size;
+
+    if (f_viewportInfo.m_fullScreen) {
+        if (!m_currentRenderTarget) {
+            throw std::runtime_error(
+                    "CommandBufferVulkan::useViewport(...) cannot use fullscreen "
+                    "viewport without a render target bound"
+                );
+        }
+        l_size = m_currentRenderTarget->getSize();
+    }
+
+    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    l_commanBuffer.setViewport(
+        0,
+        vk::Viewport(
+            f_viewportInfo.m_positions.x,
+            f_viewportInfo.m_positions.y,
+            l_size.x,
+            l_size.y,
+            0.0f,
+            1.0f
+        )
+    );
+    l_commanBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), { l_size.x, l_size.y }));
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::draw(const DrawInfo& f_drawInfo)
+{
+    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    l_commanBuffer.draw(
+        f_drawInfo.m_vertexCount,
+        f_drawInfo.m_instanceCount,
+        f_drawInfo.m_firstVertex,
+        f_drawInfo.m_firstInstance
+    );
     return *this;
 }
 

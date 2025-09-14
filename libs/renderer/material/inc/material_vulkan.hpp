@@ -18,6 +18,8 @@ public:
 
     MaterialVulkan& create();
 
+    vk::Pipeline getPipeline();
+
 private:
     void createPipeline();
 

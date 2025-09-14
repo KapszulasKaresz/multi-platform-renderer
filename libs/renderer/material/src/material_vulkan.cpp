@@ -17,6 +17,11 @@ MaterialVulkan& MaterialVulkan::create()
     return *this;
 }
 
+vk::Pipeline MaterialVulkan::getPipeline()
+{
+    return m_graphicsPipeline;
+}
+
 void MaterialVulkan::createPipeline()
 {
     vk::raii::ShaderModule l_shaderModule =

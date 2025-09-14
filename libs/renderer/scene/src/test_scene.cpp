@@ -17,6 +17,16 @@ TestScene& TestScene::create()
     return *this;
 }
 
-void TestScene::recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer) {}
+void TestScene::recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer)
+{
+    f_commandBuffer->useMaterial(m_material);
+    f_commandBuffer->useViewport({ .m_fullScreen = true });
+    f_commandBuffer->draw(
+        { .m_vertexCount   = 3,
+          .m_instanceCount = 1,
+          .m_firstVertex   = 0,
+          .m_firstInstance = 0 }
+    );
+}
 }   // namespace scene
 }   // namespace renderer
