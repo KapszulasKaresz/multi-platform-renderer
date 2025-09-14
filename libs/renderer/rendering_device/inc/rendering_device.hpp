@@ -29,7 +29,7 @@ class Window;
 namespace rendering_device {
 class RenderingDevice : public RenderResource {
 public:
-    virtual render_target::RenderTargetWindow* getRenderTargetWindow() = 0;
+    virtual std::shared_ptr<render_target::RenderTargetWindow> getRenderTargetWindow() = 0;
 
     virtual RenderingDevice& setWindow(window::Window* f_window) = 0;
 

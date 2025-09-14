@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "renderer/image/inc/image_vulkan.hpp"
+#include "renderer/render_target/inc/render_target.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
 namespace renderer {
@@ -74,10 +75,31 @@ CommandBufferVulkan& CommandBufferVulkan::end()
     return *this;
 }
 
-CommandBufferVulkan& CommandBufferVulkan::beginRendering()
+CommandBufferVulkan& CommandBufferVulkan::beginRendering(
+    std::shared_ptr<render_target::RenderTarget> f_renderTarget,
+    glm::vec4                                    f_clearColor
+)
 {
+    if (m_currentRenderTarget) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::beginRendering(...) you need to end the previous "
+            "rendering before you can start a new one"
+        );
+    }
+
+    m_currentRenderTarget = f_renderTarget;
+    image::ImageVulkan* l_imageVulkan =
+        dynamic_cast<image::ImageVulkan*>(m_currentRenderTarget->getImage().get());
+
+    if (!l_imageVulkan) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::beginRendering(...) render target didn't provide a "
+            "vulkan image"
+        );
+    }
+
     transitionImageLayout(
-        m_parentDevice->getCurrentSwapChainImage().get(),
+        l_imageVulkan,
         vk::ImageLayout::eUndefined,
         vk::ImageLayout::eColorAttachmentOptimal,
         {},   // srcAccessMask (no need to wait for previous operations)
@@ -91,14 +113,18 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering()
     // Dummy stuff for now
     vk::ClearValue l_clearColor = vk::ClearColorValue(1.0f, 0.0f, 0.0f, 1.0f);
     vk::RenderingAttachmentInfo l_attachmentInfo = {
-        .imageView   = m_parentDevice->getCurrentSwapChainImage()->getImageView(),
+        .imageView   = l_imageVulkan->getImageView(),
         .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
         .loadOp      = vk::AttachmentLoadOp::eClear,
         .storeOp     = vk::AttachmentStoreOp::eStore,
         .clearValue  = l_clearColor
     };
+    auto l_extentSize = m_currentRenderTarget->getSize();
+
     vk::RenderingInfo l_renderingInfo = {
-        .renderArea           = { .offset = { 0, 0 }, .extent = { 100, 100 } },
+        .renderArea           = { .offset = { 0, 0 },
+                                 .extent = { static_cast<uint32_t>(l_extentSize.x),
+                                              static_cast<uint32_t>(l_extentSize.y) } },
         .layerCount           = 1,
         .colorAttachmentCount = 1,
         .pColorAttachments    = &l_attachmentInfo
@@ -110,10 +136,20 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering()
 
 CommandBufferVulkan& CommandBufferVulkan::endRendering()
 {
+    image::ImageVulkan* l_imageVulkan =
+        dynamic_cast<image::ImageVulkan*>(m_currentRenderTarget->getImage().get());
+
+    if (!l_imageVulkan) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::endRendering(...) render target didn't provide a "
+            "vulkan image"
+        );
+    }
+
     auto& l_commanBuffer = selectCurrentCommandBuffer();
     l_commanBuffer.endRendering();
     transitionImageLayout(
-        m_parentDevice->getCurrentSwapChainImage().get(),
+        l_imageVulkan,
         vk::ImageLayout::eColorAttachmentOptimal,
         vk::ImageLayout::ePresentSrcKHR,
         vk::AccessFlagBits2::eColorAttachmentWrite,           // srcAccessMask
@@ -121,6 +157,8 @@ CommandBufferVulkan& CommandBufferVulkan::endRendering()
         vk::PipelineStageFlagBits2::eColorAttachmentOutput,   // srcStage
         vk::PipelineStageFlagBits2::eBottomOfPipe             // dstStage
     );
+
+    m_currentRenderTarget = nullptr;
     return *this;
 }
 

@@ -1,5 +1,7 @@
 #ifndef RENDER_TARGET_HPP_INCLUDED
 #define RENDER_TARGET_HPP_INCLUDED
+#include <glm/glm.hpp>
+
 #include "renderer/image/inc/image.hpp"
 #include "renderer/render_resource/inc/render_resource.hpp"
 
@@ -13,6 +15,9 @@ public:
     virtual RenderTarget& create() = 0;
 
     virtual image::ImageFormat getFormat() const;
+
+    virtual std::shared_ptr<image::Image> getImage()      = 0;
+    virtual glm::ivec2                    getSize() const = 0;
 
 protected:
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };

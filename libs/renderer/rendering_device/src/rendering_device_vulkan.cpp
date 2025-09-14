@@ -17,7 +17,8 @@ RenderingDeviceVulkan::RenderingDeviceVulkan(
       m_parentApi(f_parentApi)
 {}
 
-render_target::RenderTargetWindow* RenderingDeviceVulkan::getRenderTargetWindow()
+std::shared_ptr<render_target::RenderTargetWindow>
+    RenderingDeviceVulkan::getRenderTargetWindow()
 {
     if (!isValid()) {
         throw std::runtime_error(
@@ -41,7 +42,7 @@ render_target::RenderTargetWindow* RenderingDeviceVulkan::getRenderTargetWindow(
             );
     }
 
-    return m_renderTargetWindow.get();
+    return m_renderTargetWindow;
 }
 
 std::shared_ptr<image::Image> RenderingDeviceVulkan::createImage()
@@ -281,9 +282,9 @@ vk::Format RenderingDeviceVulkan::getSwapchainSurfaceFormat() const
     return image::ImageVulkan::convertToVkFormat(m_renderTargetWindow->getFormat());
 }
 
-std::shared_ptr<image::ImageVulkan> RenderingDeviceVulkan::getCurrentSwapChainImage()
+uint32_t RenderingDeviceVulkan::getCurrentImageIndex() const
 {
-    return m_renderTargetWindow->getSwapchainImage(m_currentImageIndex);
+    return m_currentImageIndex;
 }
 
 void RenderingDeviceVulkan::createRenderTargetWindow()
@@ -291,7 +292,7 @@ void RenderingDeviceVulkan::createRenderTargetWindow()
     if (!m_window) {
         return;
     }
-    m_renderTargetWindow = std::make_unique<render_target::RenderTargetWindowVulkan>(this);
+    m_renderTargetWindow = std::make_shared<render_target::RenderTargetWindowVulkan>(this);
     m_renderTargetWindow
         ->setSurface(
             m_window->createVulkanSurface(m_parentApi->getNativeHandle()),

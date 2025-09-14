@@ -20,7 +20,9 @@ class RenderTargetWindowVulkan : public RenderTargetWindow {
 public:
     RenderTargetWindowVulkan(rendering_device::RenderingDeviceVulkan* f_parentDevice);
 
-    RenderTargetWindowVulkan& setWindow(window::Window* f_window) override final;
+    RenderTargetWindowVulkan&     setWindow(window::Window* f_window) override final;
+    std::shared_ptr<image::Image> getImage() override final;
+    glm::ivec2                    getSize() const override final;
 
     RenderTargetWindowVulkan&
         setSurface(VkSurfaceKHR f_surface, const vk::raii::Instance& f_instance);

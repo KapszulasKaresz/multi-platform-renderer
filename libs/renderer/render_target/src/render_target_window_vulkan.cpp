@@ -19,6 +19,16 @@ RenderTargetWindowVulkan& RenderTargetWindowVulkan::setWindow(window::Window* f_
     return *this;
 }
 
+std::shared_ptr<image::Image> RenderTargetWindowVulkan::getImage()
+{
+    return m_swapChainImages[m_parentDevice->getCurrentImageIndex()];
+}
+
+glm::ivec2 RenderTargetWindowVulkan::getSize() const
+{
+    return glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height);
+}
+
 RenderTargetWindowVulkan& RenderTargetWindowVulkan::setSurface(
     VkSurfaceKHR              f_surface,
     const vk::raii::Instance& f_instance

@@ -31,7 +31,10 @@ public:
     CommandBufferVulkan& reset() override final;
     CommandBufferVulkan& begin() override final;
     CommandBufferVulkan& end() override final;
-    CommandBufferVulkan& beginRendering() override final;
+    CommandBufferVulkan& beginRendering(
+        std::shared_ptr<render_target::RenderTarget> f_renderTarget,
+        glm::vec4 f_clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+    ) override final;
     CommandBufferVulkan& endRendering() override final;
 
     CommandBufferVulkan& transitionImageLayout(
@@ -53,6 +56,8 @@ protected:
     uint32_t m_bufferCount{ 1 };
 
     bool m_rendering{ false };
+
+    std::shared_ptr<render_target::RenderTarget> m_currentRenderTarget{ nullptr };
 
     rendering_device::RenderingDeviceVulkan* m_parentDevice{ nullptr };
     vk::raii::CommandBuffers                 m_commandBuffers{ nullptr };

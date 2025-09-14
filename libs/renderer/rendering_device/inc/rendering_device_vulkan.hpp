@@ -37,7 +37,8 @@ class RenderingDeviceVulkan : public RenderingDevice {
 public:
     RenderingDeviceVulkan(rendering_api::RenderingApiVulkan* f_parentApi);
 
-    render_target::RenderTargetWindow*             getRenderTargetWindow() override final;
+    std::shared_ptr<render_target::RenderTargetWindow>
+                                                   getRenderTargetWindow() override final;
     std::shared_ptr<image::Image>                  createImage() override final;
     std::shared_ptr<material::Material>            createMaterial() override final;
     std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() override final;
@@ -62,8 +63,8 @@ public:
     vk::raii::PhysicalDevice& getPhysicalDevice();
     vk::raii::Device&         getLogicalDevice();
 
-    vk::Format                          getSwapchainSurfaceFormat() const;
-    std::shared_ptr<image::ImageVulkan> getCurrentSwapChainImage();
+    vk::Format getSwapchainSurfaceFormat() const;
+    uint32_t   getCurrentImageIndex() const;
 
 private:
     void createRenderTargetWindow();
@@ -82,7 +83,7 @@ private:
     FeatureChain                   m_requiredFeatures{};
 
     window::Window*                                          m_window{ nullptr };
-    std::unique_ptr<render_target::RenderTargetWindowVulkan> m_renderTargetWindow{
+    std::shared_ptr<render_target::RenderTargetWindowVulkan> m_renderTargetWindow{
         nullptr
     };
 

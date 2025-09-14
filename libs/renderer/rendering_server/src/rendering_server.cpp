@@ -103,7 +103,9 @@ void RenderingServer::frame()
     if (l_renderingDevice->preFrame()) {
         l_commandBuffer->reset();
         l_commandBuffer->begin();
-        l_commandBuffer->beginRendering();
+        l_commandBuffer->beginRendering(
+            l_renderingDevice->getRenderTargetWindow(), glm::vec4(1.0, 0.0, 0.0, 1.0)
+        );
         m_scene->recordCommandBuffer(l_commandBuffer.get());
         l_commandBuffer->endRendering();
         l_commandBuffer->end();
