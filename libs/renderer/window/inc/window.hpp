@@ -7,7 +7,7 @@
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_raii.hpp>
 
-#include <glm/vec2.hpp>
+#include <glm/glm.hpp>
 
 #include "renderer/render_resource/inc/render_resource.hpp"
 
