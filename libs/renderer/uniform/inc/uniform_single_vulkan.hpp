@@ -1,11 +1,11 @@
 #ifndef UNIFORM_VULKAN_HPP_INCLUDED
 #define UNIFORM_VULKAN_HPP_INCLUDED
 
-#include "renderer/uniform/inc/uniform.hpp"
+#include "renderer/uniform/inc/uniform_single.hpp"
 
 namespace renderer {
 namespace uniform {
-class UniformVulkan : public Uniform {
+class UniformVulkan : public UniformSingle {
 public:
     size_t getAlignment() const override final;
 };

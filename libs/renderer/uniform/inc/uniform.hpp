@@ -30,38 +30,19 @@ enum UniformType {
     UNIFORM_TYPE_MAX
 };
 
-using UniformValue = std::variant<
-    float,
-    glm::vec2,
-    glm::vec3,
-    glm::vec4,
-    int,
-    glm::ivec2,
-    glm::ivec3,
-    glm::ivec4,
-    unsigned int,
-    glm::uvec2,
-    glm::uvec3,
-    glm::uvec4,
-    glm::mat3,
-    glm::mat4>;
-
 class Uniform : public RenderResource {
 public:
     virtual Uniform& setType(UniformType f_type);
     virtual Uniform& setName(const std::string& f_name);
     virtual Uniform& create();
 
-    template <typename T>
-    Uniform& setValue(const T& f_value);
-
     virtual size_t getSize() const;
     virtual size_t getAlignment() const = 0;
+    std::string    getName();
 
 protected:
-    UniformType  m_type;
-    std::string  m_name;
-    UniformValue m_value;
+    UniformType m_type;
+    std::string m_name;
 };
 
 }   // namespace uniform

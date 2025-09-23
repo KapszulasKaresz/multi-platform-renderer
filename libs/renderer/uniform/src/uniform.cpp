@@ -21,13 +21,6 @@ Uniform& Uniform::create()
     return *this;
 }
 
-template <typename T>
-Uniform& Uniform::setValue(const T& f_value)
-{
-    m_value = f_value;
-    return *this;
-}
-
 size_t Uniform::getSize() const
 {
     switch (m_type) {
@@ -53,6 +46,11 @@ size_t Uniform::getSize() const
 
         default:                  return 0;
     }
+}
+
+std::string Uniform::getName()
+{
+    return m_name;
 }
 
 }   // namespace uniform
