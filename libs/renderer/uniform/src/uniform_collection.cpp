@@ -5,6 +5,11 @@
 
 namespace renderer {
 namespace uniform {
+Uniform& UniformCollection::setType(UniformType f_type)
+{
+    return *this;
+}
+
 void UniformCollection::addMember(std::unique_ptr<Uniform> f_member, int f_position)
 {
     if (f_position < 0) {

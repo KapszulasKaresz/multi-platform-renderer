@@ -2,7 +2,7 @@
 
 namespace renderer {
 namespace uniform {
-size_t UniformVulkan::getAlignment() const
+size_t UniformSingleVulkan::getAlignment() const
 {
     switch (m_type) {
         case UNIFORM_TYPE_FLOAT:  return alignof(float);

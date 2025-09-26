@@ -11,10 +11,13 @@ namespace renderer {
 namespace uniform {
 class UniformCollection : public Uniform {
 public:
-    void     addMember(std::unique_ptr<Uniform> f_member, int f_position = -1);
-    Uniform* getMember(std::string_view f_name);
+    Uniform& setType(UniformType f_type) override final;
 
-private:
+    void             addMember(std::unique_ptr<Uniform> f_member, int f_position = -1);
+    Uniform*         getMember(std::string_view f_name);
+    virtual Uniform* addMember(std::string_view f_name) = 0;
+
+protected:
     std::vector<std::unique_ptr<Uniform>> m_members;
 };
 

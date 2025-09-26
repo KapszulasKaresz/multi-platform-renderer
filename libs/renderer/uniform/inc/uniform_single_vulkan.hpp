@@ -5,7 +5,7 @@
 
 namespace renderer {
 namespace uniform {
-class UniformVulkan : public UniformSingle {
+class UniformSingleVulkan : public UniformSingle {
 public:
     size_t getAlignment() const override final;
 };

@@ -1,7 +1,10 @@
 #include "renderer/material/inc/material_vulkan.hpp"
 
+#include <vector>
+
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/utils/inc/utils.hpp"
 
 namespace renderer {
@@ -93,8 +96,21 @@ void MaterialVulkan::createPipeline()
         .pDynamicStates    = l_dynamicStates.data()
     };
 
-    vk::PipelineLayoutCreateInfo l_pipelineLayoutInfo{ .setLayoutCount         = 0,
-                                                       .pushConstantRangeCount = 0 };
+    std::vector<vk::DescriptorSetLayout> l_descriptorSetLayouts;
+    for (const auto& l_uniform : m_uniformCollections) {
+        uniform::UniformCollectionVulkan* l_rawCollection =
+            dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get());
+
+        if (l_rawCollection != nullptr) {
+            l_descriptorSetLayouts.push_back(l_rawCollection->getDescriptorSetLayout());
+        }
+    }
+
+    vk::PipelineLayoutCreateInfo l_pipelineLayoutInfo{
+        .setLayoutCount         = static_cast<uint32_t>(l_descriptorSetLayouts.size()),
+        .pSetLayouts            = l_descriptorSetLayouts.data(),
+        .pushConstantRangeCount = 0
+    };
 
     m_pipelineLayout = vk::raii::PipelineLayout(
         m_parentDevice->getLogicalDevice(), l_pipelineLayoutInfo
