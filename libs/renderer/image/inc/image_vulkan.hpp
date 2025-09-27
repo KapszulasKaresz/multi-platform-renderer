@@ -24,6 +24,7 @@ public:
 
     ImageVulkan& setFormat(image::ImageFormat f_format) override final;
     ImageVulkan& setColorSpace(image::ColorSpace f_colorSpace) override final;
+    ImageVulkan& createFromFile(std::string_view f_path) override final;
 
     static vk::Format        convertToVkFormat(const ImageFormat f_format);
     static vk::ColorSpaceKHR convertToVkColorSpace(const ColorSpace f_colorSpace);

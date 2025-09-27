@@ -1,5 +1,7 @@
 #include "renderer/image/inc/image_vulkan.hpp"
 
+#include <stb_image.h>
+
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
 namespace renderer {
@@ -34,6 +36,19 @@ ImageVulkan& ImageVulkan::createFromSwapChainImage(vk::Image f_swapChainImage)
 
     m_imageView = createImageView(*m_swapchainImage, vk::ImageAspectFlagBits::eColor);
     m_valid     = true;
+    return *this;
+}
+
+ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
+{
+    if (isValid()) {
+        throw std::runtime_error(
+            "ImageVulkan::createFromFile(std::string_view f_path) you "
+            "cannot create an already created image"
+        );
+    }
+
+    m_valid = true;
     return *this;
 }
 

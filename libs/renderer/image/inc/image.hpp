@@ -1,6 +1,8 @@
 #ifndef IMAGE_HPP_INCLUDED
 #define IMAGE_HPP_INCLUDED
 
+#include <string_view>
+
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
@@ -27,6 +29,7 @@ class Image : public RenderResource {
 public:
     virtual Image& setFormat(image::ImageFormat f_format);
     virtual Image& setColorSpace(image::ColorSpace f_colorSpace);
+    virtual Image& createFromFile(std::string_view f_path) = 0;
 
     virtual Image& create() = 0;
 

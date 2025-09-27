@@ -23,3 +23,9 @@ target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE
         VULKAN_HPP_NO_STRUCT_CONSTRUCTORS)
 target_link_libraries(${RENDERER_LIB_NAME} PRIVATE ${Vulkan_LIBRARIES})
 target_include_directories(${RENDERER_LIB_NAME} PRIVATE ${Vulkan_INCLUDE_DIRS})
+
+#stb
+find_package(stb REQUIRED)
+target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE
+        STB_IMAGE_IMPLEMENTATION)
+target_link_libraries(${RENDERER_LIB_NAME} PRIVATE stb::stb)
