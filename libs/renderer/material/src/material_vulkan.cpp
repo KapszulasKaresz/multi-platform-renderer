@@ -92,7 +92,7 @@ void MaterialVulkan::createPipeline()
         .rasterizerDiscardEnable = vk::False,
         .polygonMode             = vk::PolygonMode::eFill,
         .cullMode                = vk::CullModeFlagBits::eBack,
-        .frontFace               = vk::FrontFace::eClockwise,
+        .frontFace               = vk::FrontFace::eCounterClockwise,
         .depthBiasEnable         = vk::False,
         .depthBiasSlopeFactor    = 1.0f,
         .lineWidth               = 1.0f
