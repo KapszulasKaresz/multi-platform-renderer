@@ -7,6 +7,8 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include "renderer/image/inc/image.hpp"
+#include "renderer/utils/inc/vulkan_buffer_utils.hpp"
+#include "renderer/utils/inc/vulkan_image_utils.hpp"
 
 namespace renderer {
 namespace rendering_device {
@@ -21,10 +23,10 @@ public:
 
     ImageVulkan& create() override final;
     ImageVulkan& createFromSwapChainImage(vk::Image f_swapChainImage);
+    ImageVulkan& createFromFile(std::string_view f_path) override final;
 
     ImageVulkan& setFormat(image::ImageFormat f_format) override final;
     ImageVulkan& setColorSpace(image::ColorSpace f_colorSpace) override final;
-    ImageVulkan& createFromFile(std::string_view f_path) override final;
 
     static vk::Format        convertToVkFormat(const ImageFormat f_format);
     static vk::ColorSpaceKHR convertToVkColorSpace(const ColorSpace f_colorSpace);
@@ -36,9 +38,12 @@ private:
     vk::raii::ImageView
         createImageView(vk::Image& f_image, vk::ImageAspectFlags f_aspectFlags);
 
+    void transitionImageLayout(vk::ImageLayout f_oldLayout, vk::ImageLayout f_newLayout);
+    void copyBufferToImage(utils::VmaBuffer& f_buffer, uint32_t f_width, uint32_t f_height);
+
     rendering_device::RenderingDeviceVulkan* m_parentDevice;
 
-    vk::raii::Image     m_image{ nullptr };
+    utils::VmaImage     m_image{};
     vk::raii::ImageView m_imageView{ nullptr };
 
     std::optional<vk::Image> m_swapchainImage{};

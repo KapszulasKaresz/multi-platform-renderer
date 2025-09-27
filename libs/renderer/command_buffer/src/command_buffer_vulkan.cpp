@@ -282,6 +282,31 @@ CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
     return *this;
 }
 
+CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
+    utils::VmaBuffer& f_srcBuffer,
+    utils::VmaImage&  f_destImage,
+    uint32_t          f_width,
+    uint32_t          f_height
+)
+{
+    auto&               l_commanBuffer = selectCurrentCommandBuffer();
+    vk::BufferImageCopy l_region{
+        .bufferOffset      = 0,
+        .bufferRowLength   = 0,
+        .bufferImageHeight = 0,
+        .imageSubresource  = { vk::ImageAspectFlagBits::eColor, 0, 0, 1 },
+        .imageOffset       = { 0, 0, 0 },
+        .imageExtent       = { f_width, f_height, 1 }
+    };
+    l_commanBuffer.copyBufferToImage(
+        f_srcBuffer.get(),
+        f_destImage.get(),
+        vk::ImageLayout::eTransferDstOptimal,
+        { l_region }
+    );
+    return *this;
+}
+
 CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
     image::ImageVulkan*     f_image,
     vk::ImageLayout         f_old_layout,

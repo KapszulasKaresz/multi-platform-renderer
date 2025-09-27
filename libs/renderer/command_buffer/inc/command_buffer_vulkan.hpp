@@ -6,6 +6,7 @@
 
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/utils/inc/vulkan_buffer_utils.hpp"
+#include "renderer/utils/inc/vulkan_image_utils.hpp"
 
 namespace renderer {
 namespace image {
@@ -47,6 +48,13 @@ public:
         utils::VmaBuffer& f_srcBuffer,
         utils::VmaBuffer& f_destBuffer,
         vk::DeviceSize    f_size
+    );
+
+    CommandBufferVulkan& copyBuffer(
+        utils::VmaBuffer& f_srcBuffer,
+        utils::VmaImage&  f_destImage,
+        uint32_t          f_width,
+        uint32_t          f_height
     );
 
     CommandBufferVulkan& transitionImageLayout(
