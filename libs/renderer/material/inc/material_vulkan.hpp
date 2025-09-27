@@ -1,6 +1,8 @@
 #ifndef MATERIAL_VULKAN_HPP_INCLUDED
 #define MATERIAL_VULKAN_HPP_INCLUDED
 
+#include <vector>
+
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
@@ -18,7 +20,11 @@ public:
 
     MaterialVulkan& create();
 
-    vk::Pipeline getPipeline();
+    vk::Pipeline                   getPipeline();
+    vk::PipelineLayout             getPipelineLayout();
+    std::vector<vk::DescriptorSet> getDescriptorSets();
+
+    void updateUniforms();
 
 private:
     void createPipeline();

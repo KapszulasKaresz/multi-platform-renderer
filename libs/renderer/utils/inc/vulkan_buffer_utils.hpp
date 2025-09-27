@@ -17,7 +17,7 @@ public:
         VkDeviceSize                       f_size,
         vk::Flags<vk::BufferUsageFlagBits> f_usage,
         VmaMemoryUsage                     f_memoryUsage,
-        VmaAllocationCreateFlags           f_flags
+        VmaAllocationCreateFlags           f_flags = 0
     );
 
     ~VmaBuffer();

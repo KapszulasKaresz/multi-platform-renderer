@@ -7,9 +7,14 @@ bool RenderingDevice::isValid()
     return m_valid;
 }
 
-uint32_t RenderingDevice::getCurrentFrame()
+uint32_t RenderingDevice::getCurrentFrame() const
 {
     return m_currentFrame;
+}
+
+int RenderingDevice::getMaxFramesInFlight() const
+{
+    return m_maxFramesInFlight;
 }
 
 }   // namespace rendering_device

@@ -4,11 +4,16 @@
 
 #include <vulkan/vulkan.hpp>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "renderer/material/inc/material.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/scene/inc/test_scene.hpp"
+#include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_single.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 
 int main(int argc, const char* argv[])
@@ -37,8 +42,42 @@ int main(int argc, const char* argv[])
             .setWindow(std::move(l_window))
             .create();
 
+        auto l_uniformCollection =
+            l_renderingServer.getMainRenderingDevice()->createUniformCollection();
+        l_uniformCollection->addMember("model")
+            ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+            .setValue(
+                rotate(glm::mat4(1.0f), glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f))
+            )
+            .create();
+
+        l_uniformCollection->addMember("view")
+            ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+            .setValue(lookAt(
+                glm::vec3(2.0f, 2.0f, 2.0f),
+                glm::vec3(0.0f, 0.0f, 0.0f),
+                glm::vec3(0.0f, 0.0f, 1.0f)
+            ))
+            .create();
+
+        l_uniformCollection->addMember("proj")
+            ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+            .setValue(
+                glm::perspective(
+                    glm::radians(45.0f),
+                    static_cast<float>(1'600) / static_cast<float>(1'200),
+                    0.1f,
+                    10.0f
+                )
+            )
+            .create();
+
+        l_uniformCollection->create();
+
         auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();
-        l_material->setShader("res/shaders/slang.spv").create();
+        l_material->setShader("res/shaders/slang.spv")
+            .addUniformCollection(l_uniformCollection)
+            .create();
 
         auto l_mesh = l_renderingServer.getMainRenderingDevice()->createTriangleMesh();
         l_mesh->create();

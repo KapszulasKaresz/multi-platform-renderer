@@ -48,9 +48,14 @@ size_t Uniform::getSize() const
     }
 }
 
-std::string Uniform::getName()
+std::string Uniform::getName() const
 {
     return m_name;
+}
+
+UniformType Uniform::getType() const
+{
+    return m_type;
 }
 
 }   // namespace uniform

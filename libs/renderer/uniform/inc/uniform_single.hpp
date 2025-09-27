@@ -24,8 +24,13 @@ using UniformValue = std::variant<
 
 class UniformSingle : public Uniform {
 public:
-    template <typename T>
-    UniformSingle& setValue(const T& f_value);
+    UniformSingle& setType(UniformType f_type) override;
+    UniformSingle& setName(const std::string& f_name) override;
+
+    UniformSingle& setValue(const UniformValue& f_value);
+
+    UniformValue& getValue();
+    void*         valueAsVoid();
 
 protected:
     UniformValue m_value;

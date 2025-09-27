@@ -6,6 +6,10 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
+namespace uniform {
+class UniformCollection;
+}   // namespace uniform
+
 namespace command_buffer {
 class CommandBuffer;
 }   // namespace command_buffer
@@ -42,13 +46,15 @@ public:
     virtual std::shared_ptr<material::Material>            createMaterial()      = 0;
     virtual std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() = 0;
     virtual std::shared_ptr<command_buffer::CommandBuffer> getRenderingCommandBuffer() = 0;
-    virtual std::shared_ptr<mesh::TriangleMesh> createTriangleMesh() = 0;
+    virtual std::shared_ptr<mesh::TriangleMesh>         createTriangleMesh()      = 0;
+    virtual std::shared_ptr<uniform::UniformCollection> createUniformCollection() = 0;
 
     virtual bool preFrame()        = 0;
     virtual void postFrame()       = 0;
     virtual void finishRendering() = 0;
 
-    uint32_t getCurrentFrame();
+    uint32_t getCurrentFrame() const;
+    int      getMaxFramesInFlight() const;
 
     virtual bool isValid();
 

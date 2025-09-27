@@ -2,10 +2,12 @@
 #define UNIFORM_COLLECTION_HPP_INCLUDED
 
 #include <memory>
+#include <string>
 #include <string_view>
 #include <vector>
 
 #include "renderer/uniform/inc/uniform.hpp"
+#include "renderer/uniform/inc/uniform_single.hpp"
 
 namespace renderer {
 namespace uniform {
@@ -13,9 +15,11 @@ class UniformCollection : public Uniform {
 public:
     Uniform& setType(UniformType f_type) override final;
 
-    void             addMember(std::unique_ptr<Uniform> f_member, int f_position = -1);
-    Uniform*         getMember(std::string_view f_name);
-    virtual Uniform* addMember(std::string_view f_name) = 0;
+    void     addMember(std::unique_ptr<Uniform> f_member, int f_position = -1);
+    Uniform* getMember(std::string_view f_name);
+    virtual UniformSingle* addMember(const std::string& f_name) = 0;
+
+    virtual void update() = 0;
 
 protected:
     std::vector<std::unique_ptr<Uniform>> m_members;

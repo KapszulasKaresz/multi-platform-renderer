@@ -26,6 +26,33 @@ vk::Pipeline MaterialVulkan::getPipeline()
     return m_graphicsPipeline;
 }
 
+vk::PipelineLayout MaterialVulkan::getPipelineLayout()
+{
+    return m_pipelineLayout;
+}
+
+std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
+{
+    std::vector<vk::DescriptorSet> l_ret;
+    for (const auto& l_uniform : m_uniformCollections) {
+        uniform::UniformCollectionVulkan* l_rawCollection =
+            dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get());
+
+        if (l_rawCollection != nullptr) {
+            l_ret.push_back(l_rawCollection->getDescriptorSet());
+        }
+    }
+
+    return l_ret;
+}
+
+void MaterialVulkan::updateUniforms()
+{
+    for (const auto& l_uniform : m_uniformCollections) {
+        l_uniform->update();
+    }
+}
+
 void MaterialVulkan::createPipeline()
 {
     vk::raii::ShaderModule l_shaderModule =

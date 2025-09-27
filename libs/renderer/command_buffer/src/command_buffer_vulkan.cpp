@@ -198,10 +198,19 @@ CommandBufferVulkan& CommandBufferVulkan::useMaterial(
             "CommandBufferVulkan::useMaterial(...) non vulkan material provided"
         );
     }
+    l_vulkanMaterial->updateUniforms();
 
     auto& l_commanBuffer = selectCurrentCommandBuffer();
     l_commanBuffer.bindPipeline(
         vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
+    );
+
+    l_commanBuffer.bindDescriptorSets(
+        vk::PipelineBindPoint::eGraphics,
+        l_vulkanMaterial->getPipelineLayout(),
+        0,
+        l_vulkanMaterial->getDescriptorSets(),
+        nullptr
     );
     return *this;
 }

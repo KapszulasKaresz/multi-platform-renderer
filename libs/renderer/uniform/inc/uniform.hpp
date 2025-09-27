@@ -38,7 +38,8 @@ public:
 
     virtual size_t getSize() const;
     virtual size_t getAlignment() const = 0;
-    std::string    getName();
+    std::string    getName() const;
+    UniformType    getType() const;
 
 protected:
     UniformType m_type;

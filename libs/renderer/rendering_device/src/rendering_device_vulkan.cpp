@@ -6,6 +6,7 @@
 #include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/window/inc/window.hpp"
 
 namespace renderer {
@@ -88,6 +89,12 @@ std::shared_ptr<command_buffer::CommandBuffer>
 std::shared_ptr<mesh::TriangleMesh> RenderingDeviceVulkan::createTriangleMesh()
 {
     return std::make_shared<mesh::TriangleMeshVulkan>(this);
+}
+
+std::shared_ptr<uniform::UniformCollection>
+    RenderingDeviceVulkan::createUniformCollection()
+{
+    return std::make_shared<uniform::UniformCollectionVulkan>(this);
 }
 
 bool RenderingDeviceVulkan::preFrame()
@@ -223,6 +230,7 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     createLogicalDevice();
     m_valid = true;
     createRenderTargetWindow();
+    createDescriptorPool();
     createCommandPool();
     createSyncObjects();
     createVmaAllocator();
@@ -287,6 +295,16 @@ vk::raii::Device& RenderingDeviceVulkan::getLogicalDevice()
         );
     }
     return m_device;
+}
+
+vk::raii::DescriptorPool& RenderingDeviceVulkan::getDescriptorPool()
+{
+    if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::getDescriptorPool() device isn't valid"
+        );
+    }
+    return m_descriptorPool;
 }
 
 VmaAllocator& RenderingDeviceVulkan::getVmaAllocator()
@@ -515,6 +533,20 @@ void RenderingDeviceVulkan::createVmaAllocator()
             "RenderingDeviceVulkan::createVmaAllocator() Failed to create VMA allocator!"
         );
     }
+}
+
+void RenderingDeviceVulkan::createDescriptorPool()
+{
+    vk::DescriptorPoolSize l_poolSize(
+        vk::DescriptorType::eUniformBuffer, m_maxFramesInFlight * 2
+    );
+    vk::DescriptorPoolCreateInfo l_poolInfo{
+        .flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+        .maxSets       = m_maxDescriptorSets * m_maxFramesInFlight,
+        .poolSizeCount = 1,
+        .pPoolSizes    = &l_poolSize
+    };
+    m_descriptorPool = vk::raii::DescriptorPool(m_device, l_poolInfo);
 }
 
 RenderingDeviceVulkan::~RenderingDeviceVulkan()

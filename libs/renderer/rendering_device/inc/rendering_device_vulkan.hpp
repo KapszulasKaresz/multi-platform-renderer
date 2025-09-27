@@ -48,6 +48,7 @@ public:
     std::shared_ptr<command_buffer::CommandBuffer>
                                         getRenderingCommandBuffer() override final;
     std::shared_ptr<mesh::TriangleMesh> createTriangleMesh() override final;
+    std::shared_ptr<uniform::UniformCollection> createUniformCollection() override final;
 
     bool preFrame() override final;
     void postFrame() override final;
@@ -67,6 +68,7 @@ public:
 
     vk::raii::PhysicalDevice& getPhysicalDevice();
     vk::raii::Device&         getLogicalDevice();
+    vk::raii::DescriptorPool& getDescriptorPool();
     VmaAllocator&             getVmaAllocator();
 
     vk::Format getSwapchainSurfaceFormat() const;
@@ -81,11 +83,13 @@ private:
     void createCommandPool();
     void createSyncObjects();
     void createVmaAllocator();
+    void createDescriptorPool();
 
     rendering_api::RenderingApiVulkan* m_parentApi{ nullptr };
     vk::raii::PhysicalDevice           m_physicalDevice{ nullptr };
     vk::raii::Device                   m_device{ nullptr };
     vk::raii::Queue                    m_queue{ nullptr };
+    vk::raii::DescriptorPool           m_descriptorPool{ nullptr };
 
     std::vector<const char*>       m_requiredExtension{};
     std::vector<vk::QueueFlagBits> m_requiredQueues{};
@@ -108,6 +112,8 @@ private:
     uint32_t m_currentImageIndex{ 0 };
 
     VmaAllocator m_allocator{};
+
+    uint32_t m_maxDescriptorSets{ 1'000 };
 };
 
 }   // namespace rendering_device
