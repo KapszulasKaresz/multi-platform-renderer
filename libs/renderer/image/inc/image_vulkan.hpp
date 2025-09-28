@@ -27,6 +27,10 @@ public:
 
     ImageVulkan& setFormat(image::ImageFormat f_format) override final;
     ImageVulkan& setColorSpace(image::ColorSpace f_colorSpace) override final;
+    ImageVulkan& setShaderStageDestination(
+        vk::PipelineStageFlagBits2 f_shaderStageDestination
+    );
+    vk::PipelineStageFlagBits2 getShaderStageDestination() const;
 
     static vk::Format        convertToVkFormat(const ImageFormat f_format);
     static vk::ColorSpaceKHR convertToVkColorSpace(const ColorSpace f_colorSpace);
@@ -45,6 +49,10 @@ private:
 
     utils::VmaImage     m_image{};
     vk::raii::ImageView m_imageView{ nullptr };
+
+    vk::PipelineStageFlagBits2 m_shaderStageDestination{
+        vk::PipelineStageFlagBits2::eFragmentShader
+    };
 
     std::optional<vk::Image> m_swapchainImage{};
 };

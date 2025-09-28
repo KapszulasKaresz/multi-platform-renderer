@@ -1,6 +1,9 @@
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 
+#include <stdexcept>
+
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
+#include "renderer/texture/inc/texture_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_single_vulkan.hpp"
 
 namespace renderer {
@@ -44,12 +47,6 @@ UniformCollectionVulkan& UniformCollectionVulkan::setShaderstage(
     return *this;
 }
 
-UniformCollectionVulkan& UniformCollectionVulkan::setBinding(uint32_t f_binding)
-{
-    m_binding = f_binding;
-    return *this;
-}
-
 UniformCollectionVulkan& UniformCollectionVulkan::create()
 {
     Uniform::create();
@@ -70,13 +67,99 @@ vk::raii::DescriptorSet& UniformCollectionVulkan::getDescriptorSet()
     return m_descriptorSets[m_parentDevice->getCurrentFrame()];
 }
 
+namespace {
+inline vk::ShaderStageFlags convertPipelineToShaderStage(
+    vk::PipelineStageFlags2 f_pipelineStages
+)
+{
+    vk::ShaderStageFlags shaderStages{};
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eVertexShader) {
+        shaderStages |= vk::ShaderStageFlagBits::eVertex;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eTessellationControlShader) {
+        shaderStages |= vk::ShaderStageFlagBits::eTessellationControl;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eTessellationEvaluationShader) {
+        shaderStages |= vk::ShaderStageFlagBits::eTessellationEvaluation;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eGeometryShader) {
+        shaderStages |= vk::ShaderStageFlagBits::eGeometry;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eFragmentShader) {
+        shaderStages |= vk::ShaderStageFlagBits::eFragment;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eComputeShader) {
+        shaderStages |= vk::ShaderStageFlagBits::eCompute;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eTaskShaderEXT) {
+        shaderStages |= vk::ShaderStageFlagBits::eTaskEXT;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eMeshShaderEXT) {
+        shaderStages |= vk::ShaderStageFlagBits::eMeshEXT;
+    }
+
+    if (f_pipelineStages & vk::PipelineStageFlagBits2::eRayTracingShaderKHR) {
+        // Vulkan groups all ray tracing stages under this pipeline flag.
+        // To be safe, expose all ray tracing shader stages.
+        shaderStages |= vk::ShaderStageFlagBits::eRaygenKHR
+                      | vk::ShaderStageFlagBits::eAnyHitKHR
+                      | vk::ShaderStageFlagBits::eClosestHitKHR
+                      | vk::ShaderStageFlagBits::eMissKHR
+                      | vk::ShaderStageFlagBits::eIntersectionKHR
+                      | vk::ShaderStageFlagBits::eCallableKHR;
+    }
+
+    return shaderStages;
+}
+}   // namespace
+
 void UniformCollectionVulkan::createDescriptorSetLayout()
 {
-    vk::DescriptorSetLayoutBinding l_layoutBinding(
-        0, vk::DescriptorType::eUniformBuffer, 1, m_shaderStage, nullptr
+    std::vector<vk::DescriptorSetLayoutBinding> l_layoutBindings;
+
+    l_layoutBindings.push_back(
+        vk::DescriptorSetLayoutBinding(
+            0, vk::DescriptorType::eUniformBuffer, 1, m_shaderStage, nullptr
+        )
     );
-    vk::DescriptorSetLayoutCreateInfo l_layoutInfo{ .bindingCount = 1,
-                                                    .pBindings    = &l_layoutBinding };
+
+    for (int i = 1; i <= m_textures.size(); i++) {
+        texture::TextureVulkan* l_rawVulkanTexture =
+            dynamic_cast<texture::TextureVulkan*>(m_textures[i - 1].get());
+
+        if (l_rawVulkanTexture == nullptr) {
+            std::
+                runtime_error(
+                    "UniformCollectionVulkan::createDescriptorSetLayout() texture isn't "
+                    "a " "vulkan texture"
+                );
+        }
+
+        l_layoutBindings.push_back(
+            vk::DescriptorSetLayoutBinding(
+                i,
+                vk::DescriptorType::eCombinedImageSampler,
+                1,
+                convertPipelineToShaderStage(
+                    l_rawVulkanTexture->getShaderStageDestination()
+                ),
+                nullptr
+            )
+        );
+    }
+
+    vk::DescriptorSetLayoutCreateInfo l_layoutInfo{
+        .bindingCount = static_cast<uint32_t>(l_layoutBindings.size()),
+        .pBindings    = l_layoutBindings.data()
+    };
     m_descriptorSetLayout =
         vk::raii::DescriptorSetLayout(m_parentDevice->getLogicalDevice(), l_layoutInfo);
 }
@@ -123,14 +206,46 @@ void UniformCollectionVulkan::createDescriptorSets()
         vk::DescriptorBufferInfo l_bufferInfo{ .buffer = m_uniformBuffers[i].get(),
                                                .offset = 0,
                                                .range  = m_layout.m_structSize };
-        vk::WriteDescriptorSet   l_descriptorWrite{ .dstSet     = m_descriptorSets[i],
-                                                    .dstBinding = m_binding,
-                                                    .dstArrayElement = 0,
-                                                    .descriptorCount = 1,
-                                                    .descriptorType =
-                                                      vk::DescriptorType::eUniformBuffer,
-                                                    .pBufferInfo = &l_bufferInfo };
-        m_parentDevice->getLogicalDevice().updateDescriptorSets(l_descriptorWrite, {});
+
+        std::vector<vk::WriteDescriptorSet> l_descriptorWrites;
+        l_descriptorWrites.push_back(
+            vk::WriteDescriptorSet{ .dstSet          = m_descriptorSets[i],
+                                    .dstBinding      = 0,
+                                    .dstArrayElement = 0,
+                                    .descriptorCount = 1,
+                                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
+                                    .pBufferInfo     = &l_bufferInfo }
+        );
+
+        for (int j = 0; j < m_textures.size(); j++) {
+            texture::TextureVulkan* l_rawVulkanTexture =
+                dynamic_cast<texture::TextureVulkan*>(m_textures[j].get());
+
+            if (l_rawVulkanTexture == nullptr) {
+                std::runtime_error(
+                    "UniformCollectionVulkan::createDescriptorSets() texture isn't a "
+                    "vulkan texture"
+                );
+            }
+
+            vk::DescriptorImageInfo l_imageInfo(
+                l_rawVulkanTexture->getSampler(),
+                l_rawVulkanTexture->getImageView(),
+                vk::ImageLayout::eShaderReadOnlyOptimal
+            );
+
+            l_descriptorWrites.push_back(
+                vk::WriteDescriptorSet{
+                    .dstSet          = m_descriptorSets[i],
+                    .dstBinding      = static_cast<uint32_t>(j + 1),
+                    .dstArrayElement = 0,
+                    .descriptorCount = 1,
+                    .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+                    .pImageInfo      = &l_imageInfo }
+            );
+        }
+
+        m_parentDevice->getLogicalDevice().updateDescriptorSets(l_descriptorWrites, {});
     }
 }
 

@@ -26,7 +26,8 @@ public:
     UniformSingle* addMember(const std::string& f_name) override final;
 
     UniformCollectionVulkan& setShaderstage(vk::ShaderStageFlagBits f_shaderStage);
-    UniformCollectionVulkan& setBinding(uint32_t f_binding);
+    UniformCollectionVulkan& setSet(uint32_t f_set);
+    uint32_t                 getSet() const;
 
     UniformCollectionVulkan& create() override final;
 
@@ -48,8 +49,7 @@ private:
 
     rendering_device::RenderingDeviceVulkan* m_parentDevice{ nullptr };
 
-    uint32_t                      m_binding{ 0 };
-    vk::ShaderStageFlagBits       m_shaderStage{ vk::ShaderStageFlagBits::eVertex };
+    vk::ShaderStageFlagBits       m_shaderStage{ vk::ShaderStageFlagBits::eAllGraphics };
     vk::raii::DescriptorSetLayout m_descriptorSetLayout{ nullptr };
 
     std::vector<vk::raii::DescriptorSet> m_descriptorSets{};

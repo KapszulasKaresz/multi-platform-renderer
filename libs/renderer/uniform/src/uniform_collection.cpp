@@ -38,6 +38,39 @@ Uniform* UniformCollection::getMember(std::string_view f_name)
     throw std::runtime_error(" UniformCollection::getMember(...) Uniform not found.");
 }
 
+void UniformCollection::addTexture(
+    std::shared_ptr<texture::Texture> f_textrue,
+    int                               f_position
+)
+{
+    if (f_position < 0) {
+        m_textures.push_back(std::move(f_textrue));
+    }
+    else {
+        if (m_textures.size() <= f_position) {
+            m_textures.resize(f_position - 1);
+        }
+        m_textures[f_position] = std::move(f_textrue);
+    }
+}
+
+texture::Texture* UniformCollection::getTexture(std::string_view f_name)
+{
+    auto l_it = std::find_if(
+        m_textures.begin(),
+        m_textures.end(),
+        [&](const std::shared_ptr<texture::Texture>& f_texture) {
+            return f_texture->getName() == f_name;
+        }
+    );
+
+    if (l_it != m_textures.end()) {
+        return l_it->get();
+    }
+
+    throw std::runtime_error("UniformCollection::getTexture(...) texture not found.");
+}
+
 
 }   // namespace uniform
 }   // namespace renderer

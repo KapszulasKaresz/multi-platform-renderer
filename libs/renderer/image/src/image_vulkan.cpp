@@ -125,6 +125,19 @@ ImageVulkan& ImageVulkan::setColorSpace(image::ColorSpace f_colorSpace)
     return *this;
 }
 
+ImageVulkan& ImageVulkan::setShaderStageDestination(
+    vk::PipelineStageFlagBits2 f_shaderStageDestination
+)
+{
+    m_shaderStageDestination = f_shaderStageDestination;
+    return *this;
+}
+
+vk::PipelineStageFlagBits2 ImageVulkan::getShaderStageDestination() const
+{
+    return m_shaderStageDestination;
+}
+
 vk::Format ImageVulkan::convertToVkFormat(const ImageFormat f_format)
 {
     switch (f_format) {
@@ -228,7 +241,7 @@ void ImageVulkan::transitionImageLayout(
         l_dstAccessMask = vk::AccessFlagBits2::eShaderRead;
 
         l_sourceStage      = vk::PipelineStageFlagBits2::eTransfer;
-        l_destinationStage = vk::PipelineStageFlagBits2::eFragmentShader;
+        l_destinationStage = m_shaderStageDestination;
     }
     else {
         throw std::runtime_error(

@@ -42,6 +42,12 @@ int main(int argc, const char* argv[])
             .setWindow(std::move(l_window))
             .create();
 
+        auto l_image = l_renderingServer.getMainRenderingDevice()->createImage();
+        l_image->createFromFile("res/textures/test_texture.png");
+
+        auto l_texture = l_renderingServer.getMainRenderingDevice()->createTexture();
+        l_texture->setImage(l_image).create();
+
         auto l_uniformCollection =
             l_renderingServer.getMainRenderingDevice()->createUniformCollection();
         l_uniformCollection->addMember("model")
@@ -72,6 +78,7 @@ int main(int argc, const char* argv[])
             .setValue(l_proj)
             .create();
 
+        l_uniformCollection->addTexture(l_texture);
         l_uniformCollection->setName("Camera").create();
 
         auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();

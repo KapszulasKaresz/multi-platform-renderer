@@ -1,5 +1,7 @@
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
+#include <array>
+
 #include "renderer/command_buffer/inc/command_buffer_vulkan.hpp"
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
@@ -543,14 +545,17 @@ void RenderingDeviceVulkan::createVmaAllocator()
 
 void RenderingDeviceVulkan::createDescriptorPool()
 {
-    vk::DescriptorPoolSize l_poolSize(
-        vk::DescriptorType::eUniformBuffer, m_maxFramesInFlight * 2
-    );
+    std::array l_poolSize = {
+        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, m_maxFramesInFlight * 2),
+        vk::DescriptorPoolSize(
+            vk::DescriptorType::eCombinedImageSampler, m_maxFramesInFlight * 2
+        )
+    };
     vk::DescriptorPoolCreateInfo l_poolInfo{
         .flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
         .maxSets       = m_maxDescriptorSets * m_maxFramesInFlight,
-        .poolSizeCount = 1,
-        .pPoolSizes    = &l_poolSize
+        .poolSizeCount = l_poolSize.size(),
+        .pPoolSizes    = l_poolSize.data()
     };
     m_descriptorPool = vk::raii::DescriptorPool(m_device, l_poolInfo);
 }
