@@ -37,7 +37,8 @@ std::shared_ptr<rendering_device::RenderingDevice>
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
-                    {}, // vk::PhysicalDeviceFeatures2
+                    { .features = { .samplerAnisotropy =
+                                        true } }, // vk::PhysicalDeviceFeatures2
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
                     {}, // vk::PhysicalDeviceVulkan12Features
@@ -79,7 +80,8 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
-                    {}, // vk::PhysicalDeviceFeatures2
+                    { .features = { .samplerAnisotropy =
+                                        true } }, // vk::PhysicalDeviceFeatures2
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
                     {}, // vk::PhysicalDeviceVulkan12Features

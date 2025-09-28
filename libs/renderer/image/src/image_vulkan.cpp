@@ -106,6 +106,9 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
         vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal
     );
 
+    auto l_image = vk::Image(m_image.get());
+    m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eColor);
+
     m_valid = true;
     return *this;
 }

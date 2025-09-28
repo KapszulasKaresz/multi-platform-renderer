@@ -19,7 +19,6 @@ class Material;
 }   // namespace material
 
 namespace mesh {
-
 class TriangleMesh;
 }   // namespace mesh
 
@@ -30,6 +29,10 @@ class Image;
 namespace render_target {
 class RenderTargetWindow;
 }   // namespace render_target
+
+namespace texture {
+class Texture;
+}   // namespace texture
 
 namespace window {
 class Window;
@@ -48,6 +51,7 @@ public:
     virtual std::shared_ptr<command_buffer::CommandBuffer> getRenderingCommandBuffer() = 0;
     virtual std::shared_ptr<mesh::TriangleMesh>         createTriangleMesh()      = 0;
     virtual std::shared_ptr<uniform::UniformCollection> createUniformCollection() = 0;
+    virtual std::shared_ptr<texture::Texture>           createTexture()           = 0;
 
     virtual bool preFrame()        = 0;
     virtual void postFrame()       = 0;

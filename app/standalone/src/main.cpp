@@ -54,7 +54,7 @@ int main(int argc, const char* argv[])
         l_uniformCollection->addMember("view")
             ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
             .setValue(lookAt(
-                glm::vec3(2.0f, 2.0f, 2.0f),
+                glm::vec3(2.0f, 2.0f, 3.0f),
                 glm::vec3(0.0f, 0.0f, 0.0f),
                 glm::vec3(0.0f, 0.0f, 1.0f)
             ))
@@ -75,7 +75,7 @@ int main(int argc, const char* argv[])
         l_uniformCollection->setName("Camera").create();
 
         auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();
-        l_material->setShader("res/shaders/slang.spv")
+        l_material->setShader("res/shaders/shader.spv")
             .addUniformCollection(l_uniformCollection)
             .create();
 
