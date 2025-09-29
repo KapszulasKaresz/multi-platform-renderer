@@ -56,9 +56,6 @@ VmaBuffer::VmaBuffer(VmaBuffer&& f_other) noexcept
 VmaBuffer& VmaBuffer::operator=(VmaBuffer&& f_other) noexcept
 {
     if (this != &f_other) {
-        if (m_buffer != VK_NULL_HANDLE) {
-            vmaDestroyBuffer(m_allocator, m_buffer, m_allocation);
-        }
         m_allocator          = f_other.m_allocator;
         m_buffer             = f_other.m_buffer;
         m_allocation         = f_other.m_allocation;

@@ -323,7 +323,7 @@ VmaAllocator& RenderingDeviceVulkan::getVmaAllocator()
         );
     }
 
-    return m_allocator;
+    return m_allocator.get();
 }
 
 vk::Format RenderingDeviceVulkan::getSwapchainSurfaceFormat() const
@@ -537,11 +537,7 @@ void RenderingDeviceVulkan::createVmaAllocator()
                                             .device         = *m_device,
                                             .instance = *m_parentApi->getNativeHandle() };
 
-    if (vmaCreateAllocator(&l_allocatorInfo, &m_allocator) != VK_SUCCESS) {
-        throw std::runtime_error(
-            "RenderingDeviceVulkan::createVmaAllocator() Failed to create VMA allocator!"
-        );
-    }
+    m_allocator = utils::RaiiVmaAllocator(l_allocatorInfo);
 }
 
 void RenderingDeviceVulkan::createDescriptorPool()
@@ -561,10 +557,7 @@ void RenderingDeviceVulkan::createDescriptorPool()
     m_descriptorPool = vk::raii::DescriptorPool(m_device, l_poolInfo);
 }
 
-RenderingDeviceVulkan::~RenderingDeviceVulkan()
-{
-    vmaDestroyAllocator(m_allocator);
-}
+RenderingDeviceVulkan::~RenderingDeviceVulkan() {}
 
 }   // namespace rendering_device
 }   // namespace renderer

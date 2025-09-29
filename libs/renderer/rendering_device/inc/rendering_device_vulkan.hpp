@@ -6,9 +6,8 @@
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
 
-#include <vk_mem_alloc.h>
-
 #include "renderer/rendering_device/inc/rendering_device.hpp"
+#include "renderer/utils/inc/raii_vma_allocator.hpp"
 
 namespace renderer {
 namespace command_buffer {
@@ -90,6 +89,7 @@ private:
     vk::raii::PhysicalDevice           m_physicalDevice{ nullptr };
     vk::raii::Device                   m_device{ nullptr };
     vk::raii::Queue                    m_queue{ nullptr };
+    utils::RaiiVmaAllocator            m_allocator{};
     vk::raii::DescriptorPool           m_descriptorPool{ nullptr };
 
     std::vector<const char*>       m_requiredExtension{};
@@ -111,8 +111,6 @@ private:
     uint32_t m_queueIndex{ UINT32_MAX };
     uint32_t m_semaphoreIndex{ 0 };
     uint32_t m_currentImageIndex{ 0 };
-
-    VmaAllocator m_allocator{};
 
     uint32_t m_maxDescriptorSets{ 1'000 };
 };

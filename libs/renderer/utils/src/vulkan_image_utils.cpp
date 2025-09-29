@@ -52,9 +52,6 @@ VmaImage::VmaImage(VmaImage&& f_other) noexcept
 VmaImage& VmaImage::operator=(VmaImage&& f_other) noexcept
 {
     if (this != &f_other) {
-        if (m_image != VK_NULL_HANDLE) {
-            vmaDestroyImage(m_allocator, m_image, m_allocation);
-        }
         m_allocator          = f_other.m_allocator;
         m_image              = f_other.m_image;
         m_allocation         = f_other.m_allocation;
