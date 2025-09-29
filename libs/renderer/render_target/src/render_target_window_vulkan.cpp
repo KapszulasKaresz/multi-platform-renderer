@@ -24,6 +24,11 @@ std::shared_ptr<image::Image> RenderTargetWindowVulkan::getImage()
     return m_swapChainImages[m_parentDevice->getCurrentImageIndex()];
 }
 
+std::shared_ptr<image::Image> RenderTargetWindowVulkan::getDepthImage()
+{
+    return m_depthImage;
+}
+
 glm::ivec2 RenderTargetWindowVulkan::getSize() const
 {
     return glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height);
@@ -56,6 +61,9 @@ RenderTargetWindowVulkan& RenderTargetWindowVulkan::setDirectRenderTarget(
 RenderTargetWindowVulkan& RenderTargetWindowVulkan::create()
 {
     createSwapChain();
+    if (m_useDepthBuffer) {
+        createDepthResources();
+    }
     m_valid = true;
     return *this;
 }
@@ -73,6 +81,9 @@ void RenderTargetWindowVulkan::recreateSwapChain()
 
     cleanupSwapChain();
     createSwapChain();
+    if (m_useDepthBuffer) {
+        createDepthResources();
+    }
 }
 
 vk::raii::SwapchainKHR& RenderTargetWindowVulkan::acquireSwapchain()
@@ -133,6 +144,7 @@ void RenderTargetWindowVulkan::createSwapChain()
         if (l_image) {
             l_image->setFormat(m_format)
                 .setColorSpace(m_colorSpace)
+                .setSize(glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height))
                 .createFromSwapChainImage(l_rawImage);
             m_swapChainImages.push_back(l_image);
         }
@@ -143,6 +155,16 @@ void RenderTargetWindowVulkan::cleanupSwapChain()
 {
     m_swapChainImages.clear();
     m_swapChain = nullptr;
+}
+
+void RenderTargetWindowVulkan::createDepthResources()
+{
+    m_depthImage =
+        std::dynamic_pointer_cast<image::ImageVulkan>(m_parentDevice->createImage());
+    m_depthImage->setFormat(image::IMAGE_FORMAT_DEPTH)
+        .setColorSpace(image::COLOR_SPACE_LINEAR)
+        .setSize(glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height))
+        .createEmptyImage();
 }
 
 vk::Extent2D RenderTargetWindowVulkan::chooseSwapExtent(

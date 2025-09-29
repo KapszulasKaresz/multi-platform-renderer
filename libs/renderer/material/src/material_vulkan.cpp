@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
@@ -116,7 +117,16 @@ void MaterialVulkan::createPipeline()
                                                                &l_colorBlendAttachment };
 
     std::vector l_dynamicStates = { vk::DynamicState::eViewport,
-                                    vk::DynamicState::eScissor };
+                                    vk::DynamicState::eScissor,
+                                    vk::DynamicState::eDepthTestEnable };
+
+    vk::PipelineDepthStencilStateCreateInfo l_depthStencil{
+        .depthTestEnable       = vk::True,
+        .depthWriteEnable      = vk::True,
+        .depthCompareOp        = vk::CompareOp::eLess,
+        .depthBoundsTestEnable = vk::False,
+        .stencilTestEnable     = vk::False
+    };
 
     vk::PipelineDynamicStateCreateInfo l_dynamicState{
         .dynamicStateCount = static_cast<uint32_t>(l_dynamicStates.size()),
@@ -146,7 +156,10 @@ void MaterialVulkan::createPipeline()
     auto l_colorAttachmentFormat = m_parentDevice->getSwapchainSurfaceFormat();
 
     vk::PipelineRenderingCreateInfo l_pipelineRenderingCreateInfo{
-        .colorAttachmentCount = 1, .pColorAttachmentFormats = &l_colorAttachmentFormat
+        .colorAttachmentCount    = 1,
+        .pColorAttachmentFormats = &l_colorAttachmentFormat,
+        .depthAttachmentFormat =
+            image::ImageVulkan::findDepthFormat(m_parentDevice->getPhysicalDevice())
     };
     vk::GraphicsPipelineCreateInfo l_pipelineInfo{
         .pNext               = &l_pipelineRenderingCreateInfo,
@@ -157,6 +170,7 @@ void MaterialVulkan::createPipeline()
         .pViewportState      = &l_viewportState,
         .pRasterizationState = &l_rasterizer,
         .pMultisampleState   = &l_multisampling,
+        .pDepthStencilState  = &l_depthStencil,
         .pColorBlendState    = &l_colorBlending,
         .pDynamicState       = &l_dynamicState,
         .layout              = m_pipelineLayout,

@@ -3,6 +3,8 @@
 
 #include <string_view>
 
+#include <glm/glm.hpp>
+
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
@@ -16,6 +18,7 @@ enum ImageFormat {
     IMAGE_FORMAT_RGB8_SRGB,
     IMAGE_FORMAT_BGRA8,
     IMAGE_FORMAT_BGRA8_SRGB,
+    IMAGE_FORMAT_DEPTH,
     IMAGE_FORMAT_MAX
 };
 
@@ -29,13 +32,21 @@ class Image : public RenderResource {
 public:
     virtual Image& setFormat(image::ImageFormat f_format);
     virtual Image& setColorSpace(image::ColorSpace f_colorSpace);
+    virtual Image& setSize(const glm::ivec2& f_size);
+    virtual Image& setWidth(int f_width);
+    virtual Image& setHeight(int f_height);
     virtual Image& createFromFile(std::string_view f_path) = 0;
+    virtual Image& createEmptyImage()                      = 0;
 
     virtual Image& create() = 0;
 
 protected:
+    bool isDepthImage() const;
+
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
     image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };
+
+    glm::ivec2 m_size;
 };
 
 }   // namespace image

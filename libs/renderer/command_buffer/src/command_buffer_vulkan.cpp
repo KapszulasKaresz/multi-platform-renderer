@@ -131,12 +131,65 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
 
     auto& l_commanBuffer = selectCurrentCommandBuffer();
 
+    vk::RenderingAttachmentInfo l_depthAttachmentInfo;
+
+    if (m_currentRenderTarget->isDepthBufferEnabled()) {
+        image::ImageVulkan* l_depthImageVulkan = dynamic_cast<image::ImageVulkan*>(
+            m_currentRenderTarget->getDepthImage().get()
+        );
+
+        if (!l_depthImageVulkan) {
+            throw std::
+                runtime_error(
+                    "CommandBufferVulkan::beginRendering(...) render target didn't "
+                    "provide a vulkan depth image"
+                );
+        }
+
+        vk::ImageMemoryBarrier2 l_depthBarrier = {
+            .srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe,
+            .srcAccessMask = {},
+            .dstStageMask  = vk::PipelineStageFlagBits2::eEarlyFragmentTests
+                          | vk::PipelineStageFlagBits2::eLateFragmentTests,
+            .dstAccessMask = vk::AccessFlagBits2::eDepthStencilAttachmentRead
+                           | vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            .oldLayout           = vk::ImageLayout::eUndefined,
+            .newLayout           = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image               = l_depthImageVulkan->getImage(),
+            .subresourceRange    = { .aspectMask     = vk::ImageAspectFlagBits::eDepth,
+                              .baseMipLevel   = 0,
+                              .levelCount     = 1,
+                              .baseArrayLayer = 0,
+                              .layerCount     = 1 }
+        };
+        vk::DependencyInfo l_depthDependencyInfo = { .dependencyFlags         = {},
+                                                     .imageMemoryBarrierCount = 1,
+                                                     .pImageMemoryBarriers =
+                                                         &l_depthBarrier };
+        l_commanBuffer.pipelineBarrier2(l_depthDependencyInfo);
+
+        vk::ClearValue l_clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
+
+        l_depthAttachmentInfo = { .imageView = l_depthImageVulkan->getImageView(),
+                                  .imageLayout =
+                                      vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                  .loadOp     = vk::AttachmentLoadOp::eClear,
+                                  .storeOp    = vk::AttachmentStoreOp::eDontCare,
+                                  .clearValue = l_clearDepth };
+        l_commanBuffer.setDepthTestEnable(true);
+    }
+    else {
+        l_commanBuffer.setDepthTestEnable(false);
+    }
+
     // Dummy stuff for now
     auto           l_clearColorVec = f_renderBeginInfo.m_clearColor;
     vk::ClearValue l_clearColor    = vk::ClearColorValue(
         l_clearColorVec.x, l_clearColorVec.y, l_clearColorVec.z, l_clearColorVec.w
     );
-    vk::RenderingAttachmentInfo l_attachmentInfo = {
+    vk::RenderingAttachmentInfo l_colorAttachmentInfo = {
         .imageView   = l_imageVulkan->getImageView(),
         .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
         .loadOp      = vk::AttachmentLoadOp::eClear,
@@ -151,7 +204,10 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
                                               static_cast<uint32_t>(l_extentSize.y) } },
         .layerCount           = 1,
         .colorAttachmentCount = 1,
-        .pColorAttachments    = &l_attachmentInfo
+        .pColorAttachments    = &l_colorAttachmentInfo,
+        .pDepthAttachment     = m_currentRenderTarget->isDepthBufferEnabled()
+                                  ? &l_depthAttachmentInfo
+                                  : nullptr
     };
     l_commanBuffer.beginRendering(l_renderingInfo);
 

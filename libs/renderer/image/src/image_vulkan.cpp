@@ -35,7 +35,7 @@ ImageVulkan& ImageVulkan::createFromSwapChainImage(vk::Image f_swapChainImage)
     }
 
     m_swapchainImage = f_swapChainImage;
-
+    m_vkFormat       = convertToVkFormat(m_format);
     m_imageView = createImageView(*m_swapchainImage, vk::ImageAspectFlagBits::eColor);
     m_valid     = true;
     return *this;
@@ -75,10 +75,14 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
     stbi_image_free(l_pixels);
 
 
-    m_format = IMAGE_FORMAT_RGBA8_SRGB;
+    m_format   = IMAGE_FORMAT_RGBA8_SRGB;
+    m_vkFormat = convertToVkFormat(m_format);
+    m_size.x   = l_texWidth;
+    m_size.y   = l_texHeight;
+
     vk::ImageCreateInfo l_imageCreateInfo{
         .imageType   = vk::ImageType::e2D,
-        .format      = convertToVkFormat(m_format),
+        .format      = m_vkFormat,
         .extent      = { .width  = static_cast<uint32_t>(l_texWidth),
                         .height = static_cast<uint32_t>(l_texHeight),
                         .depth  = 1 },
@@ -113,6 +117,38 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
     return *this;
 }
 
+ImageVulkan& ImageVulkan::createEmptyImage()
+{
+    m_vkFormat = isDepthImage() ? findDepthFormat(m_parentDevice->getPhysicalDevice())
+                                : convertToVkFormat(m_format);
+
+    vk::ImageCreateInfo l_imageCreateInfo{
+        .imageType   = vk::ImageType::e2D,
+        .format      = m_vkFormat,
+        .extent      = { .width  = static_cast<uint32_t>(m_size.x),
+                        .height = static_cast<uint32_t>(m_size.y),
+                        .depth  = 1 },
+        .mipLevels   = 1,
+        .arrayLayers = 1,
+        .samples     = vk::SampleCountFlagBits::e1,
+        .tiling      = vk::ImageTiling::eOptimal,
+        .usage       = isDepthImage() ? vk::ImageUsageFlagBits::eDepthStencilAttachment
+                                      : vk::ImageUsageFlagBits::eTransferDst
+                                      | vk::ImageUsageFlagBits::eSampled,
+    };
+
+    m_image = utils::VmaImage(
+        m_parentDevice->getVmaAllocator(),
+        l_imageCreateInfo,
+        VMA_MEMORY_USAGE_AUTO,
+        VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT
+    );
+
+    auto l_image = vk::Image(m_image.get());
+    m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eDepth);
+    return *this;
+}
+
 ImageVulkan& ImageVulkan::setFormat(image::ImageFormat f_format)
 {
     Image::setFormat(f_format);
@@ -122,6 +158,12 @@ ImageVulkan& ImageVulkan::setFormat(image::ImageFormat f_format)
 ImageVulkan& ImageVulkan::setColorSpace(image::ColorSpace f_colorSpace)
 {
     Image::setColorSpace(f_colorSpace);
+    return *this;
+}
+
+ImageVulkan& ImageVulkan::setSize(const glm::ivec2& f_size)
+{
+    Image::setSize(f_size);
     return *this;
 }
 
@@ -207,7 +249,7 @@ vk::raii::ImageView
     vk::ImageViewCreateInfo l_imageViewCreateInfo{
         .image            = f_image,
         .viewType         = vk::ImageViewType::e2D,
-        .format           = convertToVkFormat(m_format),
+        .format           = m_vkFormat,
         .subresourceRange = { f_aspectFlags, 0, 1, 0, 1 }
     };
 
@@ -281,6 +323,42 @@ void ImageVulkan::copyBufferToImage(
     l_commandBufferVulkan->copyBuffer(f_buffer, m_image, f_width, f_height);
     l_commandBufferVulkan->end();
     l_commandBufferVulkan->submit();
+}
+
+vk::Format ImageVulkan::findDepthFormat(vk::PhysicalDevice f_physicalDevice)
+{
+    return findSupportedFormat(
+        { vk::Format::eD32Sfloat,
+          vk::Format::eD32SfloatS8Uint,
+          vk::Format::eD24UnormS8Uint },
+        vk::ImageTiling::eOptimal,
+        vk::FormatFeatureFlagBits::eDepthStencilAttachment,
+        f_physicalDevice
+    );
+}
+
+vk::Format ImageVulkan::findSupportedFormat(
+    const std::vector<vk::Format>& f_candidates,
+    vk::ImageTiling                f_tiling,
+    vk::FormatFeatureFlags         f_features,
+    vk::PhysicalDevice             f_physicalDevice
+)
+{
+    auto l_formatIt = std::ranges::find_if(f_candidates, [&](const auto f_format) {
+        vk::FormatProperties l_props = f_physicalDevice.getFormatProperties(f_format);
+        return (
+            ((f_tiling == vk::ImageTiling::eLinear)
+             && ((l_props.linearTilingFeatures & f_features) == f_features))
+            || ((f_tiling == vk::ImageTiling::eOptimal)
+                && ((l_props.optimalTilingFeatures & f_features) == f_features))
+        );
+    });
+    if (l_formatIt == f_candidates.end()) {
+        throw std::runtime_error(
+            "ImageVulkan::findSupportedFormat(...) failed to find supported format!"
+        );
+    }
+    return *l_formatIt;
 }
 
 }   // namespace image

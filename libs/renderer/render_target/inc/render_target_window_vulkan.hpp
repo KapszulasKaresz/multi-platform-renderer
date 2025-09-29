@@ -22,6 +22,7 @@ public:
 
     RenderTargetWindowVulkan&     setWindow(window::Window* f_window) override final;
     std::shared_ptr<image::Image> getImage() override final;
+    std::shared_ptr<image::Image> getDepthImage() override final;
     glm::ivec2                    getSize() const override final;
 
     RenderTargetWindowVulkan&
@@ -41,6 +42,8 @@ public:
 private:
     void createSwapChain();
     void cleanupSwapChain();
+
+    void createDepthResources();
 
     vk::Extent2D chooseSwapExtent(const vk::SurfaceCapabilitiesKHR& f_capabilities);
     vk::SurfaceFormatKHR chooseSwapSurfaceFormat(
@@ -62,6 +65,7 @@ private:
     vk::Extent2D                                     m_swapChainExtent{};
     vk::SurfaceFormatKHR                             m_swapChainSurfaceFormat{};
     std::vector<std::shared_ptr<image::ImageVulkan>> m_swapChainImages{};
+    std::shared_ptr<image::ImageVulkan>              m_depthImage{ nullptr };
 };
 
 }   // namespace render_target

@@ -237,11 +237,11 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     pickPhysicalDevice();
     createLogicalDevice();
     m_valid = true;
+    createVmaAllocator();
     createRenderTargetWindow();
     createDescriptorPool();
     createCommandPool();
     createSyncObjects();
-    createVmaAllocator();
     return *this;
 }
 
@@ -353,6 +353,7 @@ void RenderingDeviceVulkan::createRenderTargetWindow()
         .setWindow(m_window)
         .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8_SRGB)
         .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
+        .setDepthBuffer(true)
         .create();
 }
 

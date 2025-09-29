@@ -25,12 +25,31 @@ RenderTarget& RenderTarget::setColorSpace(image::ColorSpace f_colorSpace)
         throw std::
             runtime_error(
                 "RenderTarget::setColorSpace(image::ColorSpace f_colorSpace) you cannot "
-                "set " "color space on an already created target"
+                "set color space on an already created target"
             );
     }
 
     m_colorSpace = f_colorSpace;
     return *this;
+}
+
+RenderTarget& RenderTarget::setDepthBuffer(bool f_useDepthBuffer)
+{
+    if (isValid()) {
+        throw std::
+            runtime_error(
+                "RenderTarget::setDepthBuffer(bool f_useDepthBuffer) you cannot enable "
+                "depth " "buffer once render target is created"
+            );
+    }
+
+    m_useDepthBuffer = f_useDepthBuffer;
+    return *this;
+}
+
+bool RenderTarget::isDepthBufferEnabled() const
+{
+    return m_useDepthBuffer;
 }
 
 image::ImageFormat RenderTarget::getFormat() const
