@@ -85,6 +85,8 @@ private:
     void createVmaAllocator();
     void createDescriptorPool();
 
+    vk::SampleCountFlagBits getMaxUsableSampleCount();
+
     rendering_api::RenderingApiVulkan* m_parentApi{ nullptr };
     vk::raii::PhysicalDevice           m_physicalDevice{ nullptr };
     vk::raii::Device                   m_device{ nullptr };
@@ -113,6 +115,8 @@ private:
     uint32_t m_currentImageIndex{ 0 };
 
     uint32_t m_maxDescriptorSets{ 1'000 };
+
+    vk::SampleCountFlagBits m_msaaSamples{ vk::SampleCountFlagBits::e1 };
 };
 
 }   // namespace rendering_device

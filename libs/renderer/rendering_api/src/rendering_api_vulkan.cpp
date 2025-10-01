@@ -49,6 +49,7 @@ std::shared_ptr<rendering_device::RenderingDevice>
                           true }  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
         }
             )
+            .setTargetMSAASamples(8)   // TODO making this a setting
             .create();
 
         m_mainRenderingDevice = l_renderingDevice;
@@ -93,6 +94,7 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
         }
             )
             .setWindow(f_window)
+            .setTargetMSAASamples(8)   // TODO making this a setting
             .create();
 
         m_mainRenderingDevice = l_renderingDevice;

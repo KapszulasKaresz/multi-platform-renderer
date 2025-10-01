@@ -64,7 +64,8 @@ public:
         vk::AccessFlags2        f_src_access_mask,
         vk::AccessFlags2        f_dst_access_mask,
         vk::PipelineStageFlags2 f_src_stage_mask,
-        vk::PipelineStageFlags2 f_dst_stage_mask
+        vk::PipelineStageFlags2 f_dst_stage_mask,
+        vk::ImageAspectFlags    f_aspect_mask = vk::ImageAspectFlagBits::eColor
     );
 
     CommandBufferVulkan& blitImage(image::ImageVulkan* f_image);

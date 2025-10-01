@@ -144,11 +144,11 @@ ImageVulkan& ImageVulkan::createEmptyImage()
                         .depth  = 1 },
         .mipLevels   = 1,
         .arrayLayers = 1,
-        .samples     = vk::SampleCountFlagBits::e1,
+        .samples     = static_cast<vk::SampleCountFlagBits>(m_samples),
         .tiling      = vk::ImageTiling::eOptimal,
         .usage       = isDepthImage() ? vk::ImageUsageFlagBits::eDepthStencilAttachment
-                                      : vk::ImageUsageFlagBits::eTransferDst
-                                      | vk::ImageUsageFlagBits::eSampled,
+                                      : vk::ImageUsageFlagBits::eTransientAttachment
+                                      | vk::ImageUsageFlagBits::eColorAttachment,
     };
 
     m_image = utils::VmaImage(
@@ -159,7 +159,10 @@ ImageVulkan& ImageVulkan::createEmptyImage()
     );
 
     auto l_image = vk::Image(m_image.get());
-    m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eDepth);
+    m_imageView  = createImageView(
+        l_image,
+        isDepthImage() ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor
+    );
     return *this;
 }
 
@@ -192,6 +195,12 @@ ImageVulkan& ImageVulkan::setShaderStageDestination(
 vk::PipelineStageFlagBits2 ImageVulkan::getShaderStageDestination() const
 {
     return m_shaderStageDestination;
+}
+
+ImageVulkan& ImageVulkan::setSampleCount(uint32_t f_samples)
+{
+    m_samples = f_samples;
+    return *this;
 }
 
 vk::Format ImageVulkan::convertToVkFormat(const ImageFormat f_format)

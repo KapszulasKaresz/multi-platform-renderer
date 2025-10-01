@@ -6,6 +6,7 @@
 #include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
 #include "renderer/render_target/inc/render_target.hpp"
+#include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
 namespace renderer {
@@ -107,10 +108,34 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
             "rendering before you can start a new one"
         );
     }
-
     m_currentRenderTarget = f_renderBeginInfo.m_renderTarget;
-    image::ImageVulkan* l_imageVulkan =
-        dynamic_cast<image::ImageVulkan*>(m_currentRenderTarget->getImage().get());
+
+    render_target::RenderTargetWindowVulkan* l_curentRenderTargetWindowVulkan =
+        dynamic_cast<render_target::RenderTargetWindowVulkan*>(
+            m_currentRenderTarget.get()
+        );
+
+    if (!l_curentRenderTargetWindowVulkan) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::beginRendering(...) only RenderTargetWindowVulkan "
+            "supported atm"
+        );
+    }
+
+    image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
+        l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
+    );
+
+    if (!l_swapChainImageVulkan) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::beginRendering(...) render target didn't provide a "
+            "vulkan swapchain image"
+        );
+    }
+
+    image::ImageVulkan* l_imageVulkan = dynamic_cast<image::ImageVulkan*>(
+        l_curentRenderTargetWindowVulkan->getImage().get()
+    );
 
     if (!l_imageVulkan) {
         throw std::runtime_error(
@@ -120,13 +145,25 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
     }
 
     transitionImageLayout(
-        l_imageVulkan,
+        l_swapChainImageVulkan,
         vk::ImageLayout::eUndefined,
         vk::ImageLayout::eColorAttachmentOptimal,
         {},   // srcAccessMask (no need to wait for previous operations)
-        vk::AccessFlagBits2::eColorAttachmentWrite,          // dstAccessMask
-        vk::PipelineStageFlagBits2::eTopOfPipe,              // srcStage
-        vk::PipelineStageFlagBits2::eColorAttachmentOutput   // dstStage
+        vk::AccessFlagBits2::eColorAttachmentWrite,           // dstAccessMask
+        vk::PipelineStageFlagBits2::eTopOfPipe,               // srcStage
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,   // dstStage
+        vk::ImageAspectFlagBits::eColor
+    );
+
+    transitionImageLayout(
+        l_imageVulkan,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        {},
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::PipelineStageFlagBits2::eTopOfPipe,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::ImageAspectFlagBits::eColor
     );
 
     auto& l_commanBuffer = selectCurrentCommandBuffer();
@@ -146,29 +183,17 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
                 );
         }
 
-        vk::ImageMemoryBarrier2 l_depthBarrier = {
-            .srcStageMask  = vk::PipelineStageFlagBits2::eTopOfPipe,
-            .srcAccessMask = {},
-            .dstStageMask  = vk::PipelineStageFlagBits2::eEarlyFragmentTests
-                          | vk::PipelineStageFlagBits2::eLateFragmentTests,
-            .dstAccessMask = vk::AccessFlagBits2::eDepthStencilAttachmentRead
-                           | vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-            .oldLayout           = vk::ImageLayout::eUndefined,
-            .newLayout           = vk::ImageLayout::eDepthStencilAttachmentOptimal,
-            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-            .image               = l_depthImageVulkan->getImage(),
-            .subresourceRange    = { .aspectMask     = vk::ImageAspectFlagBits::eDepth,
-                              .baseMipLevel   = 0,
-                              .levelCount     = 1,
-                              .baseArrayLayer = 0,
-                              .layerCount     = 1 }
-        };
-        vk::DependencyInfo l_depthDependencyInfo = { .dependencyFlags         = {},
-                                                     .imageMemoryBarrierCount = 1,
-                                                     .pImageMemoryBarriers =
-                                                         &l_depthBarrier };
-        l_commanBuffer.pipelineBarrier2(l_depthDependencyInfo);
+        // Transition the depth image to DEPTH_ATTACHMENT_OPTIMAL
+        transitionImageLayout(
+            l_depthImageVulkan,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eDepthAttachmentOptimal,
+            {},
+            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            vk::PipelineStageFlagBits2::eTopOfPipe,
+            vk::PipelineStageFlagBits2::eEarlyFragmentTests,
+            vk::ImageAspectFlagBits::eDepth
+        );
 
         vk::ClearValue l_clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
 
@@ -190,11 +215,16 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
         l_clearColorVec.x, l_clearColorVec.y, l_clearColorVec.z, l_clearColorVec.w
     );
     vk::RenderingAttachmentInfo l_colorAttachmentInfo = {
-        .imageView   = l_imageVulkan->getImageView(),
-        .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
-        .loadOp      = vk::AttachmentLoadOp::eClear,
-        .storeOp     = vk::AttachmentStoreOp::eStore,
-        .clearValue  = l_clearColor
+        .imageView          = l_imageVulkan->getImageView(),
+        .imageLayout        = vk::ImageLayout::eColorAttachmentOptimal,
+        .resolveMode        = m_parentDevice->getMaxMSAASamples() == 1
+                                ? vk::ResolveModeFlagBits::eNone
+                                : vk::ResolveModeFlagBits::eAverage,
+        .resolveImageView   = l_swapChainImageVulkan->getImageView(),
+        .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+        .loadOp             = vk::AttachmentLoadOp::eClear,
+        .storeOp            = vk::AttachmentStoreOp::eStore,
+        .clearValue         = l_clearColor
     };
     auto l_extentSize = m_currentRenderTarget->getSize();
 
@@ -216,10 +246,23 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
 
 CommandBufferVulkan& CommandBufferVulkan::endRendering()
 {
-    image::ImageVulkan* l_imageVulkan =
-        dynamic_cast<image::ImageVulkan*>(m_currentRenderTarget->getImage().get());
+    render_target::RenderTargetWindowVulkan* l_curentRenderTargetWindowVulkan =
+        dynamic_cast<render_target::RenderTargetWindowVulkan*>(
+            m_currentRenderTarget.get()
+        );
 
-    if (!l_imageVulkan) {
+    if (!l_curentRenderTargetWindowVulkan) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::endRendering(...) only RenderTargetWindowVulkan "
+            "supported atm"
+        );
+    }
+
+    image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
+        l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
+    );
+
+    if (!l_swapChainImageVulkan) {
         throw std::runtime_error(
             "CommandBufferVulkan::endRendering(...) render target didn't provide a "
             "vulkan image"
@@ -229,13 +272,14 @@ CommandBufferVulkan& CommandBufferVulkan::endRendering()
     auto& l_commanBuffer = selectCurrentCommandBuffer();
     l_commanBuffer.endRendering();
     transitionImageLayout(
-        l_imageVulkan,
+        l_swapChainImageVulkan,
         vk::ImageLayout::eColorAttachmentOptimal,
         vk::ImageLayout::ePresentSrcKHR,
         vk::AccessFlagBits2::eColorAttachmentWrite,           // srcAccessMask
         {},                                                   // dstAccessMask
         vk::PipelineStageFlagBits2::eColorAttachmentOutput,   // srcStage
-        vk::PipelineStageFlagBits2::eBottomOfPipe             // dstStage
+        vk::PipelineStageFlagBits2::eBottomOfPipe,            // dstStage
+        vk::ImageAspectFlagBits::eColor
     );
 
     m_currentRenderTarget = nullptr;
@@ -370,7 +414,8 @@ CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
     vk::AccessFlags2        f_src_access_mask,
     vk::AccessFlags2        f_dst_access_mask,
     vk::PipelineStageFlags2 f_src_stage_mask,
-    vk::PipelineStageFlags2 f_dst_stage_mask
+    vk::PipelineStageFlags2 f_dst_stage_mask,
+    vk::ImageAspectFlags    f_aspect_mask
 )
 {
     auto& l_commandBuffer = selectCurrentCommandBuffer();
@@ -385,7 +430,7 @@ CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .image               = f_image->getImage(),
-        .subresourceRange    = { .aspectMask     = vk::ImageAspectFlagBits::eColor,
+        .subresourceRange    = { .aspectMask     = f_aspect_mask,
                                 .baseMipLevel   = 0,
                                 .levelCount     = f_image->getMipLevels(),
                                 .baseArrayLayer = 0,

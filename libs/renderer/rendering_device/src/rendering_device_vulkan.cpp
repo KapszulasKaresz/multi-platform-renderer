@@ -444,6 +444,15 @@ void RenderingDeviceVulkan::pickPhysicalDevice()
             "RenderingDeviceVulkan::pickPhysicalDevice() failed to find a suitable GPU!"
         );
     }
+
+    auto l_msaaSamples = getMaxUsableSampleCount();
+    if (m_MaxMSAASamples > static_cast<uint32_t>(l_msaaSamples)) {
+        m_MaxMSAASamples = static_cast<uint32_t>(l_msaaSamples);
+        m_msaaSamples    = l_msaaSamples;
+    }
+    else {
+        m_msaaSamples = l_msaaSamples;
+    }
 }
 
 void RenderingDeviceVulkan::createLogicalDevice()
@@ -555,6 +564,36 @@ void RenderingDeviceVulkan::createDescriptorPool()
         .pPoolSizes    = l_poolSize.data()
     };
     m_descriptorPool = vk::raii::DescriptorPool(m_device, l_poolInfo);
+}
+
+vk::SampleCountFlagBits RenderingDeviceVulkan::getMaxUsableSampleCount()
+{
+    vk::PhysicalDeviceProperties l_physicalDeviceProperties =
+        m_physicalDevice.getProperties();
+
+    vk::SampleCountFlags l_counts =
+        l_physicalDeviceProperties.limits.framebufferColorSampleCounts
+        & l_physicalDeviceProperties.limits.framebufferDepthSampleCounts;
+    if (l_counts & vk::SampleCountFlagBits::e64) {
+        return vk::SampleCountFlagBits::e64;
+    }
+    if (l_counts & vk::SampleCountFlagBits::e32) {
+        return vk::SampleCountFlagBits::e32;
+    }
+    if (l_counts & vk::SampleCountFlagBits::e16) {
+        return vk::SampleCountFlagBits::e16;
+    }
+    if (l_counts & vk::SampleCountFlagBits::e8) {
+        return vk::SampleCountFlagBits::e8;
+    }
+    if (l_counts & vk::SampleCountFlagBits::e4) {
+        return vk::SampleCountFlagBits::e4;
+    }
+    if (l_counts & vk::SampleCountFlagBits::e2) {
+        return vk::SampleCountFlagBits::e2;
+    }
+
+    return vk::SampleCountFlagBits::e1;
 }
 
 RenderingDeviceVulkan::~RenderingDeviceVulkan() {}

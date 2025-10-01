@@ -44,6 +44,8 @@ public:
     virtual std::shared_ptr<render_target::RenderTargetWindow> getRenderTargetWindow() = 0;
 
     virtual RenderingDevice& setWindow(window::Window* f_window) = 0;
+    virtual RenderingDevice& setTargetMSAASamples(uint32_t f_sampleCount);
+    virtual RenderingDevice& create() = 0;
 
     virtual std::shared_ptr<image::Image>                  createImage()         = 0;
     virtual std::shared_ptr<material::Material>            createMaterial()      = 0;
@@ -59,12 +61,12 @@ public:
 
     uint32_t getCurrentFrame() const;
     int      getMaxFramesInFlight() const;
-
-    virtual bool isValid();
+    uint32_t getMaxMSAASamples();
 
 protected:
     int      m_maxFramesInFlight{ 2 };
     uint32_t m_currentFrame{ 0 };
+    uint32_t m_MaxMSAASamples{ 1 };
 };
 
 }   // namespace rendering_device

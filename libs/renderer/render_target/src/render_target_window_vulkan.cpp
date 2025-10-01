@@ -21,6 +21,11 @@ RenderTargetWindowVulkan& RenderTargetWindowVulkan::setWindow(window::Window* f_
 
 std::shared_ptr<image::Image> RenderTargetWindowVulkan::getImage()
 {
+    return m_colorImage;
+}
+
+std::shared_ptr<image::ImageVulkan> RenderTargetWindowVulkan::getSwapChainImage()
+{
     return m_swapChainImages[m_parentDevice->getCurrentImageIndex()];
 }
 
@@ -61,6 +66,7 @@ RenderTargetWindowVulkan& RenderTargetWindowVulkan::setDirectRenderTarget(
 RenderTargetWindowVulkan& RenderTargetWindowVulkan::create()
 {
     createSwapChain();
+    createColorResources();
     if (m_useDepthBuffer) {
         createDepthResources();
     }
@@ -81,6 +87,7 @@ void RenderTargetWindowVulkan::recreateSwapChain()
 
     cleanupSwapChain();
     createSwapChain();
+    createColorResources();
     if (m_useDepthBuffer) {
         createDepthResources();
     }
@@ -157,6 +164,18 @@ void RenderTargetWindowVulkan::cleanupSwapChain()
     m_swapChain = nullptr;
 }
 
+void RenderTargetWindowVulkan::createColorResources()
+{
+    m_colorImage =
+        std::dynamic_pointer_cast<image::ImageVulkan>(m_parentDevice->createImage());
+
+    m_colorImage->setFormat(m_format)
+        .setColorSpace(m_colorSpace)
+        .setSize(glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height))
+        .setSampleCount(m_parentDevice->getMaxMSAASamples())
+        .createEmptyImage();
+}
+
 void RenderTargetWindowVulkan::createDepthResources()
 {
     m_depthImage =
@@ -164,6 +183,7 @@ void RenderTargetWindowVulkan::createDepthResources()
     m_depthImage->setFormat(image::IMAGE_FORMAT_DEPTH)
         .setColorSpace(image::COLOR_SPACE_LINEAR)
         .setSize(glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height))
+        .setSampleCount(m_parentDevice->getMaxMSAASamples())
         .createEmptyImage();
 }
 
