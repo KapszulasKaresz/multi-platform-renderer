@@ -67,6 +67,8 @@ public:
         vk::PipelineStageFlags2 f_dst_stage_mask
     );
 
+    CommandBufferVulkan& blitImage(image::ImageVulkan* f_image);
+
     vk::raii::CommandBuffers& getNativeHandle();
 
 protected:

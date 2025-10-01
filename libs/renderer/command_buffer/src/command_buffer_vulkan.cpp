@@ -373,9 +373,8 @@ CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
     vk::PipelineStageFlags2 f_dst_stage_mask
 )
 {
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
 
-    // TODO once there are images with mip levels extend this function
     vk::ImageMemoryBarrier2 l_barrier = {
         .srcStageMask        = f_src_stage_mask,
         .srcAccessMask       = f_src_access_mask,
@@ -388,14 +387,116 @@ CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
         .image               = f_image->getImage(),
         .subresourceRange    = { .aspectMask     = vk::ImageAspectFlagBits::eColor,
                                 .baseMipLevel   = 0,
-                                .levelCount     = 1,
+                                .levelCount     = f_image->getMipLevels(),
                                 .baseArrayLayer = 0,
                                 .layerCount     = 1 }
     };
     vk::DependencyInfo l_dependency_info = { .dependencyFlags         = {},
                                              .imageMemoryBarrierCount = 1,
                                              .pImageMemoryBarriers    = &l_barrier };
-    l_commanBuffer.pipelineBarrier2(l_dependency_info);
+    l_commandBuffer.pipelineBarrier2(l_dependency_info);
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::blitImage(image::ImageVulkan* f_image)
+{
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+
+    vk::ImageMemoryBarrier l_barrier = {
+        .srcAccessMask       = vk::AccessFlagBits::eTransferWrite,
+        .dstAccessMask       = vk::AccessFlagBits::eTransferRead,
+        .oldLayout           = vk::ImageLayout::eTransferDstOptimal,
+        .newLayout           = vk::ImageLayout::eTransferSrcOptimal,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .image               = f_image->getImage()
+    };
+    l_barrier.subresourceRange.aspectMask     = vk::ImageAspectFlagBits::eColor;
+    l_barrier.subresourceRange.baseArrayLayer = 0;
+    l_barrier.subresourceRange.layerCount     = 1;
+    l_barrier.subresourceRange.levelCount     = 1;
+
+    int32_t l_mipWidth  = f_image->getSize().x;
+    int32_t l_mipHeight = f_image->getSize().y;
+
+    for (uint32_t i = 1; i < f_image->getMipLevels(); i++) {
+        l_barrier.subresourceRange.baseMipLevel = i - 1;
+        l_barrier.oldLayout                     = vk::ImageLayout::eTransferDstOptimal;
+        l_barrier.newLayout                     = vk::ImageLayout::eTransferSrcOptimal;
+        l_barrier.srcAccessMask                 = vk::AccessFlagBits::eTransferWrite;
+        l_barrier.dstAccessMask                 = vk::AccessFlagBits::eTransferRead;
+
+        l_commandBuffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::PipelineStageFlagBits::eTransfer,
+            {},
+            {},
+            {},
+            l_barrier
+        );
+
+        vk::ArrayWrapper1D<vk::Offset3D, 2> l_offsets, l_dstOffsets;
+        l_offsets[0]    = vk::Offset3D(0, 0, 0);
+        l_offsets[1]    = vk::Offset3D(l_mipWidth, l_mipHeight, 1);
+        l_dstOffsets[0] = vk::Offset3D(0, 0, 0);
+        l_dstOffsets[1] = vk::Offset3D(
+            l_mipWidth > 1 ? l_mipWidth / 2 : 1, l_mipHeight > 1 ? l_mipHeight / 2 : 1, 1
+        );
+        vk::ImageBlit l_blit = { .srcSubresource = {},
+                                 .srcOffsets     = l_offsets,
+                                 .dstSubresource = {},
+                                 .dstOffsets     = l_dstOffsets };
+        l_blit.srcSubresource =
+            vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, i - 1, 0, 1);
+        l_blit.dstSubresource =
+            vk::ImageSubresourceLayers(vk::ImageAspectFlagBits::eColor, i, 0, 1);
+
+        l_commandBuffer.blitImage(
+            f_image->getImage(),
+            vk::ImageLayout::eTransferSrcOptimal,
+            f_image->getImage(),
+            vk::ImageLayout::eTransferDstOptimal,
+            { l_blit },
+            vk::Filter::eLinear
+        );
+
+        l_barrier.oldLayout     = vk::ImageLayout::eTransferSrcOptimal;
+        l_barrier.newLayout     = vk::ImageLayout::eShaderReadOnlyOptimal;
+        l_barrier.srcAccessMask = vk::AccessFlagBits::eTransferRead;
+        l_barrier.dstAccessMask = vk::AccessFlagBits::eShaderRead;
+
+        l_commandBuffer.pipelineBarrier(
+            vk::PipelineStageFlagBits::eTransfer,
+            vk::PipelineStageFlagBits::eFragmentShader,
+            {},
+            {},
+            {},
+            l_barrier
+        );
+
+        if (l_mipWidth > 1) {
+            l_mipWidth /= 2;
+        }
+        if (l_mipHeight > 1) {
+            l_mipHeight /= 2;
+        }
+    }
+
+    l_barrier.subresourceRange.baseMipLevel = f_image->getMipLevels() - 1;
+    l_barrier.oldLayout                     = vk::ImageLayout::eTransferDstOptimal;
+    l_barrier.newLayout                     = vk::ImageLayout::eShaderReadOnlyOptimal;
+    l_barrier.srcAccessMask                 = vk::AccessFlagBits::eTransferWrite;
+    l_barrier.dstAccessMask                 = vk::AccessFlagBits::eShaderRead;
+
+    l_commandBuffer.pipelineBarrier(
+        vk::PipelineStageFlagBits::eTransfer,
+        vk::PipelineStageFlagBits::eFragmentShader,
+        {},
+        {},
+        {},
+        l_barrier
+    );
+
     return *this;
 }
 

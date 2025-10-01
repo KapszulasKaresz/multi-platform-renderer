@@ -34,6 +34,7 @@ ImageVulkan& ImageVulkan::createFromSwapChainImage(vk::Image f_swapChainImage)
         );
     }
 
+    m_hasMipMaps     = false;
     m_swapchainImage = f_swapChainImage;
     m_vkFormat       = convertToVkFormat(m_format);
     m_imageView = createImageView(*m_swapchainImage, vk::ImageAspectFlagBits::eColor);
@@ -56,6 +57,12 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
     );
     vk::DeviceSize l_imageSize = l_texWidth * l_texHeight * 4;
 
+    if (m_hasMipMaps) {
+        m_mipLevels = static_cast<uint32_t>(
+                          std::floor(std::log2(std::max(l_texWidth, l_texHeight)))
+                      )
+                    + 1;
+    }
     if (!l_texWidth) {
         throw std::runtime_error(
             "ImageVulkan::createFromFile(std::string_view f_path) failed to load image!"
@@ -86,11 +93,12 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
         .extent      = { .width  = static_cast<uint32_t>(l_texWidth),
                         .height = static_cast<uint32_t>(l_texHeight),
                         .depth  = 1 },
-        .mipLevels   = 1,
+        .mipLevels   = m_mipLevels,
         .arrayLayers = 1,
         .samples     = vk::SampleCountFlagBits::e1,
         .tiling      = vk::ImageTiling::eOptimal,
-        .usage = vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+        .usage       = vk::ImageUsageFlagBits::eTransferSrc
+               | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
     };
 
     m_image = utils::VmaImage(
@@ -106,14 +114,20 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
 
     copyBufferToImage(l_stagingBuffer, l_texWidth, l_texHeight);
 
-    transitionImageLayout(
-        vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal
-    );
+    if (m_hasMipMaps) {
+        createMipmaps();
+    }
+    else {
+        transitionImageLayout(
+            vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal
+        );
+    }
 
     auto l_image = vk::Image(m_image.get());
     m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eColor);
 
-    m_valid = true;
+    m_hasMipMaps = false;
+    m_valid      = true;
     return *this;
 }
 
@@ -250,7 +264,7 @@ vk::raii::ImageView
         .image            = f_image,
         .viewType         = vk::ImageViewType::e2D,
         .format           = m_vkFormat,
-        .subresourceRange = { f_aspectFlags, 0, 1, 0, 1 }
+        .subresourceRange = { f_aspectFlags, 0, m_mipLevels, 0, 1 }
     };
 
     return vk::raii::ImageView(m_parentDevice->getLogicalDevice(), l_imageViewCreateInfo);
@@ -323,6 +337,28 @@ void ImageVulkan::copyBufferToImage(
     l_commandBufferVulkan->copyBuffer(f_buffer, m_image, f_width, f_height);
     l_commandBufferVulkan->end();
     l_commandBufferVulkan->submit();
+}
+
+void ImageVulkan::createMipmaps()
+{
+    vk::FormatProperties l_formatProperties =
+        m_parentDevice->getPhysicalDevice().getFormatProperties(m_vkFormat);
+
+    if (!(l_formatProperties.optimalTilingFeatures
+          & vk::FormatFeatureFlagBits::eSampledImageFilterLinear))
+    {
+        throw std::
+            runtime_error(
+                "ImageVulkan::createMipmaps() texture image format does not support "
+                "linear " "blitting"
+            );
+    }
+
+    auto l_commandBuffer = m_parentDevice->createSingleUseCommandBuffer();
+    command_buffer::CommandBufferVulkan* l_commandBufferVulkan =
+        dynamic_cast<command_buffer::CommandBufferVulkan*>(l_commandBuffer.get());
+
+    l_commandBufferVulkan->begin().blitImage(this).end().submit();
 }
 
 vk::Format ImageVulkan::findDepthFormat(vk::PhysicalDevice f_physicalDevice)

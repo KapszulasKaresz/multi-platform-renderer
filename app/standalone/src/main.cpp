@@ -43,7 +43,7 @@ int main(int argc, const char* argv[])
             .create();
 
         auto l_image = l_renderingServer.getMainRenderingDevice()->createImage();
-        l_image->createFromFile("res/textures/test_texture.png");
+        l_image->generateMipMaps().createFromFile("res/textures/test_texture.png");
 
         auto l_texture = l_renderingServer.getMainRenderingDevice()->createTexture();
         l_texture->setImage(l_image).create();

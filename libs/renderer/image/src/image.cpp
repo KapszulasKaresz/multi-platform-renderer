@@ -72,6 +72,30 @@ Image& Image::setHeight(int f_height)
     return *this;
 }
 
+Image& Image::generateMipMaps(bool f_generate)
+{
+    if (isValid()) {
+        throw std::
+            runtime_error(
+                "Image::generateMipMaps(bool f_generate) you cannot set generate mipmaps "
+                "on " "an already created image"
+            );
+    }
+
+    m_hasMipMaps = f_generate;
+    return *this;
+}
+
+uint32_t Image::getMipLevels() const
+{
+    return m_mipLevels;
+}
+
+glm::ivec2 Image::getSize() const
+{
+    return m_size;
+}
+
 bool Image::isDepthImage() const
 {
     return m_format == IMAGE_FORMAT_DEPTH;

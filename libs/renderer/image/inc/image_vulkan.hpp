@@ -48,6 +48,9 @@ private:
 
     void transitionImageLayout(vk::ImageLayout f_oldLayout, vk::ImageLayout f_newLayout);
     void copyBufferToImage(utils::VmaBuffer& f_buffer, uint32_t f_width, uint32_t f_height);
+
+    void createMipmaps();
+
     static vk::Format findSupportedFormat(
         const std::vector<vk::Format>& f_candidates,
         vk::ImageTiling                f_tiling,

@@ -37,8 +37,12 @@ public:
     virtual Image& setHeight(int f_height);
     virtual Image& createFromFile(std::string_view f_path) = 0;
     virtual Image& createEmptyImage()                      = 0;
+    virtual Image& generateMipMaps(bool f_generate = true);
 
     virtual Image& create() = 0;
+
+    uint32_t   getMipLevels() const;
+    glm::ivec2 getSize() const;
 
 protected:
     bool isDepthImage() const;
@@ -46,6 +50,9 @@ protected:
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
     image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };
 
+    bool m_hasMipMaps{ false };
+
+    uint32_t   m_mipLevels{ 1 };
     glm::ivec2 m_size;
 };
 
