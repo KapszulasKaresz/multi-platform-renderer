@@ -20,6 +20,10 @@ public:
     vk::ImageView              getImageView();
     vk::PipelineStageFlagBits2 getShaderStageDestination() const;
 
+    static vk::Filter             convertToVkFilter(Filter f_filter);
+    static vk::SamplerMipmapMode  converToVkMipMapMode(MipMapMode f_mode);
+    static vk::SamplerAddressMode convertToVkAddressMode(AddressMode f_addressMode);
+
 private:
     void createTextureSampler();
 
