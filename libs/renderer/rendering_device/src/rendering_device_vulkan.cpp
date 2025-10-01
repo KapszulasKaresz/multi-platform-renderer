@@ -232,6 +232,14 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::setWindow(window::Window* f_window
     return *this;
 }
 
+RenderingDeviceVulkan&
+    RenderingDeviceVulkan::setEnableSampleShading(bool f_enable, float f_level)
+{
+    m_sampleShadingEnabled = f_enable;
+    m_sampleShadingLevel   = f_level;
+    return *this;
+}
+
 RenderingDeviceVulkan& RenderingDeviceVulkan::create()
 {
     pickPhysicalDevice();
@@ -243,6 +251,16 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     createCommandPool();
     createSyncObjects();
     return *this;
+}
+
+bool RenderingDeviceVulkan::isSampleShadingEnabled() const
+{
+    return m_sampleShadingEnabled;
+}
+
+float RenderingDeviceVulkan::sampleShadingLevel() const
+{
+    return m_sampleShadingLevel;
 }
 
 void RenderingDeviceVulkan::submitCommandBuffer(

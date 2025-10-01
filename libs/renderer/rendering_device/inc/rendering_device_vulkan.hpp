@@ -61,7 +61,12 @@ public:
     RenderingDeviceVulkan& addQueue(vk::QueueFlagBits f_queueType);
     RenderingDeviceVulkan& setFeatures(FeatureChain f_featureChain);
     RenderingDeviceVulkan& setWindow(window::Window* f_window) override final;
+    RenderingDeviceVulkan&
+        setEnableSampleShading(bool f_enable = true, float f_level = 0.2f);
     RenderingDeviceVulkan& create();
+
+    bool  isSampleShadingEnabled() const;
+    float sampleShadingLevel() const;
 
     void submitCommandBuffer(command_buffer::CommandBufferVulkan* f_buffer);
     void submitRenderCommandBuffer(command_buffer::CommandBufferVulkan* f_buffer);
@@ -117,6 +122,8 @@ private:
     uint32_t m_maxDescriptorSets{ 1'000 };
 
     vk::SampleCountFlagBits m_msaaSamples{ vk::SampleCountFlagBits::e1 };
+    bool                    m_sampleShadingEnabled{ false };
+    float                   m_sampleShadingLevel{ 0.0f };
 };
 
 }   // namespace rendering_device

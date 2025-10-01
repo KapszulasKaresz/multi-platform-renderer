@@ -31,6 +31,7 @@ std::shared_ptr<rendering_device::RenderingDevice>
         }
         l_renderingDeviceVulkanRaw->addQueue(vk::QueueFlagBits::eGraphics)
             .addQueue(vk::QueueFlagBits::eCompute)
+            .setEnableSampleShading()
             .addExtension(vk::KHRSwapchainExtensionName)
             .addExtension(vk::KHRSpirv14ExtensionName)
             .addExtension(vk::KHRSynchronization2ExtensionName)
@@ -75,13 +76,15 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
         }
         l_renderingDeviceVulkanRaw->addQueue(vk::QueueFlagBits::eGraphics)
             .addQueue(vk::QueueFlagBits::eCompute)
+            .setEnableSampleShading()
             .addExtension(vk::KHRSwapchainExtensionName)
             .addExtension(vk::KHRSpirv14ExtensionName)
             .addExtension(vk::KHRSynchronization2ExtensionName)
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
-                    { .features = { .samplerAnisotropy =
+                    { .features = { .sampleRateShading = true,
+                                    .samplerAnisotropy =
                                         true } }, // vk::PhysicalDeviceFeatures2
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features

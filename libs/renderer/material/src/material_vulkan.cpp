@@ -102,7 +102,8 @@ void MaterialVulkan::createPipeline()
     vk::PipelineMultisampleStateCreateInfo l_multisampling{
         .rasterizationSamples =
             static_cast<vk::SampleCountFlagBits>(m_parentDevice->getMaxMSAASamples()),
-        .sampleShadingEnable = vk::False
+        .sampleShadingEnable = m_parentDevice->isSampleShadingEnabled(),
+        .minSampleShading    = m_parentDevice->sampleShadingLevel()
     };
 
     vk::PipelineColorBlendAttachmentState l_colorBlendAttachment{
