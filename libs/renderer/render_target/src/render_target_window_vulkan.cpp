@@ -173,6 +173,10 @@ void RenderTargetWindowVulkan::createColorResources()
         .setColorSpace(m_colorSpace)
         .setSize(glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height))
         .setSampleCount(m_parentDevice->getMaxMSAASamples())
+        .setUsage(
+            vk::ImageUsageFlagBits::eTransientAttachment
+            | vk::ImageUsageFlagBits::eColorAttachment
+        )
         .createEmptyImage();
 }
 
@@ -184,6 +188,7 @@ void RenderTargetWindowVulkan::createDepthResources()
         .setColorSpace(image::COLOR_SPACE_LINEAR)
         .setSize(glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height))
         .setSampleCount(m_parentDevice->getMaxMSAASamples())
+        .setUsage(vk::ImageUsageFlagBits::eDepthStencilAttachment)
         .createEmptyImage();
 }
 

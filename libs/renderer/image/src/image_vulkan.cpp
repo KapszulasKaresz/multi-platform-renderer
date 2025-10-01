@@ -87,6 +87,9 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
     m_size.x   = l_texWidth;
     m_size.y   = l_texHeight;
 
+    m_usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst
+            | vk::ImageUsageFlagBits::eSampled;
+
     vk::ImageCreateInfo l_imageCreateInfo{
         .imageType   = vk::ImageType::e2D,
         .format      = m_vkFormat,
@@ -97,8 +100,7 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
         .arrayLayers = 1,
         .samples     = vk::SampleCountFlagBits::e1,
         .tiling      = vk::ImageTiling::eOptimal,
-        .usage       = vk::ImageUsageFlagBits::eTransferSrc
-               | vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+        .usage       = m_usage,
     };
 
     m_image = utils::VmaImage(
@@ -146,9 +148,7 @@ ImageVulkan& ImageVulkan::createEmptyImage()
         .arrayLayers = 1,
         .samples     = static_cast<vk::SampleCountFlagBits>(m_samples),
         .tiling      = vk::ImageTiling::eOptimal,
-        .usage       = isDepthImage() ? vk::ImageUsageFlagBits::eDepthStencilAttachment
-                                      : vk::ImageUsageFlagBits::eTransientAttachment
-                                      | vk::ImageUsageFlagBits::eColorAttachment,
+        .usage       = m_usage
     };
 
     m_image = utils::VmaImage(
@@ -200,6 +200,12 @@ vk::PipelineStageFlagBits2 ImageVulkan::getShaderStageDestination() const
 ImageVulkan& ImageVulkan::setSampleCount(uint32_t f_samples)
 {
     m_samples = f_samples;
+    return *this;
+}
+
+ImageVulkan& ImageVulkan::setUsage(vk::ImageUsageFlags f_usage)
+{
+    m_usage = f_usage;
     return *this;
 }
 

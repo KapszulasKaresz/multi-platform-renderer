@@ -35,6 +35,7 @@ public:
     vk::PipelineStageFlagBits2 getShaderStageDestination() const;
 
     ImageVulkan& setSampleCount(uint32_t f_samples);
+    ImageVulkan& setUsage(vk::ImageUsageFlags f_usage);
 
     static vk::Format        convertToVkFormat(const ImageFormat f_format);
     static vk::ColorSpaceKHR convertToVkColorSpace(const ColorSpace f_colorSpace);
@@ -69,7 +70,8 @@ private:
         vk::PipelineStageFlagBits2::eFragmentShader
     };
 
-    uint32_t m_samples{ 1 };
+    uint32_t            m_samples{ 1 };
+    vk::ImageUsageFlags m_usage{ vk::ImageUsageFlagBits::eSampled };
 
     vk::Format               m_vkFormat{ vk::Format::eUndefined };
     std::optional<vk::Image> m_swapchainImage{};
