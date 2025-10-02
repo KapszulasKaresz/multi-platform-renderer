@@ -45,7 +45,7 @@ void RenderTargetVulkan::createColorResources()
     m_colorImage->setFormat(m_format)
         .setColorSpace(m_colorSpace)
         .setSize(m_size)
-        .setSampleCount(1)
+        .setSampleCount(m_parentDevice->getMaxMSAASamples())
         .setUsage(
             vk::ImageUsageFlagBits::eTransientAttachment
             | vk::ImageUsageFlagBits::eColorAttachment
@@ -60,7 +60,7 @@ void RenderTargetVulkan::createDepthResources()
     m_depthImage->setFormat(image::IMAGE_FORMAT_DEPTH)
         .setColorSpace(image::COLOR_SPACE_LINEAR)
         .setSize(glm::ivec2(m_size))
-        .setSampleCount(1)
+        .setSampleCount(m_parentDevice->getMaxMSAASamples())
         .setUsage(vk::ImageUsageFlagBits::eDepthStencilAttachment)
         .createEmptyImage();
 }
