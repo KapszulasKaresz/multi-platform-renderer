@@ -111,15 +111,15 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
     }
     m_currentRenderTarget = f_renderBeginInfo.m_renderTarget;
 
-    render_target::RenderTargetWindowVulkan* l_curentRenderTargetWindowVulkan =
+    render_target::RenderTargetWindowVulkan* l_currentRenderTargetWindowVulkan =
         dynamic_cast<render_target::RenderTargetWindowVulkan*>(
             m_currentRenderTarget.get()
         );
 
-    if (!l_curentRenderTargetWindowVulkan) {
-        render_target::RenderTargetVulkan* l_curentRenderTargetVulkan =
+    if (!l_currentRenderTargetWindowVulkan) {
+        render_target::RenderTargetVulkan* l_currentRenderTargetVulkan =
             dynamic_cast<render_target::RenderTargetVulkan*>(m_currentRenderTarget.get());
-        if (!l_curentRenderTargetVulkan) {
+        if (!l_currentRenderTargetVulkan) {
             throw std::
                 runtime_error(
                     "CommandBufferVulkan::beginRendering(...) render target isn't a "
@@ -128,7 +128,7 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
         }
 
         image::ImageVulkan* l_imageVulkan = dynamic_cast<image::ImageVulkan*>(
-            l_curentRenderTargetVulkan->getImage().get()
+            l_currentRenderTargetVulkan->getImage().get()
         );
 
         if (!l_imageVulkan) {
@@ -142,7 +142,7 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
     }
     else {
         image::ImageVulkan* l_imageVulkan = dynamic_cast<image::ImageVulkan*>(
-            l_curentRenderTargetWindowVulkan->getImage().get()
+            l_currentRenderTargetWindowVulkan->getImage().get()
         );
 
         if (!l_imageVulkan) {
@@ -154,7 +154,7 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
         }
 
         image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
-            l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
+            l_currentRenderTargetWindowVulkan->getSwapChainImage().get()
         );
 
         if (!l_swapChainImageVulkan) {
@@ -174,15 +174,15 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
 
 CommandBufferVulkan& CommandBufferVulkan::endRendering()
 {
-    render_target::RenderTargetWindowVulkan* l_curentRenderTargetWindowVulkan =
+    render_target::RenderTargetWindowVulkan* l_currentRenderTargetWindowVulkan =
         dynamic_cast<render_target::RenderTargetWindowVulkan*>(
             m_currentRenderTarget.get()
         );
 
-    if (!l_curentRenderTargetWindowVulkan) {
-        render_target::RenderTargetVulkan* l_curentRenderTargetVulkan =
+    if (!l_currentRenderTargetWindowVulkan) {
+        render_target::RenderTargetVulkan* l_currentRenderTargetVulkan =
             dynamic_cast<render_target::RenderTargetVulkan*>(m_currentRenderTarget.get());
-        if (!l_curentRenderTargetVulkan) {
+        if (!l_currentRenderTargetVulkan) {
             throw std::runtime_error(
                 "CommandBufferVulkan::endRendering() render target isn't a vulkan one"
             );
@@ -191,7 +191,7 @@ CommandBufferVulkan& CommandBufferVulkan::endRendering()
     }
     else {
         image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
-            l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
+            l_currentRenderTargetWindowVulkan->getSwapChainImage().get()
         );
 
         if (!l_swapChainImageVulkan) {
