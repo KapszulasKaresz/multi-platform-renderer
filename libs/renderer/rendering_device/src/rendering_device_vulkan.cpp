@@ -6,6 +6,7 @@
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
+#include "renderer/render_target/inc/render_target_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/texture/inc/texture_vulkan.hpp"
@@ -103,6 +104,11 @@ std::shared_ptr<uniform::UniformCollection>
 std::shared_ptr<texture::Texture> RenderingDeviceVulkan::createTexture()
 {
     return std::make_shared<texture::TextureVulkan>(this);
+}
+
+std::shared_ptr<render_target::RenderTarget> RenderingDeviceVulkan::createRenderTarget()
+{
+    return std::make_shared<render_target::RenderTargetVulkan>(this);
 }
 
 bool RenderingDeviceVulkan::preFrame()

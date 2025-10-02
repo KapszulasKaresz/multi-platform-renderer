@@ -47,8 +47,9 @@ public:
     std::shared_ptr<command_buffer::CommandBuffer>
                                         getRenderingCommandBuffer() override final;
     std::shared_ptr<mesh::TriangleMesh> createTriangleMesh() override final;
-    std::shared_ptr<uniform::UniformCollection> createUniformCollection() override final;
-    std::shared_ptr<texture::Texture>           createTexture() override final;
+    std::shared_ptr<uniform::UniformCollection>  createUniformCollection() override final;
+    std::shared_ptr<texture::Texture>            createTexture() override final;
+    std::shared_ptr<render_target::RenderTarget> createRenderTarget() override final;
 
     bool preFrame() override final;
     void postFrame() override final;

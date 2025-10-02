@@ -76,6 +76,20 @@ protected:
     void                     createCommandBuffer();
     vk::raii::CommandBuffer& selectCurrentCommandBuffer();
 
+    void beginRenderingSwpachainImage(
+        image::ImageVulkan*    f_swapchChainImage,
+        image::ImageVulkan*    f_colorImage,
+        const RenderBeginInfo& f_renderBeginInfo
+    );
+
+    void beginRenderingImage(
+        image::ImageVulkan*    f_colorImage,
+        const RenderBeginInfo& f_renderBeginInfo
+    );
+
+    void endRenderingSwapchainImage(image::ImageVulkan* f_swapchChainImage);
+    void endRenderingImage();
+
     uint32_t m_bufferCount{ 1 };
 
     bool m_rendering{ false };

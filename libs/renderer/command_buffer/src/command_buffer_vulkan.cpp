@@ -6,6 +6,7 @@
 #include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
 #include "renderer/render_target/inc/render_target.hpp"
+#include "renderer/render_target/inc/render_target_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 
@@ -116,130 +117,57 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
         );
 
     if (!l_curentRenderTargetWindowVulkan) {
-        throw std::runtime_error(
-            "CommandBufferVulkan::beginRendering(...) only RenderTargetWindowVulkan "
-            "supported atm"
-        );
-    }
-
-    image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
-        l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
-    );
-
-    if (!l_swapChainImageVulkan) {
-        throw std::runtime_error(
-            "CommandBufferVulkan::beginRendering(...) render target didn't provide a "
-            "vulkan swapchain image"
-        );
-    }
-
-    image::ImageVulkan* l_imageVulkan = dynamic_cast<image::ImageVulkan*>(
-        l_curentRenderTargetWindowVulkan->getImage().get()
-    );
-
-    if (!l_imageVulkan) {
-        throw std::runtime_error(
-            "CommandBufferVulkan::beginRendering(...) render target didn't provide a "
-            "vulkan image"
-        );
-    }
-
-    transitionImageLayout(
-        l_swapChainImageVulkan,
-        vk::ImageLayout::eUndefined,
-        vk::ImageLayout::eColorAttachmentOptimal,
-        {},   // srcAccessMask (no need to wait for previous operations)
-        vk::AccessFlagBits2::eColorAttachmentWrite,           // dstAccessMask
-        vk::PipelineStageFlagBits2::eTopOfPipe,               // srcStage
-        vk::PipelineStageFlagBits2::eColorAttachmentOutput,   // dstStage
-        vk::ImageAspectFlagBits::eColor
-    );
-
-    transitionImageLayout(
-        l_imageVulkan,
-        vk::ImageLayout::eUndefined,
-        vk::ImageLayout::eColorAttachmentOptimal,
-        {},
-        vk::AccessFlagBits2::eColorAttachmentWrite,
-        vk::PipelineStageFlagBits2::eTopOfPipe,
-        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-        vk::ImageAspectFlagBits::eColor
-    );
-
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-
-    vk::RenderingAttachmentInfo l_depthAttachmentInfo;
-
-    if (m_currentRenderTarget->isDepthBufferEnabled()) {
-        image::ImageVulkan* l_depthImageVulkan = dynamic_cast<image::ImageVulkan*>(
-            m_currentRenderTarget->getDepthImage().get()
-        );
-
-        if (!l_depthImageVulkan) {
+        render_target::RenderTargetVulkan* l_curentRenderTargetVulkan =
+            dynamic_cast<render_target::RenderTargetVulkan*>(m_currentRenderTarget.get());
+        if (!l_curentRenderTargetVulkan) {
             throw std::
                 runtime_error(
-                    "CommandBufferVulkan::beginRendering(...) render target didn't "
-                    "provide a vulkan depth image"
+                    "CommandBufferVulkan::beginRendering(...) render target isn't a "
+                    "vulkan one"
                 );
         }
 
-        // Transition the depth image to DEPTH_ATTACHMENT_OPTIMAL
-        transitionImageLayout(
-            l_depthImageVulkan,
-            vk::ImageLayout::eUndefined,
-            vk::ImageLayout::eDepthAttachmentOptimal,
-            {},
-            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-            vk::PipelineStageFlagBits2::eTopOfPipe,
-            vk::PipelineStageFlagBits2::eEarlyFragmentTests,
-            vk::ImageAspectFlagBits::eDepth
+        image::ImageVulkan* l_imageVulkan = dynamic_cast<image::ImageVulkan*>(
+            l_curentRenderTargetWindowVulkan->getImage().get()
         );
 
-        vk::ClearValue l_clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
-
-        l_depthAttachmentInfo = { .imageView = l_depthImageVulkan->getImageView(),
-                                  .imageLayout =
-                                      vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                                  .loadOp     = vk::AttachmentLoadOp::eClear,
-                                  .storeOp    = vk::AttachmentStoreOp::eDontCare,
-                                  .clearValue = l_clearDepth };
-        l_commanBuffer.setDepthTestEnable(true);
+        if (!l_imageVulkan) {
+            throw std::
+                runtime_error(
+                    "CommandBufferVulkan::beginRendering(...) render target didn't "
+                    "provide a vulkan image"
+                );
+        }
+        beginRenderingImage(l_imageVulkan, f_renderBeginInfo);
     }
     else {
-        l_commanBuffer.setDepthTestEnable(false);
+        image::ImageVulkan* l_imageVulkan = dynamic_cast<image::ImageVulkan*>(
+            l_curentRenderTargetWindowVulkan->getImage().get()
+        );
+
+        if (!l_imageVulkan) {
+            throw std::
+                runtime_error(
+                    "CommandBufferVulkan::beginRendering(...) render target didn't "
+                    "provide a " "vulkan image"
+                );
+        }
+
+        image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
+            l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
+        );
+
+        if (!l_swapChainImageVulkan) {
+            throw std::
+                runtime_error(
+                    "CommandBufferVulkan::beginRendering(...) render target didn't "
+                    "provide a " "vulkan swapchain image"
+                );
+        }
+        beginRenderingSwpachainImage(
+            l_swapChainImageVulkan, l_imageVulkan, f_renderBeginInfo
+        );
     }
-
-    // Dummy stuff for now
-    auto           l_clearColorVec = f_renderBeginInfo.m_clearColor;
-    vk::ClearValue l_clearColor    = vk::ClearColorValue(
-        l_clearColorVec.x, l_clearColorVec.y, l_clearColorVec.z, l_clearColorVec.w
-    );
-    vk::RenderingAttachmentInfo l_colorAttachmentInfo = {
-        .imageView          = l_imageVulkan->getImageView(),
-        .imageLayout        = vk::ImageLayout::eColorAttachmentOptimal,
-        .resolveMode        = m_parentDevice->getMaxMSAASamples() == 1
-                                ? vk::ResolveModeFlagBits::eNone
-                                : vk::ResolveModeFlagBits::eAverage,
-        .resolveImageView   = l_swapChainImageVulkan->getImageView(),
-        .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
-        .loadOp             = vk::AttachmentLoadOp::eClear,
-        .storeOp            = vk::AttachmentStoreOp::eStore,
-        .clearValue         = l_clearColor
-    };
-    auto l_extentSize = m_currentRenderTarget->getSize();
-
-    vk::RenderingInfo l_renderingInfo = {
-        .renderArea           = { .offset = { 0, 0 },
-                                 .extent = { static_cast<uint32_t>(l_extentSize.x),
-                                              static_cast<uint32_t>(l_extentSize.y) } },
-        .layerCount           = 1,
-        .colorAttachmentCount = 1,
-        .pColorAttachments    = &l_colorAttachmentInfo,
-        .pDepthAttachment     = m_currentRenderTarget->isDepthBufferEnabled()
-                                  ? &l_depthAttachmentInfo
-                                  : nullptr
-    };
-    l_commanBuffer.beginRendering(l_renderingInfo);
 
     return *this;
 }
@@ -252,35 +180,29 @@ CommandBufferVulkan& CommandBufferVulkan::endRendering()
         );
 
     if (!l_curentRenderTargetWindowVulkan) {
-        throw std::runtime_error(
-            "CommandBufferVulkan::endRendering(...) only RenderTargetWindowVulkan "
-            "supported atm"
-        );
+        render_target::RenderTargetVulkan* l_curentRenderTargetVulkan =
+            dynamic_cast<render_target::RenderTargetVulkan*>(m_currentRenderTarget.get());
+        if (!l_curentRenderTargetVulkan) {
+            throw std::runtime_error(
+                "CommandBufferVulkan::endRendering() render target isn't a vulkan one"
+            );
+        }
+        endRenderingImage();
     }
-
-    image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
-        l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
-    );
-
-    if (!l_swapChainImageVulkan) {
-        throw std::runtime_error(
-            "CommandBufferVulkan::endRendering(...) render target didn't provide a "
-            "vulkan image"
+    else {
+        image::ImageVulkan* l_swapChainImageVulkan = dynamic_cast<image::ImageVulkan*>(
+            l_curentRenderTargetWindowVulkan->getSwapChainImage().get()
         );
-    }
 
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.endRendering();
-    transitionImageLayout(
-        l_swapChainImageVulkan,
-        vk::ImageLayout::eColorAttachmentOptimal,
-        vk::ImageLayout::ePresentSrcKHR,
-        vk::AccessFlagBits2::eColorAttachmentWrite,           // srcAccessMask
-        {},                                                   // dstAccessMask
-        vk::PipelineStageFlagBits2::eColorAttachmentOutput,   // srcStage
-        vk::PipelineStageFlagBits2::eBottomOfPipe,            // dstStage
-        vk::ImageAspectFlagBits::eColor
-    );
+        if (!l_swapChainImageVulkan) {
+            throw std::
+                runtime_error(
+                    "CommandBufferVulkan::endRendering(...) render target didn't provide "
+                    "a " "vulkan image"
+                );
+        }
+        endRenderingSwapchainImage(l_swapChainImageVulkan);
+    }
 
     m_currentRenderTarget = nullptr;
     return *this;
@@ -567,6 +489,225 @@ vk::raii::CommandBuffer& CommandBufferVulkan::selectCurrentCommandBuffer()
     else {
         return m_commandBuffers[0];
     }
+}
+
+void CommandBufferVulkan::beginRenderingSwpachainImage(
+    image::ImageVulkan*    f_swapchChainImage,
+    image::ImageVulkan*    f_colorImage,
+    const RenderBeginInfo& f_renderBeginInfo
+)
+{
+    transitionImageLayout(
+        f_swapchChainImage,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        {},   // srcAccessMask (no need to wait for previous operations)
+        vk::AccessFlagBits2::eColorAttachmentWrite,           // dstAccessMask
+        vk::PipelineStageFlagBits2::eTopOfPipe,               // srcStage
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,   // dstStage
+        vk::ImageAspectFlagBits::eColor
+    );
+
+    transitionImageLayout(
+        f_colorImage,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        {},
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::PipelineStageFlagBits2::eTopOfPipe,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::ImageAspectFlagBits::eColor
+    );
+
+    auto& l_commanBuffer = selectCurrentCommandBuffer();
+
+    vk::RenderingAttachmentInfo l_depthAttachmentInfo;
+
+    if (m_currentRenderTarget->isDepthBufferEnabled()) {
+        image::ImageVulkan* l_depthImageVulkan = dynamic_cast<image::ImageVulkan*>(
+            m_currentRenderTarget->getDepthImage().get()
+        );
+
+        if (!l_depthImageVulkan) {
+            throw std::
+                runtime_error(
+                    "CommandBufferVulkan::beginRendering(...) render target didn't "
+                    "provide a vulkan depth image"
+                );
+        }
+
+        // Transition the depth image to DEPTH_ATTACHMENT_OPTIMAL
+        transitionImageLayout(
+            l_depthImageVulkan,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eDepthAttachmentOptimal,
+            {},
+            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            vk::PipelineStageFlagBits2::eTopOfPipe,
+            vk::PipelineStageFlagBits2::eEarlyFragmentTests,
+            vk::ImageAspectFlagBits::eDepth
+        );
+
+        vk::ClearValue l_clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
+
+        l_depthAttachmentInfo = { .imageView = l_depthImageVulkan->getImageView(),
+                                  .imageLayout =
+                                      vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                  .loadOp     = vk::AttachmentLoadOp::eClear,
+                                  .storeOp    = vk::AttachmentStoreOp::eDontCare,
+                                  .clearValue = l_clearDepth };
+        l_commanBuffer.setDepthTestEnable(true);
+    }
+    else {
+        l_commanBuffer.setDepthTestEnable(false);
+    }
+
+    // Dummy stuff for now
+    auto           l_clearColorVec = f_renderBeginInfo.m_clearColor;
+    vk::ClearValue l_clearColor    = vk::ClearColorValue(
+        l_clearColorVec.x, l_clearColorVec.y, l_clearColorVec.z, l_clearColorVec.w
+    );
+    vk::RenderingAttachmentInfo l_colorAttachmentInfo = {
+        .imageView          = f_colorImage->getImageView(),
+        .imageLayout        = vk::ImageLayout::eColorAttachmentOptimal,
+        .resolveMode        = m_parentDevice->getMaxMSAASamples() == 1
+                                ? vk::ResolveModeFlagBits::eNone
+                                : vk::ResolveModeFlagBits::eAverage,
+        .resolveImageView   = f_swapchChainImage->getImageView(),
+        .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+        .loadOp             = vk::AttachmentLoadOp::eClear,
+        .storeOp            = vk::AttachmentStoreOp::eStore,
+        .clearValue         = l_clearColor
+    };
+    auto l_extentSize = m_currentRenderTarget->getSize();
+
+    vk::RenderingInfo l_renderingInfo = {
+        .renderArea           = { .offset = { 0, 0 },
+                                 .extent = { static_cast<uint32_t>(l_extentSize.x),
+                                              static_cast<uint32_t>(l_extentSize.y) } },
+        .layerCount           = 1,
+        .colorAttachmentCount = 1,
+        .pColorAttachments    = &l_colorAttachmentInfo,
+        .pDepthAttachment     = m_currentRenderTarget->isDepthBufferEnabled()
+                                  ? &l_depthAttachmentInfo
+                                  : nullptr
+    };
+    l_commanBuffer.beginRendering(l_renderingInfo);
+}
+
+void CommandBufferVulkan::beginRenderingImage(
+    image::ImageVulkan*    f_colorImage,
+    const RenderBeginInfo& f_renderBeginInfo
+)
+{
+    transitionImageLayout(
+        f_colorImage,
+        vk::ImageLayout::eUndefined,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        {},
+        vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::PipelineStageFlagBits2::eTopOfPipe,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::ImageAspectFlagBits::eColor
+    );
+
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+
+    vk::RenderingAttachmentInfo l_depthAttachmentInfo;
+
+    if (m_currentRenderTarget->isDepthBufferEnabled()) {
+        image::ImageVulkan* l_depthImageVulkan = dynamic_cast<image::ImageVulkan*>(
+            m_currentRenderTarget->getDepthImage().get()
+        );
+
+        if (!l_depthImageVulkan) {
+            throw std::runtime_error(
+                "CommandBufferVulkan::beginRendering(...) render target didn't "
+                "provide a vulkan depth image"
+            );
+        }
+
+        transitionImageLayout(
+            l_depthImageVulkan,
+            vk::ImageLayout::eUndefined,
+            vk::ImageLayout::eDepthAttachmentOptimal,
+            {},
+            vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
+            vk::PipelineStageFlagBits2::eTopOfPipe,
+            vk::PipelineStageFlagBits2::eEarlyFragmentTests,
+            vk::ImageAspectFlagBits::eDepth
+        );
+
+        vk::ClearValue l_clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
+
+        l_depthAttachmentInfo = { .imageView = l_depthImageVulkan->getImageView(),
+                                  .imageLayout =
+                                      vk::ImageLayout::eDepthStencilAttachmentOptimal,
+                                  .loadOp     = vk::AttachmentLoadOp::eClear,
+                                  .storeOp    = vk::AttachmentStoreOp::eDontCare,
+                                  .clearValue = l_clearDepth };
+
+        l_commandBuffer.setDepthTestEnable(true);
+    }
+    else {
+        l_commandBuffer.setDepthTestEnable(false);
+    }
+
+    auto           l_clearColorVec = f_renderBeginInfo.m_clearColor;
+    vk::ClearValue l_clearColor    = vk::ClearColorValue(
+        l_clearColorVec.x, l_clearColorVec.y, l_clearColorVec.z, l_clearColorVec.w
+    );
+
+    vk::RenderingAttachmentInfo l_colorAttachmentInfo = {
+        .imageView          = f_colorImage->getImageView(),
+        .imageLayout        = vk::ImageLayout::eColorAttachmentOptimal,
+        .resolveMode        = vk::ResolveModeFlagBits::eNone,   // no resolve
+        .resolveImageView   = VK_NULL_HANDLE,                   // not used
+        .resolveImageLayout = vk::ImageLayout::eUndefined,      // not used
+        .loadOp             = vk::AttachmentLoadOp::eClear,
+        .storeOp            = vk::AttachmentStoreOp::eStore,
+        .clearValue         = l_clearColor
+    };
+
+    auto l_extentSize = m_currentRenderTarget->getSize();
+
+    vk::RenderingInfo l_renderingInfo = {
+        .renderArea           = { .offset = { 0, 0 },
+                                 .extent = { static_cast<uint32_t>(l_extentSize.x),
+                                              static_cast<uint32_t>(l_extentSize.y) } },
+        .layerCount           = 1,
+        .colorAttachmentCount = 1,
+        .pColorAttachments    = &l_colorAttachmentInfo,
+        .pDepthAttachment     = m_currentRenderTarget->isDepthBufferEnabled()
+                                  ? &l_depthAttachmentInfo
+                                  : nullptr
+    };
+
+    l_commandBuffer.beginRendering(l_renderingInfo);
+}
+
+void CommandBufferVulkan::endRenderingSwapchainImage(
+    image::ImageVulkan* f_swapchChainImage
+)
+{
+    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    l_commanBuffer.endRendering();
+    transitionImageLayout(
+        f_swapchChainImage,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::ImageLayout::ePresentSrcKHR,
+        vk::AccessFlagBits2::eColorAttachmentWrite,           // srcAccessMask
+        {},                                                   // dstAccessMask
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,   // srcStage
+        vk::PipelineStageFlagBits2::eBottomOfPipe,            // dstStage
+        vk::ImageAspectFlagBits::eColor
+    );
+}
+
+void CommandBufferVulkan::endRenderingImage()
+{
+    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    l_commanBuffer.endRendering();
 }
 
 }   // namespace command_buffer

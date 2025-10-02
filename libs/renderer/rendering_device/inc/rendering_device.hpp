@@ -27,6 +27,7 @@ class Image;
 }   // namespace image
 
 namespace render_target {
+class RenderTarget;
 class RenderTargetWindow;
 }   // namespace render_target
 
@@ -51,9 +52,10 @@ public:
     virtual std::shared_ptr<material::Material>            createMaterial()      = 0;
     virtual std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() = 0;
     virtual std::shared_ptr<command_buffer::CommandBuffer> getRenderingCommandBuffer() = 0;
-    virtual std::shared_ptr<mesh::TriangleMesh>         createTriangleMesh()      = 0;
-    virtual std::shared_ptr<uniform::UniformCollection> createUniformCollection() = 0;
-    virtual std::shared_ptr<texture::Texture>           createTexture()           = 0;
+    virtual std::shared_ptr<mesh::TriangleMesh>          createTriangleMesh()      = 0;
+    virtual std::shared_ptr<uniform::UniformCollection>  createUniformCollection() = 0;
+    virtual std::shared_ptr<texture::Texture>            createTexture()           = 0;
+    virtual std::shared_ptr<render_target::RenderTarget> createRenderTarget()      = 0;
 
     virtual bool preFrame()        = 0;
     virtual void postFrame()       = 0;
