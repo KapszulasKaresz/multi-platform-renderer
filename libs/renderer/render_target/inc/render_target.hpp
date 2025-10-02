@@ -13,6 +13,7 @@ public:
     RenderTarget&         setFormat(image::ImageFormat f_format);
     RenderTarget&         setColorSpace(image::ColorSpace f_colorSpace);
     RenderTarget&         setDepthBuffer(bool f_useDepthBuffer);
+    RenderTarget&         setSize(glm::ivec2 f_size);
     virtual RenderTarget& create() = 0;
 
     bool isDepthBufferEnabled() const;
@@ -26,6 +27,8 @@ public:
 protected:
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
     image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };
+
+    glm::ivec2 m_size{ 0, 0 };
 
     bool m_useDepthBuffer{ false };
 };

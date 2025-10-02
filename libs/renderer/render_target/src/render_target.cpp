@@ -47,6 +47,12 @@ RenderTarget& RenderTarget::setDepthBuffer(bool f_useDepthBuffer)
     return *this;
 }
 
+RenderTarget& RenderTarget::setSize(glm::ivec2 f_size)
+{
+    m_size = f_size;
+    return *this;
+}
+
 bool RenderTarget::isDepthBufferEnabled() const
 {
     return m_useDepthBuffer;

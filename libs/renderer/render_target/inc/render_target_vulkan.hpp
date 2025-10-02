@@ -18,8 +18,6 @@ class RenderTargetVulkan : public RenderTarget {
 public:
     RenderTargetVulkan(rendering_device::RenderingDeviceVulkan* f_parentDevice);
 
-    RenderTargetVulkan& setSize(glm::ivec2 f_size);
-
     RenderTargetVulkan&           create() override final;
     std::shared_ptr<image::Image> getImage() override final;
     std::shared_ptr<image::Image> getDepthImage() override final;
@@ -31,7 +29,6 @@ protected:
 
     rendering_device::RenderingDeviceVulkan* m_parentDevice{ nullptr };
 
-    glm::ivec2                          m_size{ 0, 0 };
     std::shared_ptr<image::ImageVulkan> m_depthImage{ nullptr };
     std::shared_ptr<image::ImageVulkan> m_colorImage{ nullptr };
 };

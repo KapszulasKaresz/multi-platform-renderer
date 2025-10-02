@@ -128,7 +128,7 @@ CommandBufferVulkan& CommandBufferVulkan::beginRendering(
         }
 
         image::ImageVulkan* l_imageVulkan = dynamic_cast<image::ImageVulkan*>(
-            l_curentRenderTargetWindowVulkan->getImage().get()
+            l_curentRenderTargetVulkan->getImage().get()
         );
 
         if (!l_imageVulkan) {

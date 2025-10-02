@@ -12,12 +12,6 @@ RenderTargetVulkan::RenderTargetVulkan(
     : m_parentDevice(f_parentDevice)
 {}
 
-RenderTargetVulkan& RenderTargetVulkan::setSize(glm::ivec2 f_size)
-{
-    m_size = f_size;
-    return *this;
-}
-
 RenderTargetVulkan& RenderTargetVulkan::create()
 {
     createColorResources();
@@ -54,7 +48,7 @@ void RenderTargetVulkan::createColorResources()
         .setSampleCount(1)
         .setUsage(
             vk::ImageUsageFlagBits::eTransientAttachment
-            | vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled
+            | vk::ImageUsageFlagBits::eColorAttachment
         )
         .createEmptyImage();
 }
