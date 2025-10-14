@@ -16,6 +16,7 @@ namespace rendering_api {
 enum RenderingAPIType {
     RENDERING_API_TYPE_NONE,
     RENDERING_API_TYPE_VULKAN,
+    RENDERING_API_DIRECTX12,
     RENDERING_API_TYPE_MAX
 };
 
