@@ -16,8 +16,11 @@
 #include "renderer/uniform/inc/uniform_single.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 
+#include "input_parser.hpp"
+
 int main(int argc, const char* argv[])
 {
+    InputParser l_inputs(argc, argv);
     try {
         auto& l_renderingServer =
             renderer::rendering_server::RenderingServer::getInstance();
@@ -26,21 +29,25 @@ int main(int argc, const char* argv[])
         auto l_window = std::make_unique<renderer::window::GLFWWindow>();
         l_window->setSize(glm::ivec2(1'600, 1'200)).setTitle("Test Window").create();
 
-        auto l_renderingApi =
-            std::make_unique<renderer::rendering_api::RenderingApiVulkan>();
+        if (l_inputs.getCmdOption("--api").value_or("") == "dx") {
+        }
+        else {
+            auto l_renderingApi =
+                std::make_unique<renderer::rendering_api::RenderingApiVulkan>();
 
-        auto l_glfwExtension =
-            renderer::window::GLFWWindow::getRequiredInstanceExtensionsVulkan();
+            auto l_glfwExtension =
+                renderer::window::GLFWWindow::getRequiredInstanceExtensionsVulkan();
 
-        l_renderingApi->enableValidationLayers(true)
-            .addValidationLayer("VK_LAYER_KHRONOS_validation")
-            .addExtensions(l_glfwExtension)
-            .addExtension(vk::EXTDebugUtilsExtensionName)
-            .create();
+            l_renderingApi->enableValidationLayers(true)
+                .addValidationLayer("VK_LAYER_KHRONOS_validation")
+                .addExtensions(l_glfwExtension)
+                .addExtension(vk::EXTDebugUtilsExtensionName)
+                .create();
 
-        l_renderingServer.setRenderingApi(std::move(l_renderingApi))
-            .setWindow(std::move(l_window))
-            .create();
+            l_renderingServer.setRenderingApi(std::move(l_renderingApi))
+                .setWindow(std::move(l_window))
+                .create();
+        }
 
         auto l_image = l_renderingServer.getMainRenderingDevice()->createImage();
         l_image->generateMipMaps().createFromFile("res/textures/test_texture.png");

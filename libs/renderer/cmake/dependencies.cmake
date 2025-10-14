@@ -29,3 +29,20 @@ find_package(stb REQUIRED)
 target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE
         STB_IMAGE_IMPLEMENTATION)
 target_link_libraries(${RENDERER_LIB_NAME} PRIVATE stb::stb)
+
+#directX
+if(WIN32)
+        include_directories("$ENV{WindowsSdkDir}/Include/$ENV{WindowsSDKVersion}/um")
+        include_directories("$ENV{WindowsSdkDir}/Include/$ENV{WindowsSDKVersion}/shared")
+        include_directories("$ENV{WindowsSdkDir}/Include/$ENV{WindowsSDKVersion}/winrt")
+        include_directories("$ENV{WindowsSdkDir}/Include/$ENV{WindowsSDKVersion}/cppwinrt")
+
+        link_directories("$ENV{WindowsSdkDir}/Lib/$ENV{WindowsSDKVersion}/um/x64")
+
+        target_link_libraries(${RENDERER_LIB_NAME} PUBLIC
+                d3d12
+                dxgi
+                dxguid
+                d3dcompiler
+        )
+endif()

@@ -9,7 +9,11 @@ set(SHADER_SLANG_SOURCES
 
 add_slang_shader_target(${SHADER_COMPILE_STEP} SOURCES ${SHADER_SLANG_SOURCES})
 
-add_executable(${STANDALONE_PROJECT_NAME} src/main.cpp)
+add_executable(${STANDALONE_PROJECT_NAME}
+    src/main.cpp
+    src/input_parser.cpp)
+
+target_include_directories(${STANDALONE_PROJECT_NAME} PUBLIC inc)
 
 target_link_libraries(${STANDALONE_PROJECT_NAME} PRIVATE renderer::renderer)
 

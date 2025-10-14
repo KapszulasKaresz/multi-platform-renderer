@@ -19,7 +19,10 @@
         {
             "name": "Launch",
             "request": "launch",
-            "args": [],
+            "args": [
+                "--api",
+                "vulkan"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
