@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "renderer/rendering_device/inc/rendering_device_dx.hpp"
+
 namespace renderer {
 namespace rendering_api {
 RenderingApiDX::RenderingApiDX()
@@ -11,11 +13,50 @@ RenderingApiDX::RenderingApiDX()
 
 std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRenderingDevice()
 {
-    throw std::logic_error("Function not yet implemented");
-    return nullptr;
+    if (!m_mainRenderingDevice) {
+        auto l_renderingDevice = createRenderingDevice();
+        auto l_renderingDeviceDXRaw =
+            dynamic_cast<rendering_device::RenderingDeviceDX*>(l_renderingDevice.get());
+        if (l_renderingDeviceDXRaw == nullptr) {
+            throw std::
+                runtime_error(
+                    "RenderingApDX::getMainRenderingDevice() somehow "
+                    "renderingdevice isn't a dx rendering device"
+                );
+        }
+        l_renderingDeviceDXRaw->create();
+
+        m_mainRenderingDevice = l_renderingDevice;
+    }
+
+    return m_mainRenderingDevice;
 }
 
-void RenderingApiDX::createMainRenderingDeviceWindow(window::Window* f_window) {}
+void RenderingApiDX::createMainRenderingDeviceWindow(window::Window* f_window)
+{
+    if (!m_mainRenderingDevice) {
+        auto l_renderingDevice = createRenderingDevice();
+        auto l_renderingDeviceDXRaw =
+            dynamic_cast<rendering_device::RenderingDeviceDX*>(l_renderingDevice.get());
+        if (l_renderingDeviceDXRaw == nullptr) {
+            throw std::
+                runtime_error(
+                    "RenderingApDX::getMainRenderingDevice() somehow "
+                    "renderingdevice isn't a dx rendering device"
+                );
+        }
+        l_renderingDeviceDXRaw->setWindow(f_window).create();
+
+        m_mainRenderingDevice = l_renderingDevice;
+    }
+    else {
+        throw std::
+            runtime_error(
+                "RenderingApiDX::createMainRenderingDeviceWindow() main "
+                "renderingdevice already created"
+            );
+    }
+}
 
 RenderingApiDX& RenderingApiDX::enableDebuging(bool f_enable)
 {
@@ -25,8 +66,7 @@ RenderingApiDX& RenderingApiDX::enableDebuging(bool f_enable)
 
 std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::createRenderingDevice()
 {
-    throw std::logic_error("Function not yet implemented");
-    return nullptr;
+    return std::make_shared<rendering_device::RenderingDeviceDX>(this);
 }
 
 RenderingApiDX& RenderingApiDX::create()
@@ -35,6 +75,11 @@ RenderingApiDX& RenderingApiDX::create()
 
     m_valid = true;
     return *this;
+}
+
+Microsoft::WRL::ComPtr<IDXGIFactory7> RenderingApiDX::getFactory()
+{
+    return m_dxgiFactory;
 }
 
 void RenderingApiDX::createFactory()

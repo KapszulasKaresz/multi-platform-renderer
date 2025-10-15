@@ -64,7 +64,7 @@ public:
     RenderingDeviceVulkan& setWindow(window::Window* f_window) override final;
     RenderingDeviceVulkan&
         setEnableSampleShading(bool f_enable = true, float f_level = 0.2f);
-    RenderingDeviceVulkan& create();
+    RenderingDeviceVulkan& create() override final;
 
     bool  isSampleShadingEnabled() const;
     float sampleShadingLevel() const;

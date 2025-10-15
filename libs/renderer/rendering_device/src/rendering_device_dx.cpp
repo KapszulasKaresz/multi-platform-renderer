@@ -74,12 +74,55 @@ void RenderingDeviceDX::finishRendering()
     throw std::logic_error("Function not yet implemented");
 }
 
+RenderingDeviceDX& RenderingDeviceDX::setWindow(window::Window* f_window)
+{
+    m_window = f_window;
+    return *this;
+}
+
 RenderingDeviceDX& RenderingDeviceDX::create()
 {
+    createAdapter();
     m_valid = true;
     return *this;
 }
 
 RenderingDeviceDX::~RenderingDeviceDX() {}
+
+void RenderingDeviceDX::createAdapter()
+{
+    IDXGIAdapter1* l_baseAdapter = nullptr;
+    for (UINT l_adapterIndex = 0;
+         m_parentApi->getFactory()->EnumAdapters1(l_adapterIndex, &l_baseAdapter)
+         != DXGI_ERROR_NOT_FOUND;
+         ++l_adapterIndex)
+    {
+        IDXGIAdapter4* l_adapter4 = nullptr;
+        if (FAILED(l_baseAdapter->QueryInterface(IID_PPV_ARGS(&l_adapter4)))) {
+            l_baseAdapter->Release();
+            continue;
+        }
+
+        DXGI_ADAPTER_DESC3 l_desc;
+        l_adapter4->GetDesc3(&l_desc);
+
+        if (l_desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
+            l_adapter4->Release();
+            l_baseAdapter->Release();
+            continue;
+        }
+
+        if (SUCCEEDED(D3D12CreateDevice(
+                l_adapter4, D3D_FEATURE_LEVEL_12_0, _uuidof(ID3D12Device), nullptr
+            )))
+        {
+            m_adapter = l_adapter4;
+            break;
+        }
+
+        l_adapter4->Release();
+        l_baseAdapter->Release();
+    }
+}
 }   // namespace rendering_device
 }   // namespace renderer

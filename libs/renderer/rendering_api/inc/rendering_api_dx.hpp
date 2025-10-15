@@ -26,6 +26,8 @@ public:
 
     RenderingApiDX& create();
 
+    Microsoft::WRL::ComPtr<IDXGIFactory7> getFactory();
+
 private:
     void createFactory();
 

@@ -48,13 +48,20 @@ public:
     void postFrame() override final;
     void finishRendering() override final;
 
-    RenderingDeviceDX& create();
+    RenderingDeviceDX& setWindow(window::Window* f_window) override final;
+    RenderingDeviceDX& create() override final;
 
 
     ~RenderingDeviceDX();
 
 private:
-    rendering_api::RenderingApiDX* m_parentApi;
+    void createAdapter();
+
+    rendering_api::RenderingApiDX* m_parentApi{ nullptr };
+
+    window::Window* m_window{ nullptr };
+
+    Microsoft::WRL::ComPtr<IDXGIAdapter4> m_adapter{ nullptr };
 };
 
 }   // namespace rendering_device

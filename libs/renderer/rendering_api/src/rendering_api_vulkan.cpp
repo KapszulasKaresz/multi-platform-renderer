@@ -106,7 +106,7 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
         throw std::
             runtime_error(
                 "RenderingApiVulkan::createMainRenderingDeviceWindow() main "
-                "renderingdevice " "already created"
+                "renderingdevice already created"
             );
     }
 }
