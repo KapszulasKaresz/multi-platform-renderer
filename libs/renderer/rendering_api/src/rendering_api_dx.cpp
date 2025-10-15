@@ -11,6 +11,7 @@ RenderingApiDX::RenderingApiDX()
 
 std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRenderingDevice()
 {
+    throw std::logic_error("Function not yet implemented");
     return nullptr;
 }
 
@@ -24,6 +25,7 @@ RenderingApiDX& RenderingApiDX::enableDebuging(bool f_enable)
 
 std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::createRenderingDevice()
 {
+    throw std::logic_error("Function not yet implemented");
     return nullptr;
 }
 
