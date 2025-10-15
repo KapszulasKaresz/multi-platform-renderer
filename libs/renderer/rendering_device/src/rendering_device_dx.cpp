@@ -91,24 +91,19 @@ RenderingDeviceDX::~RenderingDeviceDX() {}
 
 void RenderingDeviceDX::createAdapter()
 {
-    IDXGIAdapter1* l_baseAdapter = nullptr;
-    for (UINT l_adapterIndex = 0;
-         m_parentApi->getFactory()->EnumAdapters1(l_adapterIndex, &l_baseAdapter)
+    IDXGIAdapter4* l_adapter4 = nullptr;
+    for (UINT l_index = 0;
+         m_parentApi->getFactory()->EnumAdapterByGpuPreference(
+             l_index, DXGI_GPU_PREFERENCE_HIGH_PERFORMANCE, IID_PPV_ARGS(&l_adapter4)
+         )
          != DXGI_ERROR_NOT_FOUND;
-         ++l_adapterIndex)
+         ++l_index)
     {
-        IDXGIAdapter4* l_adapter4 = nullptr;
-        if (FAILED(l_baseAdapter->QueryInterface(IID_PPV_ARGS(&l_adapter4)))) {
-            l_baseAdapter->Release();
-            continue;
-        }
-
         DXGI_ADAPTER_DESC3 l_desc;
         l_adapter4->GetDesc3(&l_desc);
 
         if (l_desc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
             l_adapter4->Release();
-            l_baseAdapter->Release();
             continue;
         }
 
@@ -121,7 +116,6 @@ void RenderingDeviceDX::createAdapter()
         }
 
         l_adapter4->Release();
-        l_baseAdapter->Release();
     }
 }
 }   // namespace rendering_device
