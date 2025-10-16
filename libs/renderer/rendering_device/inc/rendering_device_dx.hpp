@@ -56,12 +56,19 @@ public:
 
 private:
     void createAdapter();
+    void createDevice();
+    void createCommandQueue();
 
     rendering_api::RenderingApiDX* m_parentApi{ nullptr };
 
     window::Window* m_window{ nullptr };
 
-    Microsoft::WRL::ComPtr<IDXGIAdapter4> m_adapter{ nullptr };
+    Microsoft::WRL::ComPtr<IDXGIAdapter4>     m_adapter{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12Device>      m_device{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12DebugDevice> m_debugDevice{ nullptr };
+
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue>     m_commandQueue{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator{ nullptr };
 };
 
 }   // namespace rendering_device

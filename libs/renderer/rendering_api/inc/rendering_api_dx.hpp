@@ -27,6 +27,7 @@ public:
     RenderingApiDX& create();
 
     Microsoft::WRL::ComPtr<IDXGIFactory7> getFactory();
+    bool                                  isDebugEnabled() const;
 
 private:
     void createFactory();

@@ -60,7 +60,9 @@ void RenderingApiDX::createMainRenderingDeviceWindow(window::Window* f_window)
 
 RenderingApiDX& RenderingApiDX::enableDebuging(bool f_enable)
 {
+#if defined(_DEBUG)
     m_debugEnabled = f_enable;
+#endif
     return *this;
 }
 
@@ -80,6 +82,11 @@ RenderingApiDX& RenderingApiDX::create()
 Microsoft::WRL::ComPtr<IDXGIFactory7> RenderingApiDX::getFactory()
 {
     return m_dxgiFactory;
+}
+
+bool RenderingApiDX::isDebugEnabled() const
+{
+    return m_debugEnabled;
 }
 
 void RenderingApiDX::createFactory()

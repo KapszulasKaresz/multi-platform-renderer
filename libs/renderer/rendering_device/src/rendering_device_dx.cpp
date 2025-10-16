@@ -83,6 +83,8 @@ RenderingDeviceDX& RenderingDeviceDX::setWindow(window::Window* f_window)
 RenderingDeviceDX& RenderingDeviceDX::create()
 {
     createAdapter();
+    createDevice();
+    createCommandQueue();
     m_valid = true;
     return *this;
 }
@@ -118,5 +120,48 @@ void RenderingDeviceDX::createAdapter()
         l_adapter4->Release();
     }
 }
+
+void RenderingDeviceDX::createDevice()
+{
+    if (FAILED(D3D12CreateDevice(
+            m_adapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(&m_device)
+        )))
+    {
+        throw std::runtime_error(
+            "RenderingDeviceDX::createDevice() Failed to create D3D12 device!"
+        );
+    }
+
+    if (m_parentApi->isDebugEnabled()) {
+        if (FAILED(m_device.As(&m_debugDevice))) {
+            throw std::runtime_error(
+                "RenderingDeviceDX::createDevice() Failed to create D3D12 debug device!"
+            );
+        }
+    }
+}
+
+void RenderingDeviceDX::createCommandQueue()
+{
+    D3D12_COMMAND_QUEUE_DESC l_queueDesc{ .Type  = D3D12_COMMAND_LIST_TYPE_DIRECT,
+                                          .Flags = D3D12_COMMAND_QUEUE_FLAG_NONE };
+    if (FAILED(m_device->CreateCommandQueue(&l_queueDesc, IID_PPV_ARGS(&m_commandQueue))))
+    {
+        throw std::runtime_error(
+            "RenderingDeviceDX::createCommandQueue() Failed to create command queue!"
+        );
+    }
+
+    if (FAILED(m_device->CreateCommandAllocator(
+            D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)
+        )))
+    {
+        throw std::runtime_error(
+            "RenderingDeviceDX::createCommandQueue() Failed to create command allocator!"
+        );
+    }
+}
+
+void RenderingDeviceDX::createSyncObjects() {}
 }   // namespace rendering_device
 }   // namespace renderer
