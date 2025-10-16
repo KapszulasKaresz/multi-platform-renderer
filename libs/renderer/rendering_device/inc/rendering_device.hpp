@@ -40,6 +40,8 @@ class Window;
 }   // namespace window
 
 namespace rendering_device {
+constexpr static int maxFramesInFlight{ 2 };
+
 class RenderingDevice : public RenderResource {
 public:
     virtual std::shared_ptr<render_target::RenderTargetWindow> getRenderTargetWindow() = 0;
@@ -66,7 +68,6 @@ public:
     uint32_t getMaxMSAASamples();
 
 protected:
-    int      m_maxFramesInFlight{ 2 };
     uint32_t m_currentFrame{ 0 };
     uint32_t m_MaxMSAASamples{ 1 };
 };

@@ -83,7 +83,7 @@ std::shared_ptr<command_buffer::CommandBuffer>
     if (!m_renderingCommandBuffer) {
         m_renderingCommandBuffer =
             std::make_shared<command_buffer::CommandBufferVulkan>(this, m_commandPool);
-        m_renderingCommandBuffer->setBufferCount(m_maxFramesInFlight)
+        m_renderingCommandBuffer->setBufferCount(maxFramesInFlight)
             .setRendering(true)
             .create();
     }
@@ -169,7 +169,7 @@ void RenderingDeviceVulkan::postFrame()
     }
 
     m_semaphoreIndex = (m_semaphoreIndex + 1) % m_presentCompleteSemaphore.size();
-    m_currentFrame   = (m_currentFrame + 1) % m_maxFramesInFlight;
+    m_currentFrame   = (m_currentFrame + 1) % maxFramesInFlight;
 }
 
 void RenderingDeviceVulkan::finishRendering()
@@ -557,7 +557,7 @@ void RenderingDeviceVulkan::createSyncObjects()
     }
 
 
-    for (size_t i = 0; i < m_maxFramesInFlight; i++) {
+    for (size_t i = 0; i < maxFramesInFlight; i++) {
         m_inFlightFences.emplace_back(
             m_device, vk::FenceCreateInfo{ .flags = vk::FenceCreateFlagBits::eSignaled }
         );
@@ -576,14 +576,14 @@ void RenderingDeviceVulkan::createVmaAllocator()
 void RenderingDeviceVulkan::createDescriptorPool()
 {
     std::array l_poolSize = {
-        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, m_maxFramesInFlight * 2),
+        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, maxFramesInFlight * 2),
         vk::DescriptorPoolSize(
-            vk::DescriptorType::eCombinedImageSampler, m_maxFramesInFlight * 2
+            vk::DescriptorType::eCombinedImageSampler, maxFramesInFlight * 2
         )
     };
     vk::DescriptorPoolCreateInfo l_poolInfo{
         .flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
-        .maxSets       = m_maxDescriptorSets * m_maxFramesInFlight,
+        .maxSets       = m_maxDescriptorSets * maxFramesInFlight,
         .poolSizeCount = l_poolSize.size(),
         .pPoolSizes    = l_poolSize.data()
     };

@@ -51,6 +51,7 @@ public:
     RenderingDeviceDX& setWindow(window::Window* f_window) override final;
     RenderingDeviceDX& create() override final;
 
+    void waitForGPU();
 
     ~RenderingDeviceDX();
 
@@ -58,6 +59,7 @@ private:
     void createAdapter();
     void createDevice();
     void createCommandQueue();
+    void createSyncObjects();
 
     rendering_api::RenderingApiDX* m_parentApi{ nullptr };
 
@@ -69,6 +71,12 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12CommandQueue>     m_commandQueue{ nullptr };
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator{ nullptr };
+
+    // Sync objects
+    UINT                                m_frameIndex{ 0 };
+    HANDLE                              m_fenceEvent;
+    Microsoft::WRL::ComPtr<ID3D12Fence> m_fence{ nullptr };
+    UINT64                              m_fenceValues[maxFramesInFlight];
 };
 
 }   // namespace rendering_device

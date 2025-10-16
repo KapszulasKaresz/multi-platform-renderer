@@ -4,13 +4,15 @@
 
 namespace renderer {
 namespace rendering_device {
+
 RenderingDevice& RenderingDevice::setTargetMSAASamples(uint32_t f_sampleCount)
 {
     if (isValid()) {
-        throw std::runtime_error(
-            "RenderingDevice::setTargetMSAASamples(uint32_t f_sampleCount) msaa can only "
-            "be set before device creation"
-        );
+        throw std::
+            runtime_error(
+                "RenderingDevice::setTargetMSAASamples(uint32_t f_sampleCount) msaa can "
+                "only " "be set before device creation"
+            );
     }
 
     m_MaxMSAASamples = f_sampleCount;
@@ -24,7 +26,7 @@ uint32_t RenderingDevice::getCurrentFrame() const
 
 int RenderingDevice::getMaxFramesInFlight() const
 {
-    return m_maxFramesInFlight;
+    return maxFramesInFlight;
 }
 
 uint32_t RenderingDevice::getMaxMSAASamples()

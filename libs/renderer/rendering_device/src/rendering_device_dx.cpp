@@ -89,6 +89,23 @@ RenderingDeviceDX& RenderingDeviceDX::create()
     return *this;
 }
 
+void RenderingDeviceDX::waitForGPU()
+{
+    if (FAILED(m_commandQueue->Signal(m_fence.Get(), m_fenceValues[m_frameIndex]))) {
+        throw std::runtime_error(
+            "RenderingDeviceDX::waitForGPU() Failed to signal command queue"
+        );
+    }
+
+    if (FAILED(m_fence->SetEventOnCompletion(m_fenceValues[m_frameIndex], m_fenceEvent)))
+    {
+        throw std::runtime_error("RenderingDeviceDX::waitForGPU() Failed to set fence");
+    }
+    WaitForSingleObjectEx(m_fenceEvent, INFINITE, FALSE);
+
+    m_fenceValues[m_frameIndex]++;
+}
+
 RenderingDeviceDX::~RenderingDeviceDX() {}
 
 void RenderingDeviceDX::createAdapter()
@@ -162,6 +179,26 @@ void RenderingDeviceDX::createCommandQueue()
     }
 }
 
-void RenderingDeviceDX::createSyncObjects() {}
+void RenderingDeviceDX::createSyncObjects()
+{
+    if (FAILED(m_device->CreateFence(
+            m_fenceValues[m_frameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence)
+        )))
+    {
+        throw std::runtime_error(
+            "RenderingDeviceDX::createSyncObjects() Failed to create fence!"
+        );
+    }
+    m_fenceValues[m_frameIndex]++;
+
+    m_fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+    if (m_fenceEvent == nullptr) {
+        if (FAILED((HRESULT_FROM_WIN32(GetLastError())))) {
+            throw std::runtime_error(
+                "RenderingDeviceDX::createSyncObjects() Failed to create fence event!"
+            );
+        }
+    }
+}
 }   // namespace rendering_device
 }   // namespace renderer
