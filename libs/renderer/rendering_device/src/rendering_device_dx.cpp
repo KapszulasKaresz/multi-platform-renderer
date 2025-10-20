@@ -130,6 +130,16 @@ void RenderingDeviceDX::waitForGPU()
     m_fenceValues[m_frameIndex]++;
 }
 
+rendering_api::RenderingApiDX* RenderingDeviceDX::getParentApi()
+{
+    return m_parentApi;
+}
+
+ID3D12CommandQueue* RenderingDeviceDX::getCommandQueue()
+{
+    return m_commandQueue.Get();
+}
+
 RenderingDeviceDX::~RenderingDeviceDX() {}
 
 void RenderingDeviceDX::createAdapter()

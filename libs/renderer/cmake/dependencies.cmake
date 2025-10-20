@@ -9,7 +9,8 @@ target_link_libraries(${RENDERER_LIB_NAME} PUBLIC glm::glm)
 #glfw
 find_package(glfw3 CONFIG REQUIRED)
 target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE
-        GLFW_INCLUDE_VULKAN)
+        GLFW_INCLUDE_VULKAN
+        GLFW_EXPOSE_NATIVE_WIN32)
 target_link_libraries(${RENDERER_LIB_NAME} PUBLIC glfw)
 
 # VulkanMemoryAllocator

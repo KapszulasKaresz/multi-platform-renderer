@@ -34,6 +34,7 @@ public:
     virtual bool    isOpen()        = 0;
     virtual void    update()        = 0;
     virtual void    waitTillShown() = 0;
+    virtual void*   getHwnd()       = 0;
 
     virtual int  getWidth() const;
     virtual int  getHeight() const;

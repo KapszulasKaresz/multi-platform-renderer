@@ -28,7 +28,14 @@ public:
     RenderTargetWindowDX& create();
 
 private:
+    void createSwapCahin();
+
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
+
+    Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain{ nullptr };
+
+    static const UINT s_backbufferCount = 2;
+    UINT              m_currentBuffer{ 0 };
 };
 
 }   // namespace render_target

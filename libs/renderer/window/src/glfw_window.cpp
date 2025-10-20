@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <GLFW/glfw3native.h>
+
 namespace renderer {
 namespace window {
 int GLFWWindow::s_numberOfWindows{ 0 };
@@ -53,6 +55,11 @@ void GLFWWindow::waitTillShown()
         glfwGetFramebufferSize(m_window, &l_width, &l_height);
         glfwWaitEvents();
     }
+}
+
+void* GLFWWindow::getHwnd()
+{
+    return glfwGetWin32Window(m_window);
 }
 
 std::vector<const char*> GLFWWindow::getRequiredInstanceExtensionsVulkan()

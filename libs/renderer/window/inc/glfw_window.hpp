@@ -19,6 +19,7 @@ public:
     bool         isOpen() override final;
     void         update() override final;
     void         waitTillShown() override final;
+    void*        getHwnd() override final;
 
     static std::vector<const char*> getRequiredInstanceExtensionsVulkan();
 

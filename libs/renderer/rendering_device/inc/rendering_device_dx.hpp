@@ -53,6 +53,9 @@ public:
 
     void waitForGPU();
 
+    rendering_api::RenderingApiDX* getParentApi();
+    ID3D12CommandQueue*            getCommandQueue();
+
     ~RenderingDeviceDX();
 
 private:
