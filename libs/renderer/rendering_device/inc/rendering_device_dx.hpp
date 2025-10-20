@@ -10,11 +10,11 @@
 
 namespace renderer {
 namespace command_buffer {
-class CommandBufferVulkan;
+class CommandBufferDX;
 }   // namespace command_buffer
 
 namespace image {
-class ImageVulkan;
+class ImageDX;
 }   // namespace image
 
 namespace rendering_api {
@@ -23,7 +23,7 @@ class RenderingApiDX;
 
 namespace render_target {
 class RenderTarget;
-class RenderTargetWindowVulkan;
+class RenderTargetWindowDX;
 }   // namespace render_target
 
 namespace rendering_device {
@@ -60,10 +60,12 @@ private:
     void createDevice();
     void createCommandQueue();
     void createSyncObjects();
+    void createRenderTargetWindow();
 
     rendering_api::RenderingApiDX* m_parentApi{ nullptr };
 
-    window::Window* m_window{ nullptr };
+    window::Window*                                      m_window{ nullptr };
+    std::shared_ptr<render_target::RenderTargetWindowDX> m_renderTargetWindow{ nullptr };
 
     Microsoft::WRL::ComPtr<IDXGIAdapter4>     m_adapter{ nullptr };
     Microsoft::WRL::ComPtr<ID3D12Device>      m_device{ nullptr };

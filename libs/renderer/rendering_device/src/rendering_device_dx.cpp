@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
 
 namespace renderer {
@@ -15,7 +16,29 @@ RenderingDeviceDX::RenderingDeviceDX(rendering_api::RenderingApiDX* f_parentApi)
 std::shared_ptr<render_target::RenderTargetWindow>
     RenderingDeviceDX::getRenderTargetWindow()
 {
-    throw std::logic_error("Function not yet implemented");
+    if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceDX::getRenderTargetWindow() device needs to be valid"
+        );
+    }
+
+    if (!m_window) {
+        throw std::
+            runtime_error(
+                "RenderingDeviceDX::getRenderTargetWindow() needs a window "
+                "attached to the device"
+            );
+    }
+
+    if (!m_renderTargetWindow) {
+        throw std::
+            runtime_error(
+                "RenderingDeviceDX::getRenderTargetWindow() no render target window "
+                "is available"
+            );
+    }
+
+    return m_renderTargetWindow;
 }
 
 std::shared_ptr<image::Image> RenderingDeviceDX::createImage()
@@ -86,6 +109,7 @@ RenderingDeviceDX& RenderingDeviceDX::create()
     createDevice();
     createCommandQueue();
     m_valid = true;
+    createRenderTargetWindow();
     return *this;
 }
 
@@ -199,6 +223,19 @@ void RenderingDeviceDX::createSyncObjects()
             );
         }
     }
+}
+
+void RenderingDeviceDX::createRenderTargetWindow()
+{
+    if (!m_window) {
+        return;
+    }
+    m_renderTargetWindow = std::make_shared<render_target::RenderTargetWindowDX>(this);
+    m_renderTargetWindow->setWindow(m_window)
+        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8_SRGB)
+        .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
+        .setDepthBuffer(true)
+        .create();
 }
 }   // namespace rendering_device
 }   // namespace renderer
