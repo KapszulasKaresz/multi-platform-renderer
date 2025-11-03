@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "renderer/image/inc/image_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
 #include "renderer/window/inc/window.hpp"
@@ -39,6 +40,8 @@ glm::ivec2 RenderTargetWindowDX::getSize() const
 RenderTargetWindowDX& RenderTargetWindowDX::create()
 {
     createSwapCahin();
+    createDescriptorHeap();
+    createRenderTargets();
     m_valid = true;
     return *this;
 }
@@ -62,7 +65,7 @@ void RenderTargetWindowDX::createSwapCahin()
             s_backbufferCount,
             m_window->getWidth(),
             m_window->getHeight(),
-            DXGI_FORMAT_R8G8B8A8_UNORM,   // TODO proper format conversion
+            image::ImageDX::convertToDXFormat(m_format),
             0
         );
     }
@@ -71,10 +74,9 @@ void RenderTargetWindowDX::createSwapCahin()
         l_swapchainDesc.BufferCount           = s_backbufferCount;
         l_swapchainDesc.Width                 = m_window->getWidth();
         l_swapchainDesc.Height                = m_window->getHeight();
-        l_swapchainDesc.Format      = DXGI_FORMAT_R8G8B8A8_UNORM;   // TODO proper format
-                                                                    // conversion
-        l_swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        l_swapchainDesc.SwapEffect  = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+        l_swapchainDesc.Format           = image::ImageDX::convertToDXFormat(m_format);
+        l_swapchainDesc.BufferUsage      = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+        l_swapchainDesc.SwapEffect       = DXGI_SWAP_EFFECT_FLIP_DISCARD;
         l_swapchainDesc.SampleDesc.Count = 1;
 
         Microsoft::WRL::ComPtr<IDXGISwapChain1> l_swapChain;
@@ -100,6 +102,46 @@ void RenderTargetWindowDX::createSwapCahin()
     }
 
     m_currentBuffer = m_swapChain->GetCurrentBackBufferIndex();
+}
+
+void RenderTargetWindowDX::createDescriptorHeap()
+{
+    D3D12_DESCRIPTOR_HEAP_DESC l_rtvHeapDesc = {};
+    l_rtvHeapDesc.NumDescriptors             = rendering_device::maxFramesInFlight;
+    l_rtvHeapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    l_rtvHeapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    if (FAILED(m_parentDevice->getDevice()->CreateDescriptorHeap(
+            &l_rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)
+        )))
+    {
+        throw std::runtime_error(
+            "RenderingDeviceDX::createDescriptorHeap() failed to create descriptor heap"
+        );
+    }
+
+    m_rtvDescriptorSize = m_parentDevice->getDevice()->GetDescriptorHandleIncrementSize(
+        D3D12_DESCRIPTOR_HEAP_TYPE_RTV
+    );
+}
+
+void RenderTargetWindowDX::createRenderTargets()
+{
+    D3D12_CPU_DESCRIPTOR_HANDLE l_rtvHandle(
+        m_rtvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
+
+    for (UINT n = 0; n < rendering_device::maxFramesInFlight; n++) {
+        if (FAILED(m_swapChain->GetBuffer(n, IID_PPV_ARGS(&m_renderTargets[n])))) {
+            throw std::runtime_error(
+                "RenderTargetWindowDX::createRenderTargets() failed to create render "
+                "target"
+            );
+        }
+        m_parentDevice->getDevice()->CreateRenderTargetView(
+            m_renderTargets[n].Get(), nullptr, l_rtvHandle
+        );
+        l_rtvHandle.ptr += (1 * m_rtvDescriptorSize);
+    }
 }
 }   // namespace render_target
 }   // namespace renderer

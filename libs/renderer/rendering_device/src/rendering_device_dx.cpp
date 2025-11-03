@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "renderer/command_buffer/inc/command_buffer_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
 
@@ -53,13 +54,19 @@ std::shared_ptr<material::Material> RenderingDeviceDX::createMaterial()
 
 std::shared_ptr<command_buffer::CommandBuffer> RenderingDeviceDX::createCommandBuffer()
 {
-    throw std::logic_error("Function not yet implemented");
+    auto l_commandBuffer = std::make_shared<command_buffer::CommandBufferDX>(this);
+    l_commandBuffer->setRendering(false).create();
+    return l_commandBuffer;
 }
 
 std::shared_ptr<command_buffer::CommandBuffer>
     RenderingDeviceDX::getRenderingCommandBuffer()
 {
-    throw std::logic_error("Function not yet implemented");
+    if (!m_renderingCommandBuffer) {
+        m_renderingCommandBuffer = std::make_shared<command_buffer::CommandBufferDX>(this);
+        m_renderingCommandBuffer->setRendering(true).create();
+    }
+    return m_renderingCommandBuffer;
 }
 
 std::shared_ptr<mesh::TriangleMesh> RenderingDeviceDX::createTriangleMesh()
@@ -140,6 +147,16 @@ ID3D12CommandQueue* RenderingDeviceDX::getCommandQueue()
     return m_commandQueue.Get();
 }
 
+Microsoft::WRL::ComPtr<ID3D12CommandAllocator> RenderingDeviceDX::getCommandAllocator()
+{
+    return m_commandAllocators[m_currentFrame];
+}
+
+Microsoft::WRL::ComPtr<ID3D12Device> RenderingDeviceDX::getDevice()
+{
+    return m_device;
+}
+
 RenderingDeviceDX::~RenderingDeviceDX() {}
 
 void RenderingDeviceDX::createAdapter()
@@ -203,13 +220,16 @@ void RenderingDeviceDX::createCommandQueue()
         );
     }
 
-    if (FAILED(m_device->CreateCommandAllocator(
-            D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)
-        )))
-    {
-        throw std::runtime_error(
-            "RenderingDeviceDX::createCommandQueue() Failed to create command allocator!"
-        );
+    for (UINT n = 0; n < maxFramesInFlight; n++) {
+        if (FAILED(m_device->CreateCommandAllocator(
+                D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocators[n])
+            )))
+        {
+            throw std::runtime_error(
+                "RenderingDeviceDX::createCommandQueue() Failed to create command "
+                "allocator!"
+            );
+        }
     }
 }
 
@@ -242,7 +262,7 @@ void RenderingDeviceDX::createRenderTargetWindow()
     }
     m_renderTargetWindow = std::make_shared<render_target::RenderTargetWindowDX>(this);
     m_renderTargetWindow->setWindow(m_window)
-        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8_SRGB)
+        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8)
         .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
         .setDepthBuffer(true)
         .create();

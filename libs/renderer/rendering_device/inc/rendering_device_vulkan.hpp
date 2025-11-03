@@ -110,7 +110,9 @@ private:
     };
 
     vk::raii::CommandPool                                m_commandPool{ nullptr };
-    std::shared_ptr<command_buffer::CommandBufferVulkan> m_renderingCommandBuffer{};
+    std::shared_ptr<command_buffer::CommandBufferVulkan> m_renderingCommandBuffer{
+        nullptr
+    };
 
     std::vector<vk::raii::Semaphore> m_presentCompleteSemaphore{};
     std::vector<vk::raii::Semaphore> m_renderFinishedSemaphore{};

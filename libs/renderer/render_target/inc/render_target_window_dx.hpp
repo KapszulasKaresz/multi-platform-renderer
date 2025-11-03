@@ -8,6 +8,7 @@
 #include <wrl.h>
 
 #include "renderer/render_target/inc/render_target_window.hpp"
+#include "renderer/rendering_device/inc/rendering_device.hpp"
 
 namespace renderer {
 namespace rendering_device {
@@ -29,10 +30,18 @@ public:
 
 private:
     void createSwapCahin();
+    void createDescriptorHeap();
+    void createRenderTargets();
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
     Microsoft::WRL::ComPtr<IDXGISwapChain3> m_swapChain{ nullptr };
+
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap{ nullptr };
+    UINT                                         m_rtvDescriptorSize;
+
+    Microsoft::WRL::ComPtr<ID3D12Resource>
+        m_renderTargets[rendering_device::maxFramesInFlight];
 
     static const UINT s_backbufferCount = 2;
     UINT              m_currentBuffer{ 0 };

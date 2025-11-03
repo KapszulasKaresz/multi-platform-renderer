@@ -136,10 +136,10 @@ void UniformCollectionVulkan::createDescriptorSetLayout()
             dynamic_cast<texture::TextureVulkan*>(m_textures[i - 1].get());
 
         if (l_rawVulkanTexture == nullptr) {
-            std::
+            throw std::
                 runtime_error(
                     "UniformCollectionVulkan::createDescriptorSetLayout() texture isn't "
-                    "a " "vulkan texture"
+                    "a vulkan texture"
                 );
         }
 
@@ -222,7 +222,7 @@ void UniformCollectionVulkan::createDescriptorSets()
                 dynamic_cast<texture::TextureVulkan*>(m_textures[j].get());
 
             if (l_rawVulkanTexture == nullptr) {
-                std::runtime_error(
+                throw std::runtime_error(
                     "UniformCollectionVulkan::createDescriptorSets() texture isn't a "
                     "vulkan texture"
                 );

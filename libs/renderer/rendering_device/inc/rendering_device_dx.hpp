@@ -53,8 +53,10 @@ public:
 
     void waitForGPU();
 
-    rendering_api::RenderingApiDX* getParentApi();
-    ID3D12CommandQueue*            getCommandQueue();
+    rendering_api::RenderingApiDX*                 getParentApi();
+    ID3D12CommandQueue*                            getCommandQueue();
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> getCommandAllocator();
+    Microsoft::WRL::ComPtr<ID3D12Device>           getDevice();
 
     ~RenderingDeviceDX();
 
@@ -75,7 +77,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D12DebugDevice> m_debugDevice{ nullptr };
 
     Microsoft::WRL::ComPtr<ID3D12CommandQueue>     m_commandQueue{ nullptr };
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocator{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocators[maxFramesInFlight];
+
+    std::shared_ptr<command_buffer::CommandBufferDX> m_renderingCommandBuffer{ nullptr };
 
     // Sync objects
     UINT                                m_frameIndex{ 0 };
