@@ -8,6 +8,8 @@
 
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 
+#include "D3D12MemAlloc.h"
+
 namespace renderer {
 namespace command_buffer {
 class CommandBufferDX;
@@ -57,12 +59,14 @@ public:
     ID3D12CommandQueue*                            getCommandQueue();
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> getCommandAllocator();
     Microsoft::WRL::ComPtr<ID3D12Device>           getDevice();
+    D3D12MA::Allocator*                            getMemoryAllocator();
 
     ~RenderingDeviceDX();
 
 private:
     void createAdapter();
     void createDevice();
+    void createAllocator();
     void createCommandQueue();
     void createSyncObjects();
     void createRenderTargetWindow();
@@ -72,9 +76,10 @@ private:
     window::Window*                                      m_window{ nullptr };
     std::shared_ptr<render_target::RenderTargetWindowDX> m_renderTargetWindow{ nullptr };
 
-    Microsoft::WRL::ComPtr<IDXGIAdapter4>     m_adapter{ nullptr };
-    Microsoft::WRL::ComPtr<ID3D12Device>      m_device{ nullptr };
-    Microsoft::WRL::ComPtr<ID3D12DebugDevice> m_debugDevice{ nullptr };
+    Microsoft::WRL::ComPtr<IDXGIAdapter4>      m_adapter{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12Device>       m_device{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12DebugDevice>  m_debugDevice{ nullptr };
+    Microsoft::WRL::ComPtr<D3D12MA::Allocator> m_allocator{ nullptr };
 
     Microsoft::WRL::ComPtr<ID3D12CommandQueue>     m_commandQueue{ nullptr };
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocators[maxFramesInFlight];

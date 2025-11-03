@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "renderer/command_buffer/inc/command_buffer_dx.hpp"
+#include "renderer/mesh/inc/triangle_mesh_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
 
@@ -71,7 +72,7 @@ std::shared_ptr<command_buffer::CommandBuffer>
 
 std::shared_ptr<mesh::TriangleMesh> RenderingDeviceDX::createTriangleMesh()
 {
-    throw std::logic_error("Function not yet implemented");
+    return std::make_shared<mesh::TriangleMeshDX>(this);
 }
 
 std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformCollection()
@@ -114,6 +115,7 @@ RenderingDeviceDX& RenderingDeviceDX::create()
 {
     createAdapter();
     createDevice();
+    createAllocator();
     createCommandQueue();
     m_valid = true;
     createRenderTargetWindow();
@@ -155,6 +157,11 @@ Microsoft::WRL::ComPtr<ID3D12CommandAllocator> RenderingDeviceDX::getCommandAllo
 Microsoft::WRL::ComPtr<ID3D12Device> RenderingDeviceDX::getDevice()
 {
     return m_device;
+}
+
+D3D12MA::Allocator* RenderingDeviceDX::getMemoryAllocator()
+{
+    return m_allocator.Get();
 }
 
 RenderingDeviceDX::~RenderingDeviceDX() {}
@@ -206,6 +213,19 @@ void RenderingDeviceDX::createDevice()
                 "RenderingDeviceDX::createDevice() Failed to create D3D12 debug device!"
             );
         }
+    }
+}
+
+void RenderingDeviceDX::createAllocator()
+{
+    D3D12MA::ALLOCATOR_DESC l_allocatorDesc = { .Flags =
+                                                    D3D12MA_RECOMMENDED_ALLOCATOR_FLAGS,
+                                                .pDevice  = m_device.Get(),
+                                                .pAdapter = m_adapter.Get() };
+    if (FAILED(D3D12MA::CreateAllocator(&l_allocatorDesc, &m_allocator))) {
+        throw std::runtime_error(
+            "RenderingDeviceDX::createAllocator() failed to create DMA allocator"
+        );
     }
 }
 
