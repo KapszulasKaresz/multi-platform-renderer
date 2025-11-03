@@ -13,3 +13,6 @@ CMakeUserPresets.json
 .vscode-test
 
 *.spv
+
+libs/renderer/external/inc
+libs/renderer/external/src

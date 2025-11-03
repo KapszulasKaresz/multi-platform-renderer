@@ -8,6 +8,8 @@ target_include_directories(${RENDERER_LIB_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/libs)
 
 include(cmake/dependencies.cmake)
 
+add_subdirectory(external)
+
 add_subdirectory(utils)
 add_subdirectory(command_buffer)
 add_subdirectory(image)
