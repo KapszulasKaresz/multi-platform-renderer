@@ -104,8 +104,8 @@ int main(int argc, const char* argv[])
         //     .addUniformCollection(l_uniformCollection)
         //     .create();
 
-        // auto l_mesh = l_renderingServer.getMainRenderingDevice()->createTriangleMesh();
-        // l_mesh->create();
+        auto l_mesh = l_renderingServer.getMainRenderingDevice()->createTriangleMesh();
+        l_mesh->create();
 
         // auto l_scene = std::make_shared<renderer::scene::TestScene>();
         // l_scene->setMaterial(l_material).setMesh(l_mesh).create();
