@@ -6,6 +6,7 @@
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
+#include "renderer/uniform/inc/uniform_collection_dx.hpp"
 
 namespace renderer {
 namespace rendering_device {
@@ -77,7 +78,7 @@ std::shared_ptr<mesh::TriangleMesh> RenderingDeviceDX::createTriangleMesh()
 
 std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformCollection()
 {
-    throw std::logic_error("Function not yet implemented");
+    return std::make_shared<uniform::UniformCollectionDX>(this);
 }
 
 std::shared_ptr<texture::Texture> RenderingDeviceDX::createTexture()

@@ -5,6 +5,7 @@
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 #include "renderer/texture/inc/texture_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_single_vulkan.hpp"
+#include "renderer/utils/inc/utils.hpp"
 
 namespace renderer {
 namespace uniform {
@@ -164,13 +165,6 @@ void UniformCollectionVulkan::createDescriptorSetLayout()
         vk::raii::DescriptorSetLayout(m_parentDevice->getLogicalDevice(), l_layoutInfo);
 }
 
-namespace {
-inline size_t alignUp(size_t f_offset, size_t f_alignment)
-{
-    return (f_offset + f_alignment - 1) & ~(f_alignment - 1);
-}
-}   // namespace
-
 void UniformCollectionVulkan::createUniformBuffers()
 {
     m_uniformBuffers.clear();
@@ -260,12 +254,12 @@ void UniformCollectionVulkan::computeStd140Layout()
         size_t l_size  = l_member->getSize();
 
         l_maxAlign = std::max(l_maxAlign, l_align);
-        l_offset   = alignUp(l_offset, l_align);
+        l_offset   = utils::alignUp(l_offset, l_align);
         m_layout.m_offsets.push_back(l_offset);
         l_offset += l_size;
     }
 
-    m_layout.m_structSize = alignUp(l_offset, l_maxAlign);
+    m_layout.m_structSize = utils::alignUp(l_offset, l_maxAlign);
 }
 
 std::vector<uint8_t> UniformCollectionVulkan::createStd140Buffer()
