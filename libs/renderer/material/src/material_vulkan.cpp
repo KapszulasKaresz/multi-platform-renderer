@@ -57,7 +57,7 @@ void MaterialVulkan::updateUniforms()
 void MaterialVulkan::createPipeline()
 {
     vk::raii::ShaderModule l_shaderModule =
-        createShaderModule(utils::readFile(m_shaderLocation));
+        createShaderModule(utils::readFile(m_shaderLocation + ".spv"));
 
     vk::PipelineShaderStageCreateInfo l_vertShaderStageInfo{
         .stage  = vk::ShaderStageFlagBits::eVertex,

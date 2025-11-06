@@ -98,18 +98,18 @@ int main(int argc, const char* argv[])
         // l_uniformCollection->addTexture(l_texture);
         l_uniformCollection->setName("Camera").create();
 
-        // auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();
-        // l_material->setShader("res/shaders/shader.spv")
-        //     .addUniformCollection(l_uniformCollection)
-        //     .create();
+        auto l_material = l_renderingServer.getMainRenderingDevice()->createMaterial();
+        l_material->setShader("res/shaders/shader")
+            .addUniformCollection(l_uniformCollection)
+            .create();
 
         auto l_mesh = l_renderingServer.getMainRenderingDevice()->createTriangleMesh();
         l_mesh->create();
 
-        // auto l_scene = std::make_shared<renderer::scene::TestScene>();
-        // l_scene->setMaterial(l_material).setMesh(l_mesh).create();
+        auto l_scene = std::make_shared<renderer::scene::TestScene>();
+        l_scene->setMaterial(l_material).setMesh(l_mesh).create();
 
-        // l_renderingServer.setScene(l_scene);
+        l_renderingServer.setScene(l_scene);
 
         l_renderingServer.mainLoop();
     } catch (const std::runtime_error& l_error) {

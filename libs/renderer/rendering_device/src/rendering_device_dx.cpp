@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "renderer/command_buffer/inc/command_buffer_dx.hpp"
+#include "renderer/material/inc/material_dx.hpp"
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
@@ -51,7 +52,7 @@ std::shared_ptr<image::Image> RenderingDeviceDX::createImage()
 
 std::shared_ptr<material::Material> RenderingDeviceDX::createMaterial()
 {
-    throw std::logic_error("Function not yet implemented");
+    return std::make_shared<material::MaterialDX>(this);
 }
 
 std::shared_ptr<command_buffer::CommandBuffer> RenderingDeviceDX::createCommandBuffer()

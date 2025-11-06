@@ -107,7 +107,7 @@ void RenderingServer::frame()
             { .m_renderTarget = l_renderingDevice->getRenderTargetWindow(),
               .m_clearColor   = glm::vec4(0.0, 0.0, 0.0, 1.0) }
         );
-        // m_scene->recordCommandBuffer(l_commandBuffer.get());
+        m_scene->recordCommandBuffer(l_commandBuffer.get());
         l_commandBuffer->endRendering();
         l_commandBuffer->end();
         l_commandBuffer->submit();
