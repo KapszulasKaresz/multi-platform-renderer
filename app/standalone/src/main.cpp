@@ -29,7 +29,12 @@ int main(int argc, const char* argv[])
         l_renderingServer.setRenderMode(renderer::rendering_server::RENDER_MODE_LOOP);
 
         auto l_window = std::make_unique<renderer::window::GLFWWindow>();
-        l_window->setSize(glm::ivec2(1'600, 1'200)).setTitle("Test Window").create();
+        l_window->setSize(glm::ivec2(1'600, 1'200))
+            .setTitle(
+                l_inputs.getCmdOption("--api").value_or("") == "dx" ? "Test Window DX"
+                                                                    : "Test Windwo VK"
+            )
+            .create();
 
         if (l_inputs.getCmdOption("--api").value_or("") == "dx") {
             auto l_renderingApi =
@@ -89,7 +94,9 @@ int main(int argc, const char* argv[])
             0.1f,
             10.0f
         );
-        // l_proj[1][1] *= -1;
+        if (l_inputs.getCmdOption("--api").value_or("") == "vk") {
+            l_proj[1][1] *= -1;
+        }
         l_uniformCollection->addMember("proj")
             ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
             .setValue(l_proj)
