@@ -66,6 +66,11 @@ IDXGISwapChain3* RenderTargetWindowDX::getSwapchain()
     return m_swapChain.Get();
 }
 
+void RenderTargetWindowDX::resizeSwapChain()
+{
+    createSwapCahin();
+}
+
 void RenderTargetWindowDX::createSwapCahin()
 {
     if (m_swapChain != nullptr) {

@@ -8,6 +8,7 @@
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
+#include "renderer/window/inc/window.hpp"
 
 namespace renderer {
 namespace rendering_device {
@@ -107,6 +108,10 @@ void RenderingDeviceDX::postFrame()
 
 void RenderingDeviceDX::finishRendering()
 {
+    if (m_window->isResized()) {
+        m_window->resizeHandled();
+        m_renderTargetWindow->resizeSwapChain();
+    }
     waitForGPU();
 }
 

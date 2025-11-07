@@ -32,6 +32,8 @@ public:
     UINT                  getDescriptorSize();
     IDXGISwapChain3*      getSwapchain();
 
+    void resizeSwapChain();
+
 private:
     void createSwapCahin();
     void createDescriptorHeap();
