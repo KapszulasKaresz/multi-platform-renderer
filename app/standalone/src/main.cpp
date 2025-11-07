@@ -89,7 +89,7 @@ int main(int argc, const char* argv[])
             0.1f,
             10.0f
         );
-        l_proj[1][1] *= -1;
+        // l_proj[1][1] *= -1;
         l_uniformCollection->addMember("proj")
             ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
             .setValue(l_proj)

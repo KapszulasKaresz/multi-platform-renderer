@@ -19,6 +19,16 @@ TriangleMeshDX& TriangleMeshDX::create()
     return *this;
 }
 
+D3D12_VERTEX_BUFFER_VIEW& TriangleMeshDX::getVertexBufferView()
+{
+    return m_vertexBufferView;
+}
+
+D3D12_INDEX_BUFFER_VIEW& TriangleMeshDX::getIndexBufferView()
+{
+    return m_indexBufferView;
+}
+
 void TriangleMeshDX::createVertexBuffer()
 {
     const UINT l_vertexBufferSize = sizeof(Vertex) * m_vertices.size();

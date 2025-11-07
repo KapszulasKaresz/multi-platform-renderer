@@ -53,6 +53,11 @@ UniformCollectionDX& UniformCollectionDX::create()
     return *this;
 }
 
+ID3D12DescriptorHeap* UniformCollectionDX::getDescriptorHeap()
+{
+    return m_constantBufferHeap.Get();
+}
+
 void UniformCollectionDX::createBuffer()
 {
     D3D12_DESCRIPTOR_HEAP_DESC l_heapDesc = {};
@@ -112,6 +117,9 @@ void UniformCollectionDX::createBuffer()
                     + m_parentDevice->getDevice()->GetDescriptorHandleIncrementSize(
                           D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
                       ) * 0;
+    m_parentDevice->getDevice()->CreateConstantBufferView(
+        &m_constantBufferView, l_cbvHandle
+    );
 }
 
 void UniformCollectionDX::computeLayout()

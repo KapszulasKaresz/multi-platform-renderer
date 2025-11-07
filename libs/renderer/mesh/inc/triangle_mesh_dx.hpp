@@ -22,6 +22,9 @@ public:
 
     TriangleMeshDX& create() override final;
 
+    D3D12_VERTEX_BUFFER_VIEW& getVertexBufferView();
+    D3D12_INDEX_BUFFER_VIEW&  getIndexBufferView();
+
 protected:
     void createVertexBuffer();
     void createIndexBuffer();

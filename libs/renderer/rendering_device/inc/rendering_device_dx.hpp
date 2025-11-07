@@ -57,9 +57,11 @@ public:
 
     rendering_api::RenderingApiDX*                 getParentApi();
     ID3D12CommandQueue*                            getCommandQueue();
-    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> getCommandAllocator();
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> getCommandAllocator(int f_index = -1);
     Microsoft::WRL::ComPtr<ID3D12Device>           getDevice();
     D3D12MA::Allocator*                            getMemoryAllocator();
+
+    void executeCommandList(ID3D12GraphicsCommandList* f_commandList);
 
     ~RenderingDeviceDX();
 

@@ -24,8 +24,6 @@ public:
     vk::PipelineLayout             getPipelineLayout();
     std::vector<vk::DescriptorSet> getDescriptorSets();
 
-    void updateUniforms();
-
 private:
     void createPipeline();
 

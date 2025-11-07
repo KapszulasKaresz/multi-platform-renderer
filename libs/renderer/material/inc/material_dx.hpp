@@ -22,6 +22,10 @@ public:
 
     MaterialDX& create() override final;
 
+    ID3D12RootSignature*               getRootSignature();
+    std::vector<ID3D12DescriptorHeap*> getDescriptorHeaps();
+    ID3D12PipelineState*               getPipelineState();
+
 private:
     void createRootSignature();
     void createPipelineState();

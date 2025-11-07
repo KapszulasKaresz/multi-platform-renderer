@@ -34,7 +34,7 @@ std::shared_ptr<image::Image> RenderTargetWindowDX::getDepthImage()
 
 glm::ivec2 RenderTargetWindowDX::getSize() const
 {
-    throw std::logic_error("Function not yet implemented");
+    return m_size;
 }
 
 RenderTargetWindowDX& RenderTargetWindowDX::create()
@@ -46,20 +46,28 @@ RenderTargetWindowDX& RenderTargetWindowDX::create()
     return *this;
 }
 
+ID3D12Resource* RenderTargetWindowDX::getRenderTarget()
+{
+    return m_renderTargets[m_parentDevice->getCurrentFrame()].Get();
+}
+
+ID3D12DescriptorHeap* RenderTargetWindowDX::getDescriptorHeap()
+{
+    return m_rtvHeap.Get();
+}
+
+UINT RenderTargetWindowDX::getDescriptorSize()
+{
+    return m_rtvDescriptorSize;
+}
+
+IDXGISwapChain3* RenderTargetWindowDX::getSwapchain()
+{
+    return m_swapChain.Get();
+}
+
 void RenderTargetWindowDX::createSwapCahin()
 {
-    D3D12_VIEWPORT l_viewport{ .TopLeftX = 0.0f,
-                               .TopLeftY = 0.0f,
-                               .Width    = static_cast<float>(m_window->getWidth()),
-                               .Height   = static_cast<float>(m_window->getHeight()),
-                               .MinDepth = .1f,
-                               .MaxDepth = 1000.f };
-    D3D12_RECT     l_surfaceSize{ .left   = 0,
-                                  .top    = 0,
-                                  .right  = static_cast<LONG>(m_window->getWidth()),
-                                  .bottom = static_cast<LONG>(m_window->getHeight()) };
-
-
     if (m_swapChain != nullptr) {
         m_swapChain->ResizeBuffers(
             s_backbufferCount,
@@ -100,8 +108,10 @@ void RenderTargetWindowDX::createSwapCahin()
             );
         }
     }
+    m_size = glm::ivec2(m_window->getWidth(), m_window->getHeight());
 
     m_currentBuffer = m_swapChain->GetCurrentBackBufferIndex();
+    m_parentDevice->waitForGPU();
 }
 
 void RenderTargetWindowDX::createDescriptorHeap()

@@ -37,5 +37,12 @@ std::shared_ptr<uniform::UniformCollection> Material::getUniformCollection(
     throw std::runtime_error("Material::getUniformCollection(...) Uniform not found.");
 }
 
+void Material::updateUniforms()
+{
+    for (const auto& l_uniform : m_uniformCollections) {
+        l_uniform->update();
+    }
+}
+
 }   // namespace material
 }   // namespace renderer

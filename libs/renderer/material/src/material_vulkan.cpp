@@ -47,13 +47,6 @@ std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
     return l_ret;
 }
 
-void MaterialVulkan::updateUniforms()
-{
-    for (const auto& l_uniform : m_uniformCollections) {
-        l_uniform->update();
-    }
-}
-
 void MaterialVulkan::createPipeline()
 {
     vk::raii::ShaderModule l_shaderModule =

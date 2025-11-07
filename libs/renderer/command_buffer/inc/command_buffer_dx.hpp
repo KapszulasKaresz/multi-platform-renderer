@@ -1,11 +1,14 @@
 #ifndef COMMAND_BUFFER_DX_HPP
 #define COMMAND_BUFFER_DX_HPP
 
+#include <array>
+
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
 
 #include "renderer/command_buffer/inc/command_buffer.hpp"
+#include "renderer/rendering_device/inc/rendering_device.hpp"
 
 namespace renderer {
 namespace image {
@@ -40,6 +43,8 @@ public:
     CommandBufferDX& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
 
 protected:
+    ID3D12GraphicsCommandList* selectCommandList();
+
     bool m_rendering{ false };
 
     bool m_singleUse{ false };
@@ -48,6 +53,12 @@ protected:
     std::shared_ptr<render_target::RenderTarget> m_currentRenderTarget{ nullptr };
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
+
+    std::array<
+        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>,
+        rendering_device::maxFramesInFlight>
+                                                m_commandLists{};
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_initialPipelineState{ nullptr };
 };
 }   // namespace command_buffer
 }   // namespace  renderer

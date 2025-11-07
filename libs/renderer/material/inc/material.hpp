@@ -23,6 +23,8 @@ public:
         std::string_view f_name
     );
 
+    void updateUniforms();
+
 protected:
     std::vector<std::shared_ptr<uniform::UniformCollection>> m_uniformCollections;
 

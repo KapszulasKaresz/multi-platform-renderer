@@ -94,17 +94,20 @@ std::shared_ptr<render_target::RenderTarget> RenderingDeviceDX::createRenderTarg
 
 bool RenderingDeviceDX::preFrame()
 {
-    throw std::logic_error("Function not yet implemented");
+    waitForGPU();
+    m_frameIndex   = m_renderTargetWindow->getSwapchain()->GetCurrentBackBufferIndex();
+    m_currentFrame = m_renderTargetWindow->getSwapchain()->GetCurrentBackBufferIndex();
+    return true;
 }
 
 void RenderingDeviceDX::postFrame()
 {
-    throw std::logic_error("Function not yet implemented");
+    m_renderTargetWindow->getSwapchain()->Present(1, 0);
 }
 
 void RenderingDeviceDX::finishRendering()
 {
-    throw std::logic_error("Function not yet implemented");
+    waitForGPU();
 }
 
 RenderingDeviceDX& RenderingDeviceDX::setWindow(window::Window* f_window)
@@ -119,6 +122,7 @@ RenderingDeviceDX& RenderingDeviceDX::create()
     createDevice();
     createAllocator();
     createCommandQueue();
+    createSyncObjects();
     m_valid = true;
     createRenderTargetWindow();
     return *this;
@@ -151,9 +155,14 @@ ID3D12CommandQueue* RenderingDeviceDX::getCommandQueue()
     return m_commandQueue.Get();
 }
 
-Microsoft::WRL::ComPtr<ID3D12CommandAllocator> RenderingDeviceDX::getCommandAllocator()
+Microsoft::WRL::ComPtr<ID3D12CommandAllocator> RenderingDeviceDX::getCommandAllocator(
+    int f_index
+)
 {
-    return m_commandAllocators[m_currentFrame];
+    if (f_index < 0) {
+        return m_commandAllocators[m_currentFrame];
+    }
+    return m_commandAllocators[f_index];
 }
 
 Microsoft::WRL::ComPtr<ID3D12Device> RenderingDeviceDX::getDevice()
@@ -166,7 +175,16 @@ D3D12MA::Allocator* RenderingDeviceDX::getMemoryAllocator()
     return m_allocator.Get();
 }
 
-RenderingDeviceDX::~RenderingDeviceDX() {}
+void RenderingDeviceDX::executeCommandList(ID3D12GraphicsCommandList* f_commandList)
+{
+    ID3D12CommandList* l_ppCommandLists[] = { f_commandList };
+    m_commandQueue->ExecuteCommandLists(_countof(l_ppCommandLists), l_ppCommandLists);
+}
+
+RenderingDeviceDX::~RenderingDeviceDX()
+{
+    waitForGPU();
+}
 
 void RenderingDeviceDX::createAdapter()
 {

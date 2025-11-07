@@ -4,6 +4,7 @@
 
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
+#include "renderer/uniform/inc/uniform_collection_dx.hpp"
 #include "renderer/utils/inc/utils.hpp"
 
 namespace renderer {
@@ -20,6 +21,35 @@ MaterialDX& MaterialDX::create()
     createPipelineState();
     m_valid = true;
     return *this;
+}
+
+ID3D12RootSignature* MaterialDX::getRootSignature()
+{
+    return m_rootSignature.Get();
+}
+
+std::vector<ID3D12DescriptorHeap*> MaterialDX::getDescriptorHeaps()
+{
+    std::vector<ID3D12DescriptorHeap*> l_ret;
+    for (auto& l_uniform : m_uniformCollections) {
+        uniform::UniformCollectionDX* l_uniformDX =
+            dynamic_cast<uniform::UniformCollectionDX*>(l_uniform.get());
+        if (l_uniformDX == nullptr) {
+            throw std::
+                runtime_error(
+                    "MaterialDX::getDescriptorHeaps() uniform collection wasn't a dx "
+                    "uniform " "collection"
+                );
+        }
+
+        l_ret.push_back(l_uniformDX->getDescriptorHeap());
+    }
+    return l_ret;
+}
+
+ID3D12PipelineState* MaterialDX::getPipelineState()
+{
+    return m_pipelineState.Get();
 }
 
 void MaterialDX::createRootSignature()
@@ -151,7 +181,7 @@ void MaterialDX::createPipelineState()
     l_psoDesc.SampleMask                      = UINT_MAX;
 
     l_psoDesc.NumRenderTargets = 1;
-    l_psoDesc.RTVFormats[0]    = DXGI_FORMAT_R8G8B8A8_UNORM;
+    l_psoDesc.RTVFormats[0]    = DXGI_FORMAT_B8G8R8A8_UNORM;
     l_psoDesc.SampleDesc.Count = 1;
 
     if (FAILED(m_parentDevice->getDevice()->CreateGraphicsPipelineState(

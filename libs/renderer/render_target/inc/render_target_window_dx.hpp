@@ -27,6 +27,10 @@ public:
     glm::ivec2                    getSize() const override final;
 
     RenderTargetWindowDX& create();
+    ID3D12Resource*       getRenderTarget();
+    ID3D12DescriptorHeap* getDescriptorHeap();
+    UINT                  getDescriptorSize();
+    IDXGISwapChain3*      getSwapchain();
 
 private:
     void createSwapCahin();

@@ -25,7 +25,8 @@ public:
     size_t         getAlignment() const override final;
     UniformSingle* addMember(const std::string& f_name) override final;
 
-    UniformCollectionDX& create() override final;
+    UniformCollectionDX&  create() override final;
+    ID3D12DescriptorHeap* getDescriptorHeap();
 
 private:
     void createBuffer();
