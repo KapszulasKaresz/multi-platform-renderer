@@ -21,7 +21,7 @@
             "request": "launch",
             "args": [
                 "--api",
-                "vulkan"
+                "vk"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
