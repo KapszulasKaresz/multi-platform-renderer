@@ -27,9 +27,10 @@ public:
     size_t         getAlignment() const override final;
     UniformSingle* addMember(const std::string& f_name) override final;
 
-    UniformCollectionDX&               create() override final;
-    ID3D12DescriptorHeap*              getDescriptorHeap();
-    std::vector<ID3D12DescriptorHeap*> getDescriptorHeapSPV();
+    UniformCollectionDX& create() override final;
+
+    UINT              getHeapOffset();
+    std::vector<UINT> getTextureHeapOffsets();
 
 private:
     void createBuffer();
@@ -44,10 +45,10 @@ private:
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
-    Microsoft::WRL::ComPtr<D3D12MA::Allocation>  m_constantBuffer{ nullptr };
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_constantBufferHeap{ nullptr };
-    D3D12_CONSTANT_BUFFER_VIEW_DESC              m_constantBufferView;
-    UINT8*                                       m_mappedConstantBuffer{ nullptr };
+    Microsoft::WRL::ComPtr<D3D12MA::Allocation> m_constantBuffer{ nullptr };
+    UINT                                        m_heapPosition{ 0 };
+    D3D12_CONSTANT_BUFFER_VIEW_DESC             m_constantBufferView;
+    UINT8*                                      m_mappedConstantBuffer{ nullptr };
 };
 
 }   // namespace uniform

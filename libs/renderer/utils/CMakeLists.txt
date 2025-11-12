@@ -1,4 +1,5 @@
 target_sources(${RENDERER_LIB_NAME} PRIVATE
+    "src/descriptor_heap_manager_dx.cpp"
     "src/raii_vma_allocator.cpp"
     "src/vma_impl.cpp"
     "src/stb_image_impl.cpp"

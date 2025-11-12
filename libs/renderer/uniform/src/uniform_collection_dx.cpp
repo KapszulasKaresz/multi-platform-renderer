@@ -54,45 +54,32 @@ UniformCollectionDX& UniformCollectionDX::create()
     return *this;
 }
 
-ID3D12DescriptorHeap* UniformCollectionDX::getDescriptorHeap()
+UINT UniformCollectionDX::getHeapOffset()
 {
-    return m_constantBufferHeap.Get();
+    return m_heapPosition;
 }
 
-std::vector<ID3D12DescriptorHeap*> UniformCollectionDX::getDescriptorHeapSPV()
+std::vector<UINT> UniformCollectionDX::getTextureHeapOffsets()
 {
-    std::vector<ID3D12DescriptorHeap*> l_ret;
-    for (auto& l_texture : m_textures) {
-        texture::TextureDX* l_textureDX =
-            dynamic_cast<texture::TextureDX*>(l_texture.get());
-        if (l_textureDX == nullptr) {
+    std::vector<UINT> l_ret;
+    for (auto texture : m_textures) {
+        texture::TextureDX* textureDX = dynamic_cast<texture::TextureDX*>(texture.get());
+
+        if (!textureDX) {
             throw std::runtime_error(
-                "UniformCollectionDX::getDescriptorHeapSPV() texture collection wasn't dx"
+                "UniformCollectionDX::getTextureHeapOffsets() non dx texture in the "
+                "collection"
             );
         }
 
-        l_ret.push_back(l_textureDX->getDescriptorHeap());
+        l_ret.push_back(textureDX->getHeapOffset());
     }
+
     return l_ret;
 }
 
 void UniformCollectionDX::createBuffer()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC l_heapDesc = {};
-    l_heapDesc.NumDescriptors             = 1;
-    l_heapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    l_heapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-
-    if (FAILED(m_parentDevice->getDevice()->CreateDescriptorHeap(
-            &l_heapDesc, IID_PPV_ARGS(&m_constantBufferHeap)
-        )))
-    {
-        throw std::runtime_error(
-            "UniformCollectionDX::createBuffer() failed to create descriptor heap"
-        );
-    }
-    m_constantBufferHeap->SetName(L"Constant Buffer Descriptor Heap");
-
     D3D12_RESOURCE_DESC l_resourceDesc = {};
     l_resourceDesc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
     l_resourceDesc.Alignment           = 0;
@@ -129,15 +116,8 @@ void UniformCollectionDX::createBuffer()
         m_constantBuffer->GetResource()->GetGPUVirtualAddress();
     m_constantBufferView.SizeInBytes = getSize();
 
-    D3D12_CPU_DESCRIPTOR_HANDLE
-    l_cbvHandle(m_constantBufferHeap->GetCPUDescriptorHandleForHeapStart());
-    l_cbvHandle.ptr = l_cbvHandle.ptr
-                    + m_parentDevice->getDevice()->GetDescriptorHandleIncrementSize(
-                          D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
-                      ) * 0;
-    m_parentDevice->getDevice()->CreateConstantBufferView(
-        &m_constantBufferView, l_cbvHandle
-    );
+    m_heapPosition =
+        m_parentDevice->getCommonDescriptorHeapManager()->addCBV(m_constantBufferView);
 }
 
 void UniformCollectionDX::computeLayout()

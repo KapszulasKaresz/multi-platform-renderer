@@ -130,6 +130,7 @@ RenderingDeviceDX& RenderingDeviceDX::create()
     createSyncObjects();
     m_valid = true;
     createRenderTargetWindow();
+    createDescriptorHeapManager();
     return *this;
 }
 
@@ -178,6 +179,11 @@ Microsoft::WRL::ComPtr<ID3D12Device> RenderingDeviceDX::getDevice()
 D3D12MA::Allocator* RenderingDeviceDX::getMemoryAllocator()
 {
     return m_allocator.Get();
+}
+
+utils::DescriptorHeapManagerDX* RenderingDeviceDX::getCommonDescriptorHeapManager()
+{
+    return m_commonDescriptorHeap.get();
 }
 
 void RenderingDeviceDX::executeCommandList(ID3D12GraphicsCommandList* f_commandList)
@@ -311,6 +317,12 @@ void RenderingDeviceDX::createRenderTargetWindow()
         .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
         .setDepthBuffer(true)
         .create();
+}
+
+void RenderingDeviceDX::createDescriptorHeapManager()
+{
+    // TODO do something with the size
+    m_commonDescriptorHeap = std::make_shared<utils::DescriptorHeapManagerDX>(this, 256);
 }
 }   // namespace rendering_device
 }   // namespace renderer

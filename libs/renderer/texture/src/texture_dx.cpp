@@ -19,23 +19,13 @@ TextureDX& TextureDX::create()
     return *this;
 }
 
-ID3D12DescriptorHeap* TextureDX::getDescriptorHeap()
+UINT TextureDX::getHeapOffset()
 {
-    return m_srvHeap.Get();
+    return m_heapPosition;
 }
 
 void TextureDX::createShaderResourceView()
 {
-    D3D12_DESCRIPTOR_HEAP_DESC l_heapDesc = {};
-    l_heapDesc.NumDescriptors             = 1;
-    l_heapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    l_heapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    l_heapDesc.NodeMask                   = 0;
-
-    m_parentDevice->getDevice()->CreateDescriptorHeap(
-        &l_heapDesc, IID_PPV_ARGS(&m_srvHeap)
-    );
-
     D3D12_SHADER_RESOURCE_VIEW_DESC l_srvDesc = {};
     l_srvDesc.Shader4ComponentMapping         = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     l_srvDesc.Format        = image::ImageDX::convertToDXFormat(m_image->getFormat());
@@ -45,9 +35,6 @@ void TextureDX::createShaderResourceView()
     l_srvDesc.Texture2D.PlaneSlice          = 0;
     l_srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE l_srvHandle =
-        m_srvHeap->GetCPUDescriptorHandleForHeapStart();
-
     image::ImageDX* l_imageDX = dynamic_cast<image::ImageDX*>(m_image.get());
 
     if (!l_imageDX) {
@@ -56,8 +43,8 @@ void TextureDX::createShaderResourceView()
         );
     }
 
-    m_parentDevice->getDevice()->CreateShaderResourceView(
-        l_imageDX->getResource(), &l_srvDesc, l_srvHandle
+    m_heapPosition = m_parentDevice->getCommonDescriptorHeapManager()->addSRV(
+        l_imageDX->getResource(), l_srvDesc
     );
 }
 }   // namespace texture

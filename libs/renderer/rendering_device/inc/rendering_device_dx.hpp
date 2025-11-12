@@ -7,6 +7,7 @@
 #include <wrl.h>
 
 #include "renderer/rendering_device/inc/rendering_device.hpp"
+#include "renderer/utils/inc/descriptor_heap_manager_dx.hpp"
 
 #include "D3D12MemAlloc.h"
 
@@ -60,6 +61,7 @@ public:
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> getCommandAllocator(int f_index = -1);
     Microsoft::WRL::ComPtr<ID3D12Device>           getDevice();
     D3D12MA::Allocator*                            getMemoryAllocator();
+    utils::DescriptorHeapManagerDX*                getCommonDescriptorHeapManager();
 
     void executeCommandList(ID3D12GraphicsCommandList* f_commandList);
 
@@ -72,6 +74,7 @@ private:
     void createCommandQueue();
     void createSyncObjects();
     void createRenderTargetWindow();
+    void createDescriptorHeapManager();
 
     rendering_api::RenderingApiDX* m_parentApi{ nullptr };
 
@@ -87,6 +90,8 @@ private:
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocators[maxFramesInFlight];
 
     std::shared_ptr<command_buffer::CommandBufferDX> m_renderingCommandBuffer{ nullptr };
+
+    std::shared_ptr<utils::DescriptorHeapManagerDX> m_commonDescriptorHeap{ nullptr };
 
     // Sync objects
     UINT                                m_frameIndex{ 0 };

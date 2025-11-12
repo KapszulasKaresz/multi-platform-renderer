@@ -63,6 +63,8 @@ CommandBufferDX& CommandBufferDX::reset()
 
 CommandBufferDX& CommandBufferDX::begin()
 {
+    auto l_heap = m_parentDevice->getCommonDescriptorHeapManager()->getHeap();
+    selectCommandList()->SetDescriptorHeaps(1, &l_heap);
     return *this;
 }
 
@@ -166,13 +168,28 @@ CommandBufferDX& CommandBufferDX::useMaterial(
     l_dxMaterial->updateUniforms();
 
     l_commandList->SetGraphicsRootSignature(l_dxMaterial->getRootSignature());
-    auto l_descriptorHeap = l_dxMaterial->getDescriptorHeap();
 
-    l_commandList->SetDescriptorHeaps(1, &l_descriptorHeap);
+    auto l_CBVOffsets = l_dxMaterial->getCBVHeapOffsets();
+    auto l_SRVOffsets = l_dxMaterial->getSRVHeapOffsets();
 
-    l_commandList->SetGraphicsRootDescriptorTable(
-        0, l_descriptorHeap->GetGPUDescriptorHandleForHeapStart()
-    );
+    int l_index = 0;
+
+    for (int i = 0; i < l_CBVOffsets.size(); i++) {
+        l_commandList->SetGraphicsRootDescriptorTable(
+            l_index,
+            m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(l_CBVOffsets[i])
+        );
+        l_index++;
+    }
+
+    for (int i = 0; i < l_SRVOffsets.size(); i++) {
+        l_commandList->SetGraphicsRootDescriptorTable(
+            l_index,
+            m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(l_SRVOffsets[i])
+        );
+        l_index++;
+    }
+
     return *this;
 }
 

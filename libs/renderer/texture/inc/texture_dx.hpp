@@ -18,14 +18,14 @@ public:
 
     TextureDX& create() override final;
 
-    ID3D12DescriptorHeap* getDescriptorHeap();
+    UINT getHeapOffset();
 
 private:
     void createShaderResourceView();
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
-    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_srvHeap;
+    UINT m_heapPosition{ 0 };
 };
 }   // namespace texture
 }   // namespace renderer
