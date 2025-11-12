@@ -186,6 +186,11 @@ utils::DescriptorHeapManagerDX* RenderingDeviceDX::getCommonDescriptorHeapManage
     return m_commonDescriptorHeap.get();
 }
 
+utils::DescriptorHeapManagerDX* RenderingDeviceDX::getCommonSamplerHeapManager()
+{
+    return m_commonSamplerHeap.get();
+}
+
 void RenderingDeviceDX::executeCommandList(ID3D12GraphicsCommandList* f_commandList)
 {
     ID3D12CommandList* l_ppCommandLists[] = { f_commandList };
@@ -322,7 +327,12 @@ void RenderingDeviceDX::createRenderTargetWindow()
 void RenderingDeviceDX::createDescriptorHeapManager()
 {
     // TODO do something with the size
-    m_commonDescriptorHeap = std::make_shared<utils::DescriptorHeapManagerDX>(this, 256);
+    m_commonDescriptorHeap = std::make_shared<utils::DescriptorHeapManagerDX>(
+        this, 256, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+    );
+    m_commonSamplerHeap = std::make_shared<utils::DescriptorHeapManagerDX>(
+        this, 256, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+    );
 }
 }   // namespace rendering_device
 }   // namespace renderer

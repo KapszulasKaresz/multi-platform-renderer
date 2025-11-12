@@ -19,13 +19,21 @@ public:
     TextureDX& create() override final;
 
     UINT getHeapOffset();
+    UINT getSamplerOffset();
+
+    static D3D12_FILTER convertToD3D12Filter(Filter f_filter, MipMapMode f_mipmapMode);
+    static D3D12_TEXTURE_ADDRESS_MODE convertToD3D12AddressMode(AddressMode f_addressMode);
 
 private:
     void createShaderResourceView();
+    void createSampler();
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
+    D3D12_SAMPLER_DESC m_samplerDesc{};
+
     UINT m_heapPosition{ 0 };
+    UINT m_heapPositionSampler{ 0 };
 };
 }   // namespace texture
 }   // namespace renderer

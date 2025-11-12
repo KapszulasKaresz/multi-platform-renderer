@@ -31,6 +31,7 @@ public:
 
     UINT              getHeapOffset();
     std::vector<UINT> getTextureHeapOffsets();
+    std::vector<UINT> getTextureHeapSamplerOffsets();
 
 private:
     void createBuffer();

@@ -20,12 +20,7 @@ cbuffer cb : register(b0)
 
 Texture2D g_Texture : register(t0);
 
-SamplerState TextureSampler
-{
-    Filter = MIN_MAG_MIP_LINEAR;
-    AddressU = Wrap;
-    AddressV = Wrap;
-};
+SamplerState TextureSampler : register(s0); 
 
 PixelOutput main(PixelInput pixelInput)
 {

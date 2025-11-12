@@ -63,8 +63,13 @@ CommandBufferDX& CommandBufferDX::reset()
 
 CommandBufferDX& CommandBufferDX::begin()
 {
-    auto l_heap = m_parentDevice->getCommonDescriptorHeapManager()->getHeap();
-    selectCommandList()->SetDescriptorHeaps(1, &l_heap);
+    auto l_commandList = selectCommandList();
+
+    ID3D12DescriptorHeap* l_heaps[] = {
+        m_parentDevice->getCommonDescriptorHeapManager()->getHeap(),
+        m_parentDevice->getCommonSamplerHeapManager()->getHeap()
+    };
+    l_commandList->SetDescriptorHeaps(2, l_heaps);
     return *this;
 }
 
@@ -169,8 +174,9 @@ CommandBufferDX& CommandBufferDX::useMaterial(
 
     l_commandList->SetGraphicsRootSignature(l_dxMaterial->getRootSignature());
 
-    auto l_CBVOffsets = l_dxMaterial->getCBVHeapOffsets();
-    auto l_SRVOffsets = l_dxMaterial->getSRVHeapOffsets();
+    auto l_CBVOffsets     = l_dxMaterial->getCBVHeapOffsets();
+    auto l_SRVOffsets     = l_dxMaterial->getSRVHeapOffsets();
+    auto l_samplerOffsets = l_dxMaterial->getSamplerHeapOffsets();
 
     int l_index = 0;
 
@@ -186,6 +192,14 @@ CommandBufferDX& CommandBufferDX::useMaterial(
         l_commandList->SetGraphicsRootDescriptorTable(
             l_index,
             m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(l_SRVOffsets[i])
+        );
+        l_index++;
+    }
+
+    for (int i = 0; i < l_samplerOffsets.size(); i++) {
+        l_commandList->SetGraphicsRootDescriptorTable(
+            l_index,
+            m_parentDevice->getCommonSamplerHeapManager()->getGPUHandle(l_samplerOffsets[i])
         );
         l_index++;
     }

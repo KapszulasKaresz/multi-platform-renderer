@@ -72,6 +72,26 @@ std::vector<UINT> MaterialDX::getSRVHeapOffsets()
     return l_ret;
 }
 
+std::vector<UINT> MaterialDX::getSamplerHeapOffsets()
+{
+    std::vector<UINT> l_ret;
+    for (auto l_uniform : m_uniformCollections) {
+        uniform::UniformCollectionDX* l_uniformDX =
+            dynamic_cast<uniform::UniformCollectionDX*>(l_uniform.get());
+
+        if (!l_uniformDX) {
+            throw std::runtime_error(
+                "MaterialDX::getSamplerHeapOffsets() non dx uniform in the material"
+            );
+        }
+
+        auto l_samplerOffsets = l_uniformDX->getTextureHeapSamplerOffsets();
+        l_ret.insert(l_ret.end(), l_samplerOffsets.begin(), l_samplerOffsets.end());
+    }
+
+    return l_ret;
+}
+
 void MaterialDX::createRootSignature()
 {
     D3D12_FEATURE_DATA_ROOT_SIGNATURE l_featureData = {};
@@ -130,21 +150,30 @@ void MaterialDX::createRootSignature()
         }
     }
 
-    // TODO MOVE THIS TO TEXTURE
-    D3D12_STATIC_SAMPLER_DESC l_staticSampler = {};
-    l_staticSampler.Filter                    = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    l_staticSampler.AddressU                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    l_staticSampler.AddressV                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    l_staticSampler.AddressW                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    l_staticSampler.MipLODBias                = 0;
-    l_staticSampler.MaxAnisotropy             = 1;
-    l_staticSampler.ComparisonFunc            = D3D12_COMPARISON_FUNC_ALWAYS;
-    l_staticSampler.BorderColor               = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
-    l_staticSampler.MinLOD                    = 0.0f;
-    l_staticSampler.MaxLOD                    = D3D12_FLOAT32_MAX;
-    l_staticSampler.ShaderRegister            = 0;   // s0
-    l_staticSampler.RegisterSpace             = 0;
-    l_staticSampler.ShaderVisibility          = D3D12_SHADER_VISIBILITY_PIXEL;
+    int l_samplerIndex = 0;
+    for (int i = 0; i < m_uniformCollections.size(); i++) {
+        for (int j = 0; j < static_cast<UINT>(m_uniformCollections[0]->getTextureCount());
+             j++)
+        {
+            D3D12_DESCRIPTOR_RANGE1 l_samplerRange = {};
+            l_samplerRange.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+            l_samplerRange.BaseShaderRegister      = l_samplerIndex++;
+            l_samplerRange.NumDescriptors          = 1;
+            l_samplerRange.RegisterSpace           = 0;
+            l_samplerRange.OffsetInDescriptorsFromTableStart =
+                D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+
+            D3D12_ROOT_PARAMETER1 l_rootParameterSampler{};
+            l_rootParameterSampler.ParameterType =
+                D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+            l_rootParameterSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+            l_rootParameterSampler.DescriptorTable.NumDescriptorRanges = 1;
+            l_rootParameterSampler.DescriptorTable.pDescriptorRanges   = &l_samplerRange;
+            l_rootParameters.push_back(l_rootParameterSampler);
+        }
+    }
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC l_rootSignatureDesc;
     l_rootSignatureDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
@@ -152,8 +181,8 @@ void MaterialDX::createRootSignature()
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     l_rootSignatureDesc.Desc_1_1.NumParameters     = l_rootParameters.size();
     l_rootSignatureDesc.Desc_1_1.pParameters       = l_rootParameters.data();
-    l_rootSignatureDesc.Desc_1_1.NumStaticSamplers = 1;
-    l_rootSignatureDesc.Desc_1_1.pStaticSamplers   = &l_staticSampler;
+    l_rootSignatureDesc.Desc_1_1.NumStaticSamplers = 0;
+    l_rootSignatureDesc.Desc_1_1.pStaticSamplers   = nullptr;
 
     ID3DBlob* l_signature;
     ID3DBlob* l_error;

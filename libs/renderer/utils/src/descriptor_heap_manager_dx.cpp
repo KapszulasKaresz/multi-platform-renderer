@@ -7,13 +7,15 @@ namespace utils {
 
 DescriptorHeapManagerDX::DescriptorHeapManagerDX(
     rendering_device::RenderingDeviceDX* f_parentDevice,
-    UINT                                 f_numDescriptors
+    UINT                                 f_numDescriptors,
+    D3D12_DESCRIPTOR_HEAP_TYPE           f_type
 )
-    : m_parentDevice(f_parentDevice)
+    : m_parentDevice(f_parentDevice),
+      m_type(f_type)
 {
     D3D12_DESCRIPTOR_HEAP_DESC l_heapDesc = {};
     l_heapDesc.NumDescriptors             = f_numDescriptors;
-    l_heapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    l_heapDesc.Type                       = m_type;
     l_heapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
     if (FAILED(m_parentDevice->getDevice()->CreateDescriptorHeap(
@@ -31,6 +33,12 @@ DescriptorHeapManagerDX::DescriptorHeapManagerDX(
 
 UINT DescriptorHeapManagerDX::addCBV(const D3D12_CONSTANT_BUFFER_VIEW_DESC& f_cbvDesc)
 {
+    if (m_type != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {
+        throw std::runtime_error(
+            "DescriptorHeapManagerDX::addCBV() type must be "
+            "D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV"
+        );
+    }
     if (m_nextFreeHandle >= getNumDescriptors()) {
         throw std::runtime_error(
             "DescriptorHeapManagerDX::addCBV(...) Descriptor heap full"
@@ -49,14 +57,38 @@ UINT DescriptorHeapManagerDX::addSRV(
     const D3D12_SHADER_RESOURCE_VIEW_DESC& f_srvDesc
 )
 {
+    if (m_type != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {
+        throw std::runtime_error(
+            "DescriptorHeapManagerDX::addSRV() type must be "
+            "D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV"
+        );
+    }
     if (m_nextFreeHandle >= getNumDescriptors()) {
-        throw std::runtime_error("Descriptor heap full");
+        throw std::runtime_error(
+            "DescriptorHeapManagerDX::addCBV(...) Descriptor heap full"
+        );
     }
 
     auto l_handle = getCPUHandle(m_nextFreeHandle);
     m_parentDevice->getDevice()->CreateShaderResourceView(
         f_resource, &f_srvDesc, l_handle
     );
+    auto l_originalFreeHandle = m_nextFreeHandle;
+    m_nextFreeHandle++;
+    return l_originalFreeHandle;
+}
+
+UINT DescriptorHeapManagerDX::addSampler(const D3D12_SAMPLER_DESC& f_desc)
+{
+    if (m_type != D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {
+        throw std::runtime_error(
+            "DescriptorHeapManagerDX::addSampler() type must be "
+            "D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER"
+        );
+    }
+
+    auto l_handle = getCPUHandle(m_nextFreeHandle);
+    m_parentDevice->getDevice()->CreateSampler(&f_desc, l_handle);
     auto l_originalFreeHandle = m_nextFreeHandle;
     m_nextFreeHandle++;
     return l_originalFreeHandle;

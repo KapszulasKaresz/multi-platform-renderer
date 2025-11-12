@@ -36,6 +36,7 @@ conan build . -of=_build
 | Uniform handling        |   ✅    |       ✅ |
 | On-screen rendering     |   ✅    |       ✅ |
 | Off-screen rendering    |   ✅    |       ❌ |
-| Textures                |   ✅    |       🔜 |
+| Depth buffer            |   ✅    |       ❌ |
+| Textures                |   ✅    |       ✅ |
 | Mip-map generation      |   ✅    |       ❌ |
 | MSAA                    |   ✅    |       ❌ |

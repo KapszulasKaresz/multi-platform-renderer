@@ -27,6 +27,7 @@ public:
 
     std::vector<UINT> getCBVHeapOffsets();
     std::vector<UINT> getSRVHeapOffsets();
+    std::vector<UINT> getSamplerHeapOffsets();
 
 private:
     void createRootSignature();

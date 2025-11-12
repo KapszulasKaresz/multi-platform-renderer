@@ -62,6 +62,7 @@ public:
     Microsoft::WRL::ComPtr<ID3D12Device>           getDevice();
     D3D12MA::Allocator*                            getMemoryAllocator();
     utils::DescriptorHeapManagerDX*                getCommonDescriptorHeapManager();
+    utils::DescriptorHeapManagerDX*                getCommonSamplerHeapManager();
 
     void executeCommandList(ID3D12GraphicsCommandList* f_commandList);
 
@@ -92,6 +93,7 @@ private:
     std::shared_ptr<command_buffer::CommandBufferDX> m_renderingCommandBuffer{ nullptr };
 
     std::shared_ptr<utils::DescriptorHeapManagerDX> m_commonDescriptorHeap{ nullptr };
+    std::shared_ptr<utils::DescriptorHeapManagerDX> m_commonSamplerHeap{ nullptr };
 
     // Sync objects
     UINT                                m_frameIndex{ 0 };

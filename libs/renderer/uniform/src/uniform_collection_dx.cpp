@@ -78,6 +78,26 @@ std::vector<UINT> UniformCollectionDX::getTextureHeapOffsets()
     return l_ret;
 }
 
+std::vector<UINT> UniformCollectionDX::getTextureHeapSamplerOffsets()
+{
+    std::vector<UINT> l_ret;
+    for (auto texture : m_textures) {
+        texture::TextureDX* textureDX = dynamic_cast<texture::TextureDX*>(texture.get());
+
+        if (!textureDX) {
+            throw std::
+                runtime_error(
+                    "UniformCollectionDX::getTextureHeapSamplerOffsets() non dx texture "
+                    "in " "the collection"
+                );
+        }
+
+        l_ret.push_back(textureDX->getSamplerOffset());
+    }
+
+    return l_ret;
+}
+
 void UniformCollectionDX::createBuffer()
 {
     D3D12_RESOURCE_DESC l_resourceDesc = {};
