@@ -27,6 +27,11 @@ Once you have the dependencies you can use the conan build command to build the 
 ```
 conan build . -of=_build
 ```
+## Example standalone app
+There is an example standalone app in the repository which uses the renderer library and runs throught it's basic functions. There are a couple of arguments you can pass to the program:
+| Argument |   Values   | Description                                                                                                                     |
+| :------- | :--------: | :------------------------------------------------------------------------------------------------------------------------------ |
+| `--api`  | `vk`, `dx` | Sets up what kind of graphics API will be used with the program `vk` is for vulkan and `dx` is for D3D12, the default is vulkan |
 
 ## Features
 | Feature                 | Vulkan | DirectX |
