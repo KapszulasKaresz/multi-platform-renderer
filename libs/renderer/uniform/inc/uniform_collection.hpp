@@ -23,6 +23,7 @@ public:
     void addTexture(std::shared_ptr<texture::Texture> f_textrue, int f_position = -1);
     texture::Texture* getTexture(std::string_view f_name);
 
+    int          getTextureCount() const;
     virtual void update() = 0;
 
 protected:

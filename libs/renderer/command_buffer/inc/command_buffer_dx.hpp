@@ -42,6 +42,12 @@ public:
     CommandBufferDX& useViewport(const ViewportInfo& f_viewportInfo) override final;
     CommandBufferDX& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
 
+    CommandBufferDX& copyBuffer(
+        ID3D12Resource*                    f_srcBuffer,
+        ID3D12Resource*                    f_dstBuffer,
+        D3D12_PLACED_SUBRESOURCE_FOOTPRINT f_footprint
+    );
+
 protected:
     ID3D12GraphicsCommandList* selectCommandList();
 

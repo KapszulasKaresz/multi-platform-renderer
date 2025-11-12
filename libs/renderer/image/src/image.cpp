@@ -96,6 +96,11 @@ glm::ivec2 Image::getSize() const
     return m_size;
 }
 
+image::ImageFormat Image::getFormat() const
+{
+    return m_format;
+}
+
 bool Image::isDepthImage() const
 {
     return m_format == IMAGE_FORMAT_DEPTH;

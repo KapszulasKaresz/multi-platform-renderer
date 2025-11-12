@@ -41,8 +41,9 @@ public:
 
     virtual Image& create() = 0;
 
-    uint32_t   getMipLevels() const;
-    glm::ivec2 getSize() const;
+    uint32_t           getMipLevels() const;
+    glm::ivec2         getSize() const;
+    image::ImageFormat getFormat() const;
 
 protected:
     bool isDepthImage() const;

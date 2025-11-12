@@ -71,6 +71,10 @@ texture::Texture* UniformCollection::getTexture(std::string_view f_name)
     throw std::runtime_error("UniformCollection::getTexture(...) texture not found.");
 }
 
+int UniformCollection::getTextureCount() const
+{
+    return m_textures.size();
+}
 
 }   // namespace uniform
 }   // namespace renderer

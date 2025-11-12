@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
+#include "renderer/texture/inc/texture_dx.hpp"
 #include "renderer/uniform/inc/uniform_single_dx.hpp"
 #include "renderer/utils/inc/utils.hpp"
 
@@ -56,6 +57,23 @@ UniformCollectionDX& UniformCollectionDX::create()
 ID3D12DescriptorHeap* UniformCollectionDX::getDescriptorHeap()
 {
     return m_constantBufferHeap.Get();
+}
+
+std::vector<ID3D12DescriptorHeap*> UniformCollectionDX::getDescriptorHeapSPV()
+{
+    std::vector<ID3D12DescriptorHeap*> l_ret;
+    for (auto& l_texture : m_textures) {
+        texture::TextureDX* l_textureDX =
+            dynamic_cast<texture::TextureDX*>(l_texture.get());
+        if (l_textureDX == nullptr) {
+            throw std::runtime_error(
+                "UniformCollectionDX::getDescriptorHeapSPV() texture collection wasn't dx"
+            );
+        }
+
+        l_ret.push_back(l_textureDX->getDescriptorHeap());
+    }
+    return l_ret;
 }
 
 void UniformCollectionDX::createBuffer()

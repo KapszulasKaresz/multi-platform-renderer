@@ -1,6 +1,8 @@
 #ifndef UNIFORM_COLLECTION_DX_HPP_INCLUDED
 #define UNIFORM_COLLECTION_DX_HPP_INCLUDED
 
+#include <vector>
+
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
@@ -25,8 +27,9 @@ public:
     size_t         getAlignment() const override final;
     UniformSingle* addMember(const std::string& f_name) override final;
 
-    UniformCollectionDX&  create() override final;
-    ID3D12DescriptorHeap* getDescriptorHeap();
+    UniformCollectionDX&               create() override final;
+    ID3D12DescriptorHeap*              getDescriptorHeap();
+    std::vector<ID3D12DescriptorHeap*> getDescriptorHeapSPV();
 
 private:
     void createBuffer();

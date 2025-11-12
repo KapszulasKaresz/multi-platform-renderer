@@ -166,14 +166,13 @@ CommandBufferDX& CommandBufferDX::useMaterial(
     l_dxMaterial->updateUniforms();
 
     l_commandList->SetGraphicsRootSignature(l_dxMaterial->getRootSignature());
-    auto l_descriptorHeaps = l_dxMaterial->getDescriptorHeaps();
-    l_commandList->SetDescriptorHeaps(l_descriptorHeaps.size(), l_descriptorHeaps.data());
+    auto l_descriptorHeap = l_dxMaterial->getDescriptorHeap();
 
-    for (int i = 0; i < l_descriptorHeaps.size(); i++) {
-        D3D12_GPU_DESCRIPTOR_HANDLE
-        l_cbvHandle(l_descriptorHeaps[i]->GetGPUDescriptorHandleForHeapStart());
-        l_commandList->SetGraphicsRootDescriptorTable(i, l_cbvHandle);
-    }
+    l_commandList->SetDescriptorHeaps(1, &l_descriptorHeap);
+
+    l_commandList->SetGraphicsRootDescriptorTable(
+        0, l_descriptorHeap->GetGPUDescriptorHandleForHeapStart()
+    );
     return *this;
 }
 
@@ -230,12 +229,51 @@ CommandBufferDX& CommandBufferDX::draw(std::shared_ptr<mesh::TriangleMesh> f_mes
     return *this;
 }
 
+CommandBufferDX& CommandBufferDX::copyBuffer(
+    ID3D12Resource*                    f_srcBuffer,
+    ID3D12Resource*                    f_dstBuffer,
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT f_footprint
+)
+{
+    D3D12_TEXTURE_COPY_LOCATION l_dstLocation = {};
+    l_dstLocation.pResource                   = f_dstBuffer;
+    l_dstLocation.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    l_dstLocation.SubresourceIndex            = 0;
+
+    D3D12_TEXTURE_COPY_LOCATION l_srcLocation = {};
+    l_srcLocation.pResource                   = f_srcBuffer;
+    l_srcLocation.Type                        = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    l_srcLocation.PlacedFootprint             = f_footprint;
+
+    auto l_commandList = selectCommandList();
+    l_commandList->CopyTextureRegion(
+        &l_dstLocation,
+        0,
+        0,
+        0,        // X, Y, Z destination offset
+        &l_srcLocation,
+        nullptr   // full resource copy
+    );
+
+    D3D12_RESOURCE_BARRIER l_barrier = {};
+    l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    l_barrier.Transition.pResource   = f_dstBuffer;
+    l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+
+    l_commandList->ResourceBarrier(1, &l_barrier);
+
+    return *this;
+}
+
 ID3D12GraphicsCommandList* CommandBufferDX::selectCommandList()
 {
     if (m_rendering) {
         return m_commandLists[m_parentDevice->getCurrentFrame()].Get();
     }
-    return m_commandLists[0].Get();
+    return m_commandLists[m_parentDevice->getCurrentFrame()].Get();
 }
 }   // namespace command_buffer
 }   // namespace renderer

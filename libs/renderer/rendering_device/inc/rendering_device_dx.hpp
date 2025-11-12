@@ -75,13 +75,13 @@ private:
 
     rendering_api::RenderingApiDX* m_parentApi{ nullptr };
 
-    window::Window*                                      m_window{ nullptr };
-    std::shared_ptr<render_target::RenderTargetWindowDX> m_renderTargetWindow{ nullptr };
-
     Microsoft::WRL::ComPtr<IDXGIAdapter4>      m_adapter{ nullptr };
     Microsoft::WRL::ComPtr<ID3D12Device>       m_device{ nullptr };
     Microsoft::WRL::ComPtr<ID3D12DebugDevice>  m_debugDevice{ nullptr };
     Microsoft::WRL::ComPtr<D3D12MA::Allocator> m_allocator{ nullptr };
+
+    window::Window*                                      m_window{ nullptr };
+    std::shared_ptr<render_target::RenderTargetWindowDX> m_renderTargetWindow{ nullptr };
 
     Microsoft::WRL::ComPtr<ID3D12CommandQueue>     m_commandQueue{ nullptr };
     Microsoft::WRL::ComPtr<ID3D12CommandAllocator> m_commandAllocators[maxFramesInFlight];

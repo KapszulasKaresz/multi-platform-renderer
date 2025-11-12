@@ -7,6 +7,8 @@
 
 #include "renderer/image/inc/image.hpp"
 
+#include "D3D12MemAlloc.h"
+
 namespace renderer {
 namespace rendering_device {
 class RenderingDeviceDX;
@@ -26,10 +28,20 @@ public:
     ImageDX& setColorSpace(image::ColorSpace f_colorSpace) override final;
     ImageDX& setSize(const glm::ivec2& f_size) override final;
 
+    ID3D12Resource* getResource();
+
     static DXGI_FORMAT convertToDXFormat(const ImageFormat f_format);
 
 private:
+    inline UINT64 GetRequiredIntermediateSize(
+        _In_ ID3D12Resource*                       f_pDestinationResource,
+        _In_range_(0, D3D12_REQ_SUBRESOURCES) UINT f_FirstSubresource,
+        _In_range_(0, D3D12_REQ_SUBRESOURCES - f_FirstSubresource) UINT f_NumSubresources
+    );
+
     rendering_device::RenderingDeviceDX* m_parentDevice;
+
+    Microsoft::WRL::ComPtr<D3D12MA::Allocation> m_image{ nullptr };
 };
 }   // namespace image
 }   // namespace renderer

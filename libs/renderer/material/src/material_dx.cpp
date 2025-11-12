@@ -19,6 +19,7 @@ MaterialDX& MaterialDX::create()
 {
     createRootSignature();
     createPipelineState();
+    createComibnedDescriptorHeap();
     m_valid = true;
     return *this;
 }
@@ -26,6 +27,11 @@ MaterialDX& MaterialDX::create()
 ID3D12RootSignature* MaterialDX::getRootSignature()
 {
     return m_rootSignature.Get();
+}
+
+ID3D12DescriptorHeap* MaterialDX::getDescriptorHeap()
+{
+    return m_combinedHeap.Get();
 }
 
 std::vector<ID3D12DescriptorHeap*> MaterialDX::getDescriptorHeaps()
@@ -43,6 +49,26 @@ std::vector<ID3D12DescriptorHeap*> MaterialDX::getDescriptorHeaps()
         }
 
         l_ret.push_back(l_uniformDX->getDescriptorHeap());
+    }
+    return l_ret;
+}
+
+std::vector<ID3D12DescriptorHeap*> MaterialDX::getDescriptorHeapsSPV()
+{
+    std::vector<ID3D12DescriptorHeap*> l_ret;
+    for (auto& l_uniform : m_uniformCollections) {
+        uniform::UniformCollectionDX* l_uniformDX =
+            dynamic_cast<uniform::UniformCollectionDX*>(l_uniform.get());
+        if (l_uniformDX == nullptr) {
+            throw std::
+                runtime_error(
+                    "MaterialDX::getDescriptorHeapsSPV() uniform collection wasn't a dx "
+                    "uniform " "collection"
+                );
+        }
+
+        auto l_heaps = l_uniformDX->getDescriptorHeapSPV();
+        l_ret.insert(l_ret.end(), l_heaps.begin(), l_heaps.end());
     }
     return l_ret;
 }
@@ -65,6 +91,7 @@ void MaterialDX::createRootSignature()
     }
 
     std::vector<D3D12_DESCRIPTOR_RANGE1> l_ranges;
+    // CBV ranges
     for (int i = 0; i < m_uniformCollections.size(); i++) {
         D3D12_DESCRIPTOR_RANGE1 l_range{};
 
@@ -72,10 +99,24 @@ void MaterialDX::createRootSignature()
         l_range.RangeType                         = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
         l_range.NumDescriptors                    = 1;
         l_range.RegisterSpace                     = 0;
-        l_range.OffsetInDescriptorsFromTableStart = 0;
+        l_range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
         l_range.Flags                             = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 
         l_ranges.push_back(l_range);
+    }
+
+    // Texture SRV ranges
+    for (int i = 0; i < m_uniformCollections.size(); i++) {
+        D3D12_DESCRIPTOR_RANGE1 l_srvRange = {};
+        l_srvRange.BaseShaderRegister      = 0;
+        l_srvRange.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+        l_srvRange.NumDescriptors =
+            static_cast<UINT>(m_uniformCollections[0]->getTextureCount());
+        l_srvRange.RegisterSpace = 0;
+        l_srvRange.OffsetInDescriptorsFromTableStart =
+            D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+        l_srvRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+        l_ranges.push_back(l_srvRange);
     }
 
     D3D12_ROOT_PARAMETER1 l_rootParameters[1];
@@ -85,14 +126,30 @@ void MaterialDX::createRootSignature()
     l_rootParameters[0].DescriptorTable.NumDescriptorRanges = l_ranges.size();
     l_rootParameters[0].DescriptorTable.pDescriptorRanges   = l_ranges.data();
 
+    // TODO MOVE THIS TO TEXTURE
+    D3D12_STATIC_SAMPLER_DESC l_staticSampler = {};
+    l_staticSampler.Filter                    = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    l_staticSampler.AddressU                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    l_staticSampler.AddressV                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    l_staticSampler.AddressW                  = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    l_staticSampler.MipLODBias                = 0;
+    l_staticSampler.MaxAnisotropy             = 1;
+    l_staticSampler.ComparisonFunc            = D3D12_COMPARISON_FUNC_ALWAYS;
+    l_staticSampler.BorderColor               = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+    l_staticSampler.MinLOD                    = 0.0f;
+    l_staticSampler.MaxLOD                    = D3D12_FLOAT32_MAX;
+    l_staticSampler.ShaderRegister            = 0;   // s0
+    l_staticSampler.RegisterSpace             = 0;
+    l_staticSampler.ShaderVisibility          = D3D12_SHADER_VISIBILITY_PIXEL;
+
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC l_rootSignatureDesc;
     l_rootSignatureDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
     l_rootSignatureDesc.Desc_1_1.Flags =
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
     l_rootSignatureDesc.Desc_1_1.NumParameters     = 1;
     l_rootSignatureDesc.Desc_1_1.pParameters       = l_rootParameters;
-    l_rootSignatureDesc.Desc_1_1.NumStaticSamplers = 0;
-    l_rootSignatureDesc.Desc_1_1.pStaticSamplers   = nullptr;
+    l_rootSignatureDesc.Desc_1_1.NumStaticSamplers = 1;
+    l_rootSignatureDesc.Desc_1_1.pStaticSamplers   = &l_staticSampler;
 
     ID3DBlob* l_signature;
     ID3DBlob* l_error;
@@ -191,6 +248,48 @@ void MaterialDX::createPipelineState()
         throw std::runtime_error(
             "MaterialDX::createPipelineState() failed to create pipeline"
         );
+    }
+}
+
+void MaterialDX::createComibnedDescriptorHeap()
+{
+    auto l_cbvHeaps = getDescriptorHeaps();
+    auto l_spvHeaps = getDescriptorHeapsSPV();
+
+    D3D12_DESCRIPTOR_HEAP_DESC l_heapDesc = {};
+    l_heapDesc.NumDescriptors             = l_cbvHeaps.size() + l_spvHeaps.size();
+    l_heapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    l_heapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    m_parentDevice->getDevice()->CreateDescriptorHeap(
+        &l_heapDesc, IID_PPV_ARGS(&m_combinedHeap)
+    );
+
+    UINT l_descriptorSize = m_parentDevice->getDevice()->GetDescriptorHandleIncrementSize(
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+    );
+
+    D3D12_CPU_DESCRIPTOR_HANDLE l_dstHandle =
+        m_combinedHeap->GetCPUDescriptorHandleForHeapStart();
+
+    for (auto heap : l_cbvHeaps) {
+        D3D12_CPU_DESCRIPTOR_HANDLE l_srcHandle =
+            heap->GetCPUDescriptorHandleForHeapStart();
+        m_parentDevice->getDevice()->CopyDescriptorsSimple(
+            1,             // number of descriptors
+            l_dstHandle,   // destination
+            l_srcHandle,   // source
+            D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        );
+        l_dstHandle.ptr += l_descriptorSize;
+    }
+
+    for (auto heap : l_spvHeaps) {
+        D3D12_CPU_DESCRIPTOR_HANDLE l_srcHandle =
+            heap->GetCPUDescriptorHandleForHeapStart();
+        m_parentDevice->getDevice()->CopyDescriptorsSimple(
+            1, l_dstHandle, l_srcHandle, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        );
+        l_dstHandle.ptr += l_descriptorSize;
     }
 }
 

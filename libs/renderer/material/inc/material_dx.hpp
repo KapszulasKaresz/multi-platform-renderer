@@ -23,19 +23,23 @@ public:
     MaterialDX& create() override final;
 
     ID3D12RootSignature*               getRootSignature();
+    ID3D12DescriptorHeap*              getDescriptorHeap();
     std::vector<ID3D12DescriptorHeap*> getDescriptorHeaps();
+    std::vector<ID3D12DescriptorHeap*> getDescriptorHeapsSPV();
     ID3D12PipelineState*               getPipelineState();
 
 private:
     void createRootSignature();
     void createPipelineState();
+    void createComibnedDescriptorHeap();
 
     static std::array<D3D12_INPUT_ELEMENT_DESC, 4> getInputElementDescription();
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_rootSignature{ nullptr };
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> m_pipelineState{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12RootSignature>  m_rootSignature{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12PipelineState>  m_pipelineState{ nullptr };
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_combinedHeap{ nullptr };
 };
 }   // namespace material
 }   // namespace  renderer

@@ -3,10 +3,12 @@
 #include <stdexcept>
 
 #include "renderer/command_buffer/inc/command_buffer_dx.hpp"
+#include "renderer/image/inc/image_dx.hpp"
 #include "renderer/material/inc/material_dx.hpp"
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
+#include "renderer/texture/inc/texture_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
 #include "renderer/window/inc/window.hpp"
 
@@ -48,7 +50,7 @@ std::shared_ptr<render_target::RenderTargetWindow>
 
 std::shared_ptr<image::Image> RenderingDeviceDX::createImage()
 {
-    throw std::logic_error("Function not yet implemented");
+    return std::make_shared<image::ImageDX>(this);
 }
 
 std::shared_ptr<material::Material> RenderingDeviceDX::createMaterial()
@@ -58,9 +60,7 @@ std::shared_ptr<material::Material> RenderingDeviceDX::createMaterial()
 
 std::shared_ptr<command_buffer::CommandBuffer> RenderingDeviceDX::createCommandBuffer()
 {
-    auto l_commandBuffer = std::make_shared<command_buffer::CommandBufferDX>(this);
-    l_commandBuffer->setRendering(false).create();
-    return l_commandBuffer;
+    return getRenderingCommandBuffer();
 }
 
 std::shared_ptr<command_buffer::CommandBuffer>
@@ -85,7 +85,7 @@ std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformColl
 
 std::shared_ptr<texture::Texture> RenderingDeviceDX::createTexture()
 {
-    throw std::logic_error("Function not yet implemented");
+    return std::make_shared<texture::TextureDX>(this);
 }
 
 std::shared_ptr<render_target::RenderTarget> RenderingDeviceDX::createRenderTarget()

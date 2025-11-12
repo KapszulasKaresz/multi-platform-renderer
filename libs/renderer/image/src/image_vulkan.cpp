@@ -128,8 +128,7 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
     auto l_image = vk::Image(m_image.get());
     m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eColor);
 
-    m_hasMipMaps = false;
-    m_valid      = true;
+    m_valid = true;
     return *this;
 }
 

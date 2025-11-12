@@ -29,13 +29,13 @@ conan build . -of=_build
 ```
 
 ## Features
-| Feature | Vulkan | DirectX |
-| :---------------- | :------: | ----: |
-| Vertex input | ✅ | ✅ |
-| Custom shader materials | ✅ | ✅ |
-| Uniform handling | ✅ | ✅ |
-| On-screen rendering | ✅ | ✅ |
-| Off-screen rendering | ✅ | ❌ |
-| Textures | ✅ | ❌ |
-| Mip-map generation | ✅ | ❌ |
-| MSAA | ✅ | ❌ |
+| Feature                 | Vulkan | DirectX |
+| :---------------------- | :----: | ------: |
+| Vertex input            |   ✅    |       ✅ |
+| Custom shader materials |   ✅    |       ✅ |
+| Uniform handling        |   ✅    |       ✅ |
+| On-screen rendering     |   ✅    |       ✅ |
+| Off-screen rendering    |   ✅    |       ❌ |
+| Textures                |   ✅    |       🔜 |
+| Mip-map generation      |   ✅    |       ❌ |
+| MSAA                    |   ✅    |       ❌ |
