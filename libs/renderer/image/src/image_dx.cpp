@@ -149,7 +149,45 @@ ImageDX& ImageDX::createFromFile(std::string_view f_path)
 
 ImageDX& ImageDX::createEmptyImage()
 {
-    throw std::logic_error("Function not yet implemented");
+    D3D12_RESOURCE_DESC l_imgDesc = {};
+    l_imgDesc.Dimension           = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    l_imgDesc.Alignment           = 0;
+    l_imgDesc.Width               = m_size.x;
+    l_imgDesc.Height              = m_size.y;
+    l_imgDesc.DepthOrArraySize    = 1;
+    l_imgDesc.MipLevels           = 1;
+    l_imgDesc.Format              = convertToDXFormat(m_format);
+    l_imgDesc.SampleDesc.Count    = 1;
+    l_imgDesc.SampleDesc.Quality  = 0;
+    l_imgDesc.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    l_imgDesc.Flags = isDepthImage() ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
+                                     : D3D12_RESOURCE_FLAG_NONE;
+
+    D3D12MA::ALLOCATION_DESC l_allocDesc = {};
+    l_allocDesc.HeapType                 = D3D12_HEAP_TYPE_DEFAULT;
+
+    D3D12_CLEAR_VALUE l_depthOptimizedClearValue    = {};
+    l_depthOptimizedClearValue.Format               = convertToDXFormat(m_format);
+    l_depthOptimizedClearValue.DepthStencil.Depth   = 1.0f;
+    l_depthOptimizedClearValue.DepthStencil.Stencil = 0;
+
+    if (FAILED(m_parentDevice->getMemoryAllocator()->CreateResource(
+            &l_allocDesc,
+            &l_imgDesc,
+            isDepthImage() ? D3D12_RESOURCE_STATE_DEPTH_WRITE
+                           : D3D12_RESOURCE_STATE_COMMON,
+            isDepthImage() ? &l_depthOptimizedClearValue : NULL,
+            &m_image,
+            IID_NULL,
+            NULL
+        )))
+    {
+        throw std::runtime_error(
+            "ImageDX::createEmptyImage(...) failed to create image from file"
+        );
+    }
+    m_valid = true;
+    return *this;
 }
 
 ImageDX& ImageDX::setFormat(image::ImageFormat f_format)
@@ -204,12 +242,21 @@ DXGI_FORMAT ImageDX::convertToDXFormat(const ImageFormat f_format)
             return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
         }
 
+        case IMAGE_FORMAT_DEPTH: {
+            return DXGI_FORMAT_D32_FLOAT;
+        }
+
         case IMAGE_FORMAT_UNDEFINED:
         case IMAGE_FORMAT_MAX:
         default:                     {
             return DXGI_FORMAT_UNKNOWN;
         }
     }
+}
+
+bool ImageDX::isDepthImage() const
+{
+    return m_format == IMAGE_FORMAT_DEPTH;
 }
 
 inline UINT64 ImageDX::GetRequiredIntermediateSize(

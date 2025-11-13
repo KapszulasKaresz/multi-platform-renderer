@@ -118,7 +118,11 @@ CommandBufferDX& CommandBufferDX::beginRendering(const RenderBeginInfo& f_render
     l_rtvHandle.ptr = l_rtvHandle.ptr
                     + (m_parentDevice->getCurrentFrame()
                        * l_currentRenderTargetDX->getDescriptorSize());
-    l_commandList->OMSetRenderTargets(1, &l_rtvHandle, FALSE, nullptr);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE
+    l_dsvHandle(l_currentRenderTargetDX->getDepthDescriptorHeap()
+                    ->GetCPUDescriptorHandleForHeapStart());
+    l_commandList->OMSetRenderTargets(1, &l_rtvHandle, FALSE, &l_dsvHandle);
 
     const float l_clearColor[] = { f_renderBeginInfo.m_clearColor.r,
                                    f_renderBeginInfo.m_clearColor.g,
@@ -126,6 +130,11 @@ CommandBufferDX& CommandBufferDX::beginRendering(const RenderBeginInfo& f_render
                                    f_renderBeginInfo.m_clearColor.a };
 
     l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
+
+    // TODO this should be 1.0 bug
+    l_commandList->ClearDepthStencilView(
+        l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1000.0f, 0, 0, nullptr
+    );
     return *this;
 }
 

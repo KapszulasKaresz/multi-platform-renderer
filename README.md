@@ -41,7 +41,7 @@ There is an example standalone app in the repository which uses the renderer lib
 | Uniform handling        |   ✅    |       ✅ |
 | On-screen rendering     |   ✅    |       ✅ |
 | Off-screen rendering    |   ✅    |       ❌ |
-| Depth buffer            |   ✅    |       ❌ |
+| Depth buffer            |   ✅    |       ✅ |
 | Textures                |   ✅    |       ✅ |
 | Mip-map generation      |   ✅    |       ❌ |
 | MSAA                    |   ✅    |       ❌ |

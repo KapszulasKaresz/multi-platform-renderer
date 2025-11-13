@@ -29,7 +29,7 @@ std::shared_ptr<image::Image> RenderTargetWindowDX::getImage()
 
 std::shared_ptr<image::Image> RenderTargetWindowDX::getDepthImage()
 {
-    throw std::logic_error("Function not yet implemented");
+    return m_depthImage;
 }
 
 glm::ivec2 RenderTargetWindowDX::getSize() const
@@ -40,6 +40,9 @@ glm::ivec2 RenderTargetWindowDX::getSize() const
 RenderTargetWindowDX& RenderTargetWindowDX::create()
 {
     createSwapCahin();
+    if (m_useDepthBuffer) {
+        createDepthResource();
+    }
     createDescriptorHeap();
     createRenderTargets();
     m_valid = true;
@@ -56,6 +59,11 @@ ID3D12DescriptorHeap* RenderTargetWindowDX::getDescriptorHeap()
     return m_rtvHeap.Get();
 }
 
+ID3D12DescriptorHeap* RenderTargetWindowDX::getDepthDescriptorHeap()
+{
+    return m_dsvHeap.Get();
+}
+
 UINT RenderTargetWindowDX::getDescriptorSize()
 {
     return m_rtvDescriptorSize;
@@ -69,6 +77,9 @@ IDXGISwapChain3* RenderTargetWindowDX::getSwapchain()
 void RenderTargetWindowDX::resizeSwapChain()
 {
     createSwapCahin();
+    if (m_useDepthBuffer) {
+        createDepthResource();
+    }
 }
 
 void RenderTargetWindowDX::createSwapCahin()
@@ -137,6 +148,22 @@ void RenderTargetWindowDX::createDescriptorHeap()
     m_rtvDescriptorSize = m_parentDevice->getDevice()->GetDescriptorHandleIncrementSize(
         D3D12_DESCRIPTOR_HEAP_TYPE_RTV
     );
+
+    D3D12_DESCRIPTOR_HEAP_DESC l_dsvHeapDesc = {};
+    l_dsvHeapDesc.NumDescriptors             = 1;
+    l_dsvHeapDesc.Type                       = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+    l_dsvHeapDesc.Flags                      = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+    if (FAILED(m_parentDevice->getDevice()->CreateDescriptorHeap(
+            &l_dsvHeapDesc, IID_PPV_ARGS(&m_dsvHeap)
+        )))
+    {
+        throw std::
+            runtime_error(
+                "RenderingDeviceDX::createDescriptorHeap() failed to create depth "
+                "descriptor " "heap"
+            );
+    }
 }
 
 void RenderTargetWindowDX::createRenderTargets()
@@ -157,6 +184,27 @@ void RenderTargetWindowDX::createRenderTargets()
         );
         l_rtvHandle.ptr += (1 * m_rtvDescriptorSize);
     }
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC l_dsvDesc = {};
+    l_dsvDesc.Format = image::ImageDX::convertToDXFormat(m_depthImage->getFormat());
+    l_dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    l_dsvDesc.Flags         = D3D12_DSV_FLAG_NONE;
+
+    m_parentDevice->getDevice()->CreateDepthStencilView(
+        m_depthImage->getResource(),
+        &l_dsvDesc,
+        m_dsvHeap->GetCPUDescriptorHandleForHeapStart()
+    );
+}
+
+void RenderTargetWindowDX::createDepthResource()
+{
+    m_depthImage =
+        std::dynamic_pointer_cast<image::ImageDX>(m_parentDevice->createImage());
+    m_depthImage->setFormat(image::IMAGE_FORMAT_DEPTH)
+        .setColorSpace(image::COLOR_SPACE_LINEAR)
+        .setSize(m_size)
+        .createEmptyImage();
 }
 }   // namespace render_target
 }   // namespace renderer

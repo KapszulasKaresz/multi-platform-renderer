@@ -33,6 +33,8 @@ public:
     static DXGI_FORMAT convertToDXFormat(const ImageFormat f_format);
 
 private:
+    bool isDepthImage() const;
+
     inline UINT64 GetRequiredIntermediateSize(
         _In_ ID3D12Resource*                       f_pDestinationResource,
         _In_range_(0, D3D12_REQ_SUBRESOURCES) UINT f_FirstSubresource,

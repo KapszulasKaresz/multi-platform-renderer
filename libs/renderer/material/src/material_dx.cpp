@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "renderer/image/inc/image_dx.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
@@ -266,9 +267,15 @@ void MaterialDX::createPipelineState()
     }
     l_psoDesc.BlendState = l_blendDesc;
 
-    l_psoDesc.DepthStencilState.DepthEnable   = FALSE;
-    l_psoDesc.DepthStencilState.StencilEnable = FALSE;
-    l_psoDesc.SampleMask                      = UINT_MAX;
+    D3D12_DEPTH_STENCIL_DESC l_depthStencilDesc = {};
+    l_depthStencilDesc.DepthEnable              = TRUE;
+    l_depthStencilDesc.DepthWriteMask           = D3D12_DEPTH_WRITE_MASK_ALL;
+    l_depthStencilDesc.DepthFunc                = D3D12_COMPARISON_FUNC_LESS;
+    l_depthStencilDesc.StencilEnable            = FALSE;
+
+    l_psoDesc.DepthStencilState = l_depthStencilDesc;
+    l_psoDesc.DSVFormat  = image::ImageDX::convertToDXFormat(image::IMAGE_FORMAT_DEPTH);
+    l_psoDesc.SampleMask = UINT_MAX;
 
     l_psoDesc.NumRenderTargets = 1;
     l_psoDesc.RTVFormats[0]    = DXGI_FORMAT_B8G8R8A8_UNORM;
