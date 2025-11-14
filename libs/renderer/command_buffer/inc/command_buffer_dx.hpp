@@ -19,6 +19,11 @@ namespace rendering_device {
 class RenderingDeviceDX;
 }   // namespace rendering_device
 
+namespace render_target {
+class RenderTargetDX;
+class RenderTargetWindowDX;
+}   // namespace render_target
+
 namespace command_buffer {
 class CommandBufferDX : public CommandBuffer {
 public:
@@ -50,6 +55,18 @@ public:
 
 protected:
     ID3D12GraphicsCommandList* selectCommandList();
+
+    void beginRendering(
+        render_target::RenderTargetDX* f_renderTarget,
+        const RenderBeginInfo&         f_renderBeginInfo
+    );
+    void beginRendering(
+        render_target::RenderTargetWindowDX* f_renderTarget,
+        const RenderBeginInfo&               f_renderBeginInfo
+    );
+
+    void endRendering(render_target::RenderTargetDX* f_renderTarget);
+    void endRendering(render_target::RenderTargetWindowDX* f_renderTarget);
 
     bool m_rendering{ false };
 

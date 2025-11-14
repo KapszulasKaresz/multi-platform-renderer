@@ -6,6 +6,7 @@
 #include "renderer/image/inc/image_dx.hpp"
 #include "renderer/material/inc/material_dx.hpp"
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
+#include "renderer/render_target/inc/render_target_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
 #include "renderer/texture/inc/texture_dx.hpp"
@@ -90,7 +91,7 @@ std::shared_ptr<texture::Texture> RenderingDeviceDX::createTexture()
 
 std::shared_ptr<render_target::RenderTarget> RenderingDeviceDX::createRenderTarget()
 {
-    throw std::logic_error("Function not yet implemented");
+    return std::make_shared<render_target::RenderTargetDX>(this);
 }
 
 bool RenderingDeviceDX::preFrame()

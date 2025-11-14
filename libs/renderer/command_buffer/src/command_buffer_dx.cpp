@@ -5,6 +5,7 @@
 #include "renderer/image/inc/image_dx.hpp"
 #include "renderer/material/inc/material_dx.hpp"
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
+#include "renderer/render_target/inc/render_target_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
 
@@ -93,145 +94,46 @@ CommandBufferDX& CommandBufferDX::beginRendering(const RenderBeginInfo& f_render
     }
     m_currentRenderTarget = f_renderBeginInfo.m_renderTarget;
 
-    render_target::RenderTargetWindowDX* l_currentRenderTargetDX =
+    render_target::RenderTargetWindowDX* l_currentRenderTargetWindowDX =
         dynamic_cast<render_target::RenderTargetWindowDX*>(m_currentRenderTarget.get());
-    if (!l_currentRenderTargetDX) {
-        throw std::runtime_error(
-            "CommandBufferDX::beginRendering(...) unsopported render target format"
-        );
+    if (l_currentRenderTargetWindowDX) {
+        beginRendering(l_currentRenderTargetWindowDX, f_renderBeginInfo);
     }
-    auto l_commandList = selectCommandList();
+    else {
+        render_target::RenderTargetDX* l_currentRenderTargetDX =
+            dynamic_cast<render_target::RenderTargetDX*>(m_currentRenderTarget.get());
 
-    D3D12_RESOURCE_BARRIER l_renderTargetBarrier;
-    l_renderTargetBarrier.Type  = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    l_renderTargetBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    l_renderTargetBarrier.Transition.pResource =
-        dynamic_cast<image::ImageDX*>(l_currentRenderTargetDX->getImage().get())
-            ->getResource();
-    l_renderTargetBarrier.Transition.StateBefore = l_currentRenderTargetDX->isMSAA()
-                                                     ? D3D12_RESOURCE_STATE_RESOLVE_SOURCE
-                                                     : D3D12_RESOURCE_STATE_COPY_SOURCE;
-    l_renderTargetBarrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    l_renderTargetBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    l_commandList->ResourceBarrier(1, &l_renderTargetBarrier);
+        if (l_currentRenderTargetDX) {
+            beginRendering(l_currentRenderTargetDX, f_renderBeginInfo);
+        }
+        else {
+            throw std::runtime_error(
+                "CommandBufferDX::beginRendering(...) unsopported render target format"
+            );
+        }
+    }
 
-    D3D12_CPU_DESCRIPTOR_HANDLE
-    l_rtvHandle(l_currentRenderTargetDX->getMSAADescriptorHeap()
-                    ->GetCPUDescriptorHandleForHeapStart());
-
-    D3D12_CPU_DESCRIPTOR_HANDLE
-    l_dsvHandle(l_currentRenderTargetDX->getDepthDescriptorHeap()
-                    ->GetCPUDescriptorHandleForHeapStart());
-    l_commandList->OMSetRenderTargets(1, &l_rtvHandle, FALSE, &l_dsvHandle);
-
-    const float l_clearColor[] = { f_renderBeginInfo.m_clearColor.r,
-                                   f_renderBeginInfo.m_clearColor.g,
-                                   f_renderBeginInfo.m_clearColor.b,
-                                   f_renderBeginInfo.m_clearColor.a };
-
-    l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
-
-    l_commandList->ClearDepthStencilView(
-        l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
-    );
     return *this;
 }
 
 CommandBufferDX& CommandBufferDX::endRendering()
 {
-    render_target::RenderTargetWindowDX* l_currentRenderTargetDX =
+    render_target::RenderTargetWindowDX* l_currentRenderTargetWindowDX =
         dynamic_cast<render_target::RenderTargetWindowDX*>(m_currentRenderTarget.get());
-    if (!l_currentRenderTargetDX) {
-        throw std::runtime_error(
-            "CommandBufferDX::endRendering() unsopported render target format"
-        );
-    }
-    auto l_commandList = selectCommandList();
-
-    ID3D12Resource* l_msaaRT =
-        dynamic_cast<image::ImageDX*>(l_currentRenderTargetDX->getImage().get())
-            ->getResource();
-    ID3D12Resource* l_backBuffer = l_currentRenderTargetDX->getRenderTarget();
-
-    if (l_currentRenderTargetDX->isMSAA()) {
-        {
-            D3D12_RESOURCE_BARRIER l_barrier;
-            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-            l_barrier.Transition.pResource   = l_msaaRT;
-            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
-            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-            l_commandList->ResourceBarrier(1, &l_barrier);
-        }
-
-        {
-            D3D12_RESOURCE_BARRIER l_barrier = {};
-            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            l_barrier.Transition.pResource   = l_backBuffer;
-            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RESOLVE_DEST;
-            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-            l_commandList->ResourceBarrier(1, &l_barrier);
-        }
-
-        l_commandList->ResolveSubresource(
-            /* pDstResource     */ l_backBuffer,
-            /* DstSubresource  */ 0,
-            /* pSrcResource     */ l_msaaRT,
-            /* SrcSubresource  */ 0,
-            /* Format          */
-            image::ImageDX::convertToDXFormat(l_currentRenderTargetDX->getFormat())
-        );
-
-        {
-            D3D12_RESOURCE_BARRIER l_barrier = {};
-            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            l_barrier.Transition.pResource   = l_backBuffer;
-            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
-            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
-            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-            l_commandList->ResourceBarrier(1, &l_barrier);
-        }
+    if (l_currentRenderTargetWindowDX) {
+        endRendering(l_currentRenderTargetWindowDX);
     }
     else {
-        {
-            D3D12_RESOURCE_BARRIER l_barrier;
-            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-            l_barrier.Transition.pResource   = l_msaaRT;
-            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_COPY_SOURCE;
-            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        render_target::RenderTargetDX* l_currentRenderTargetDX =
+            dynamic_cast<render_target::RenderTargetDX*>(m_currentRenderTarget.get());
 
-            l_commandList->ResourceBarrier(1, &l_barrier);
+        if (l_currentRenderTargetDX) {
+            endRendering(l_currentRenderTargetDX);
         }
-
-        {
-            D3D12_RESOURCE_BARRIER l_barrier = {};
-            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            l_barrier.Transition.pResource   = l_backBuffer;
-            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_COPY_DEST;
-            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-            l_commandList->ResourceBarrier(1, &l_barrier);
-        }
-
-        l_commandList->CopyResource(l_backBuffer, l_msaaRT);
-
-        {
-            D3D12_RESOURCE_BARRIER l_barrier = {};
-            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-            l_barrier.Transition.pResource   = l_backBuffer;
-            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
-            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-            l_commandList->ResourceBarrier(1, &l_barrier);
+        else {
+            throw std::runtime_error(
+                "CommandBufferDX::endRendering(...) unsopported render target format"
+            );
         }
     }
 
@@ -390,6 +292,200 @@ ID3D12GraphicsCommandList* CommandBufferDX::selectCommandList()
         return m_commandLists[m_parentDevice->getCurrentFrame()].Get();
     }
     return m_commandLists[m_parentDevice->getCurrentFrame()].Get();
+}
+
+void CommandBufferDX::beginRendering(
+    render_target::RenderTargetDX* f_renderTarget,
+    const RenderBeginInfo&         f_renderBeginInfo
+)
+{
+    auto l_commandList = selectCommandList();
+
+    D3D12_RESOURCE_BARRIER l_renderTargetBarrier;
+    l_renderTargetBarrier.Type  = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    l_renderTargetBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    l_renderTargetBarrier.Transition.pResource =
+        dynamic_cast<image::ImageDX*>(f_renderTarget->getImage().get())->getResource();
+    l_renderTargetBarrier.Transition.StateBefore =
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    l_renderTargetBarrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    l_renderTargetBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    l_commandList->ResourceBarrier(1, &l_renderTargetBarrier);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE
+    l_rtvHandle(
+        f_renderTarget->getMSAADescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
+    );
+
+    D3D12_CPU_DESCRIPTOR_HANDLE
+    l_dsvHandle(
+        f_renderTarget->getDepthDescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
+    );
+    l_commandList->OMSetRenderTargets(1, &l_rtvHandle, FALSE, &l_dsvHandle);
+
+    const float l_clearColor[] = { f_renderBeginInfo.m_clearColor.r,
+                                   f_renderBeginInfo.m_clearColor.g,
+                                   f_renderBeginInfo.m_clearColor.b,
+                                   f_renderBeginInfo.m_clearColor.a };
+
+    l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
+
+    l_commandList->ClearDepthStencilView(
+        l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
+    );
+}
+
+void CommandBufferDX::beginRendering(
+    render_target::RenderTargetWindowDX* f_renderTarget,
+    const RenderBeginInfo&               f_renderBeginInfo
+)
+{
+    auto l_commandList = selectCommandList();
+
+    D3D12_RESOURCE_BARRIER l_renderTargetBarrier;
+    l_renderTargetBarrier.Type  = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    l_renderTargetBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    l_renderTargetBarrier.Transition.pResource =
+        dynamic_cast<image::ImageDX*>(f_renderTarget->getImage().get())->getResource();
+    l_renderTargetBarrier.Transition.StateBefore = f_renderTarget->isMSAA()
+                                                     ? D3D12_RESOURCE_STATE_RESOLVE_SOURCE
+                                                     : D3D12_RESOURCE_STATE_COPY_SOURCE;
+    l_renderTargetBarrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    l_renderTargetBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    l_commandList->ResourceBarrier(1, &l_renderTargetBarrier);
+
+    D3D12_CPU_DESCRIPTOR_HANDLE
+    l_rtvHandle(
+        f_renderTarget->getMSAADescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
+    );
+
+    D3D12_CPU_DESCRIPTOR_HANDLE
+    l_dsvHandle(
+        f_renderTarget->getDepthDescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
+    );
+    l_commandList->OMSetRenderTargets(1, &l_rtvHandle, FALSE, &l_dsvHandle);
+
+    const float l_clearColor[] = { f_renderBeginInfo.m_clearColor.r,
+                                   f_renderBeginInfo.m_clearColor.g,
+                                   f_renderBeginInfo.m_clearColor.b,
+                                   f_renderBeginInfo.m_clearColor.a };
+
+    l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
+
+    l_commandList->ClearDepthStencilView(
+        l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
+    );
+}
+
+void CommandBufferDX::endRendering(render_target::RenderTargetDX* f_renderTarget)
+{
+    auto l_commandList = selectCommandList();
+
+    ID3D12Resource* l_msaaRT =
+        dynamic_cast<image::ImageDX*>(f_renderTarget->getImage().get())->getResource();
+
+    {
+        D3D12_RESOURCE_BARRIER l_barrier;
+        l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        l_barrier.Transition.pResource   = l_msaaRT;
+        l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+        l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+        l_commandList->ResourceBarrier(1, &l_barrier);
+    }
+}
+
+void CommandBufferDX::endRendering(render_target::RenderTargetWindowDX* f_renderTarget)
+{
+    auto l_commandList = selectCommandList();
+
+    ID3D12Resource* l_msaaRT =
+        dynamic_cast<image::ImageDX*>(f_renderTarget->getImage().get())->getResource();
+    ID3D12Resource* l_backBuffer = f_renderTarget->getRenderTarget();
+
+    if (f_renderTarget->isMSAA()) {
+        {
+            D3D12_RESOURCE_BARRIER l_barrier;
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            l_barrier.Transition.pResource   = l_msaaRT;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        l_commandList->ResolveSubresource(
+            /* pDstResource     */ l_backBuffer,
+            /* DstSubresource  */ 0,
+            /* pSrcResource     */ l_msaaRT,
+            /* SrcSubresource  */ 0,
+            /* Format          */
+            image::ImageDX::convertToDXFormat(f_renderTarget->getFormat())
+        );
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+    }
+    else {
+        {
+            D3D12_RESOURCE_BARRIER l_barrier;
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            l_barrier.Transition.pResource   = l_msaaRT;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_COPY_SOURCE;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_COPY_DEST;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        l_commandList->CopyResource(l_backBuffer, l_msaaRT);
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+    }
 }
 }   // namespace command_buffer
 }   // namespace renderer
