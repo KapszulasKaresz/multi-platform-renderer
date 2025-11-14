@@ -2,6 +2,7 @@
 
 #include <stdexcept>
 
+#include "renderer/image/inc/image_dx.hpp"
 #include "renderer/material/inc/material_dx.hpp"
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
@@ -105,19 +106,18 @@ CommandBufferDX& CommandBufferDX::beginRendering(const RenderBeginInfo& f_render
     l_renderTargetBarrier.Type  = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     l_renderTargetBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
     l_renderTargetBarrier.Transition.pResource =
-        l_currentRenderTargetDX->getRenderTarget();
-    l_renderTargetBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+        dynamic_cast<image::ImageDX*>(l_currentRenderTargetDX->getImage().get())
+            ->getResource();
+    l_renderTargetBarrier.Transition.StateBefore = l_currentRenderTargetDX->isMSAA()
+                                                     ? D3D12_RESOURCE_STATE_RESOLVE_SOURCE
+                                                     : D3D12_RESOURCE_STATE_COPY_SOURCE;
     l_renderTargetBarrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RENDER_TARGET;
     l_renderTargetBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
     l_commandList->ResourceBarrier(1, &l_renderTargetBarrier);
 
     D3D12_CPU_DESCRIPTOR_HANDLE
-    l_rtvHandle(
-        l_currentRenderTargetDX->getDescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
-    );
-    l_rtvHandle.ptr = l_rtvHandle.ptr
-                    + (m_parentDevice->getCurrentFrame()
-                       * l_currentRenderTargetDX->getDescriptorSize());
+    l_rtvHandle(l_currentRenderTargetDX->getMSAADescriptorHeap()
+                    ->GetCPUDescriptorHandleForHeapStart());
 
     D3D12_CPU_DESCRIPTOR_HANDLE
     l_dsvHandle(l_currentRenderTargetDX->getDepthDescriptorHeap()
@@ -131,7 +131,6 @@ CommandBufferDX& CommandBufferDX::beginRendering(const RenderBeginInfo& f_render
 
     l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
 
-    // TODO this should be 1.0 bug
     l_commandList->ClearDepthStencilView(
         l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
     );
@@ -149,15 +148,92 @@ CommandBufferDX& CommandBufferDX::endRendering()
     }
     auto l_commandList = selectCommandList();
 
-    D3D12_RESOURCE_BARRIER l_presentBarrier;
-    l_presentBarrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    l_presentBarrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    l_presentBarrier.Transition.pResource   = l_currentRenderTargetDX->getRenderTarget();
-    l_presentBarrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    l_presentBarrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
-    l_presentBarrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    ID3D12Resource* l_msaaRT =
+        dynamic_cast<image::ImageDX*>(l_currentRenderTargetDX->getImage().get())
+            ->getResource();
+    ID3D12Resource* l_backBuffer = l_currentRenderTargetDX->getRenderTarget();
 
-    l_commandList->ResourceBarrier(1, &l_presentBarrier);
+    if (l_currentRenderTargetDX->isMSAA()) {
+        {
+            D3D12_RESOURCE_BARRIER l_barrier;
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            l_barrier.Transition.pResource   = l_msaaRT;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        l_commandList->ResolveSubresource(
+            /* pDstResource     */ l_backBuffer,
+            /* DstSubresource  */ 0,
+            /* pSrcResource     */ l_msaaRT,
+            /* SrcSubresource  */ 0,
+            /* Format          */
+            image::ImageDX::convertToDXFormat(l_currentRenderTargetDX->getFormat())
+        );
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+    }
+    else {
+        {
+            D3D12_RESOURCE_BARRIER l_barrier;
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+            l_barrier.Transition.pResource   = l_msaaRT;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_COPY_SOURCE;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_COPY_DEST;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        l_commandList->CopyResource(l_backBuffer, l_msaaRT);
+
+        {
+            D3D12_RESOURCE_BARRIER l_barrier = {};
+            l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+            l_barrier.Transition.pResource   = l_backBuffer;
+            l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+            l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+    }
 
     m_currentRenderTarget = nullptr;
     return *this;

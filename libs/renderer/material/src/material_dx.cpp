@@ -279,7 +279,7 @@ void MaterialDX::createPipelineState()
 
     l_psoDesc.NumRenderTargets = 1;
     l_psoDesc.RTVFormats[0]    = DXGI_FORMAT_B8G8R8A8_UNORM;
-    l_psoDesc.SampleDesc.Count = 1;
+    l_psoDesc.SampleDesc.Count = m_parentDevice->getMaxMSAASamples();
 
     if (FAILED(m_parentDevice->getDevice()->CreateGraphicsPipelineState(
             &l_psoDesc, IID_PPV_ARGS(&m_pipelineState)

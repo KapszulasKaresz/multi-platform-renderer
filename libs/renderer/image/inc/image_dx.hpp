@@ -28,6 +28,10 @@ public:
     ImageDX& setColorSpace(image::ColorSpace f_colorSpace) override final;
     ImageDX& setSize(const glm::ivec2& f_size) override final;
 
+    ImageDX& setMSAASamples(DXGI_SAMPLE_DESC f_samples);
+    ImageDX& setDefaultState(D3D12_RESOURCE_STATES f_deafultState);
+    ImageDX& setResrouceFlags(D3D12_RESOURCE_FLAGS f_resourceFlags);
+
     ID3D12Resource* getResource();
 
     static DXGI_FORMAT convertToDXFormat(const ImageFormat f_format);
@@ -44,6 +48,11 @@ private:
     rendering_device::RenderingDeviceDX* m_parentDevice;
 
     Microsoft::WRL::ComPtr<D3D12MA::Allocation> m_image{ nullptr };
+
+    DXGI_SAMPLE_DESC m_MSAASamples{ .Count = 1, .Quality = 0 };
+
+    D3D12_RESOURCE_STATES m_defaultState{ D3D12_RESOURCE_STATE_COMMON };
+    D3D12_RESOURCE_FLAGS  m_resourceFlags{ D3D12_RESOURCE_FLAG_NONE };
 };
 }   // namespace image
 }   // namespace renderer

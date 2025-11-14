@@ -157,29 +157,29 @@ ImageDX& ImageDX::createEmptyImage()
     l_imgDesc.DepthOrArraySize    = 1;
     l_imgDesc.MipLevels           = 1;
     l_imgDesc.Format              = convertToDXFormat(m_format);
-    l_imgDesc.SampleDesc.Count    = 1;
-    l_imgDesc.SampleDesc.Quality  = 0;
+    l_imgDesc.SampleDesc          = m_MSAASamples;
     l_imgDesc.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    l_imgDesc.Flags = isDepthImage() ? D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL
-                                     : D3D12_RESOURCE_FLAG_NONE;
+    l_imgDesc.Flags               = m_resourceFlags;
 
     D3D12MA::ALLOCATION_DESC l_allocDesc = {};
     l_allocDesc.HeapType                 = D3D12_HEAP_TYPE_DEFAULT;
 
-    D3D12_CLEAR_VALUE l_depthOptimizedClearValue    = {};
-    l_depthOptimizedClearValue.Format               = convertToDXFormat(m_format);
-    l_depthOptimizedClearValue.DepthStencil.Depth   = 1.0f;
-    l_depthOptimizedClearValue.DepthStencil.Stencil = 0;
+    D3D12_CLEAR_VALUE l_clearValue = {};
+    if (isDepthImage()) {
+        l_clearValue.DepthStencil.Depth   = 1.0f;
+        l_clearValue.DepthStencil.Stencil = 0;
+    }
+    else {
+        l_clearValue.Color[0] = 0.0f;
+        l_clearValue.Color[1] = 0.0f;
+        l_clearValue.Color[2] = 0.0f;
+        l_clearValue.Color[3] = 1.0f;
+    }
+    l_clearValue.Format = convertToDXFormat(m_format);
+
 
     if (FAILED(m_parentDevice->getMemoryAllocator()->CreateResource(
-            &l_allocDesc,
-            &l_imgDesc,
-            isDepthImage() ? D3D12_RESOURCE_STATE_DEPTH_WRITE
-                           : D3D12_RESOURCE_STATE_COMMON,
-            isDepthImage() ? &l_depthOptimizedClearValue : NULL,
-            &m_image,
-            IID_NULL,
-            NULL
+            &l_allocDesc, &l_imgDesc, m_defaultState, &l_clearValue, &m_image, IID_NULL, NULL
         )))
     {
         throw std::runtime_error(
@@ -205,6 +205,24 @@ ImageDX& ImageDX::setColorSpace(image::ColorSpace f_colorSpace)
 ImageDX& ImageDX::setSize(const glm::ivec2& f_size)
 {
     m_size = f_size;
+    return *this;
+}
+
+ImageDX& ImageDX::setMSAASamples(DXGI_SAMPLE_DESC f_samples)
+{
+    m_MSAASamples = f_samples;
+    return *this;
+}
+
+ImageDX& ImageDX::setDefaultState(D3D12_RESOURCE_STATES f_deafultState)
+{
+    m_defaultState = f_deafultState;
+    return *this;
+}
+
+ImageDX& ImageDX::setResrouceFlags(D3D12_RESOURCE_FLAGS f_resourceFlags)
+{
+    m_resourceFlags = f_resourceFlags;
     return *this;
 }
 

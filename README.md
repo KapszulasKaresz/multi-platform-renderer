@@ -44,4 +44,4 @@ There is an example standalone app in the repository which uses the renderer lib
 | Depth buffer            |   ✅    |       ✅ |
 | Textures                |   ✅    |       ✅ |
 | Mip-map generation      |   ✅    |       ❌ |
-| MSAA                    |   ✅    |       ❌ |
+| MSAA                    |   ✅    |       ✅ |

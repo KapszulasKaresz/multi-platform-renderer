@@ -30,17 +30,21 @@ public:
     RenderTargetWindowDX& create();
     ID3D12Resource*       getRenderTarget();
     ID3D12DescriptorHeap* getDescriptorHeap();
+    ID3D12DescriptorHeap* getMSAADescriptorHeap();
     ID3D12DescriptorHeap* getDepthDescriptorHeap();
     UINT                  getDescriptorSize();
     IDXGISwapChain3*      getSwapchain();
 
     void resizeSwapChain();
+    bool isMSAA();
 
 private:
     void createSwapCahin();
     void createDescriptorHeap();
     void createRenderTargets();
     void createDepthResource();
+    void createColorResource();
+    void validateMSAARequirements();
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
@@ -48,6 +52,8 @@ private:
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_rtvHeap{ nullptr };
     UINT                                         m_rtvDescriptorSize;
+
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_msaaRtvHeap{ nullptr };
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_dsvHeap{ nullptr };
 
@@ -58,6 +64,9 @@ private:
     UINT              m_currentBuffer{ 0 };
 
     std::shared_ptr<image::ImageDX> m_depthImage{ nullptr };
+    std::shared_ptr<image::ImageDX> m_colorImage{ nullptr };
+
+    DXGI_SAMPLE_DESC m_MSAASampleDesc{};
 };
 
 }   // namespace render_target

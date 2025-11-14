@@ -24,7 +24,7 @@ std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRender
                     "renderingdevice isn't a dx rendering device"
                 );
         }
-        l_renderingDeviceDXRaw->create();
+        l_renderingDeviceDXRaw->setTargetMSAASamples(4).create();
 
         m_mainRenderingDevice = l_renderingDevice;
     }
@@ -45,7 +45,7 @@ void RenderingApiDX::createMainRenderingDeviceWindow(window::Window* f_window)
                     "renderingdevice isn't a dx rendering device"
                 );
         }
-        l_renderingDeviceDXRaw->setWindow(f_window).create();
+        l_renderingDeviceDXRaw->setWindow(f_window).setTargetMSAASamples(4).create();
 
         m_mainRenderingDevice = l_renderingDevice;
     }
