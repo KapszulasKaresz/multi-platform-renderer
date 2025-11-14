@@ -3,7 +3,7 @@ cbuffer cb : register(b0)
     row_major float4x4 modelMatrix : packoffset(c0);
     row_major float4x4 viewMatrix : packoffset(c4);
     row_major float4x4 projectionMatrix : packoffset(c8);
-};
+};  
 
 struct VertexInput
 {

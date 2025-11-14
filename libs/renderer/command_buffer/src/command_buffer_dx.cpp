@@ -133,7 +133,7 @@ CommandBufferDX& CommandBufferDX::beginRendering(const RenderBeginInfo& f_render
 
     // TODO this should be 1.0 bug
     l_commandList->ClearDepthStencilView(
-        l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1000.0f, 0, 0, nullptr
+        l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
     );
     return *this;
 }
@@ -236,8 +236,8 @@ CommandBufferDX& CommandBufferDX::useViewport(const ViewportInfo& f_viewportInfo
                                .TopLeftY = f_viewportInfo.m_positions.y,
                                .Width    = l_size.x,
                                .Height   = l_size.y,
-                               .MinDepth = 0.1f,
-                               .MaxDepth = 1000.0f };
+                               .MinDepth = 0.0f,
+                               .MaxDepth = 1.0f };
     D3D12_RECT     l_surfaceSize{ .left   = 0,
                                   .top    = 0,
                                   .right  = static_cast<LONG>(l_size.x),
