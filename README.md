@@ -43,5 +43,5 @@ There is an example standalone app in the repository which uses the renderer lib
 | Off-screen rendering    |   ✅    |       ✅ |
 | Depth buffer            |   ✅    |       ✅ |
 | Textures                |   ✅    |       ✅ |
-| Mip-map generation      |   ✅    |       ❌ |
+| Mip-map generation      |   ✅    |       ✅ |
 | MSAA                    |   ✅    |       ✅ |

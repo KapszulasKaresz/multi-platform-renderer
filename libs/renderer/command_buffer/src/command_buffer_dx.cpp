@@ -250,13 +250,14 @@ CommandBufferDX& CommandBufferDX::draw(std::shared_ptr<mesh::TriangleMesh> f_mes
 CommandBufferDX& CommandBufferDX::copyBuffer(
     ID3D12Resource*                    f_srcBuffer,
     ID3D12Resource*                    f_dstBuffer,
-    D3D12_PLACED_SUBRESOURCE_FOOTPRINT f_footprint
+    D3D12_PLACED_SUBRESOURCE_FOOTPRINT f_footprint,
+    UINT                               f_subresourceIndex
 )
 {
     D3D12_TEXTURE_COPY_LOCATION l_dstLocation = {};
     l_dstLocation.pResource                   = f_dstBuffer;
     l_dstLocation.Type                        = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    l_dstLocation.SubresourceIndex            = 0;
+    l_dstLocation.SubresourceIndex            = f_subresourceIndex;
 
     D3D12_TEXTURE_COPY_LOCATION l_srcLocation = {};
     l_srcLocation.pResource                   = f_srcBuffer;
@@ -284,6 +285,11 @@ CommandBufferDX& CommandBufferDX::copyBuffer(
     l_commandList->ResourceBarrier(1, &l_barrier);
 
     return *this;
+}
+
+ID3D12GraphicsCommandList* CommandBufferDX::getCommandList()
+{
+    return selectCommandList();
 }
 
 ID3D12GraphicsCommandList* CommandBufferDX::selectCommandList()

@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include <stb_image.h>
+#include <stb_image_resize.h>
 
 #include "renderer/command_buffer/inc/command_buffer_dx.hpp"
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
@@ -36,13 +37,17 @@ ImageDX& ImageDX::createFromFile(std::string_view f_path)
     m_size.x = l_texWidth;
     m_size.y = l_texHeight;
 
+    if (m_hasMipMaps) {
+        m_mipLevels = std::floor(std::log2(std::max(l_texWidth, l_texHeight))) + 1;
+    }
+
     D3D12_RESOURCE_DESC l_imgDesc = {};
     l_imgDesc.Dimension           = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     l_imgDesc.Alignment           = 0;
     l_imgDesc.Width               = m_size.x;
     l_imgDesc.Height              = m_size.y;
     l_imgDesc.DepthOrArraySize    = 1;
-    l_imgDesc.MipLevels           = 1;
+    l_imgDesc.MipLevels           = m_mipLevels;
     l_imgDesc.Format              = convertToDXFormat(m_format);
     l_imgDesc.SampleDesc.Count    = 1;
     l_imgDesc.SampleDesc.Quality  = 0;
@@ -66,7 +71,8 @@ ImageDX& ImageDX::createFromFile(std::string_view f_path)
             "ImageDX::createFromFile(...) failed to create image from file"
         );
     }
-    UINT64 l_uploadBufferSize = GetRequiredIntermediateSize(m_image->GetResource(), 0, 1);
+    UINT64 l_uploadBufferSize =
+        GetRequiredIntermediateSize(m_image->GetResource(), 0, m_mipLevels);
 
     D3D12_RESOURCE_DESC l_uploadBufferDesc = {};
     l_uploadBufferDesc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -95,19 +101,11 @@ ImageDX& ImageDX::createFromFile(std::string_view f_path)
             NULL
         )))
     {
+        stbi_image_free(l_pixels);
         throw std::runtime_error(
             "ImageDX::createFromFile(...) failed to create upload buffer"
         );
     }
-
-    D3D12_PLACED_SUBRESOURCE_FOOTPRINT l_footprint      = {};
-    UINT                               l_numRows        = 0;
-    UINT64                             l_rowSizeInBytes = 0;
-    UINT64                             l_totalBytes     = 0;
-
-    m_parentDevice->getDevice()->GetCopyableFootprints(
-        &l_imgDesc, 0, 1, 0, &l_footprint, &l_numRows, &l_rowSizeInBytes, &l_totalBytes
-    );
 
     BYTE*       l_mappedData = nullptr;
     D3D12_RANGE l_range      = { 0, 0 };   // We don't intend to read from it
@@ -115,15 +113,57 @@ ImageDX& ImageDX::createFromFile(std::string_view f_path)
         0, &l_range, reinterpret_cast<void**>(&l_mappedData)
     );
 
-    BYTE*       l_destSlice = l_mappedData + l_footprint.Offset;
-    const BYTE* l_srcSlice  = l_pixels;
+    std::vector<stbi_uc> l_mipData(l_pixels, l_pixels + l_texWidth * l_texHeight * 4);
+    int                  l_mipWidth  = l_texWidth;
+    int                  l_mipHeight = l_texHeight;
 
-    for (UINT y = 0; y < l_numRows; ++y) {
-        memcpy(
-            l_destSlice + y * l_footprint.Footprint.RowPitch,
-            l_srcSlice + y * (m_size.x * 4),   // 4 bytes per pixel (RGBA)
-            m_size.x * 4
-        );
+    std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> l_footprints(m_mipLevels);
+    std::vector<UINT>                               l_numRows(m_mipLevels);
+    std::vector<UINT64>                             l_rowSizes(m_mipLevels);
+    UINT64                                          l_totalBytes = 0;
+
+    m_parentDevice->getDevice()->GetCopyableFootprints(
+        &l_imgDesc,
+        0,
+        m_mipLevels,
+        0,
+        l_footprints.data(),
+        l_numRows.data(),
+        l_rowSizes.data(),
+        &l_totalBytes
+    );
+
+    for (UINT l_mip = 0; l_mip < m_mipLevels; ++l_mip) {
+        BYTE* l_destSlice = l_mappedData + l_footprints[l_mip].Offset;
+
+        for (UINT y = 0; y < static_cast<UINT>(l_mipHeight); ++y) {
+            memcpy(
+                l_destSlice + y * l_footprints[l_mip].Footprint.RowPitch,
+                l_mipData.data() + y * l_mipWidth * 4,
+                l_mipWidth * 4
+            );
+        }
+
+        // Generate next l_mip level using STB
+        if (l_mip + 1 < m_mipLevels) {
+            int                  l_nextWidth  = std::max(1, l_mipWidth / 2);
+            int                  l_nextHeight = std::max(1, l_mipHeight / 2);
+            std::vector<stbi_uc> l_nextMip(l_nextWidth * l_nextHeight * 4);
+            stbir_resize_uint8(
+                l_mipData.data(),
+                l_mipWidth,
+                l_mipHeight,
+                0,
+                l_nextMip.data(),
+                l_nextWidth,
+                l_nextHeight,
+                0,
+                4
+            );
+            l_mipData.swap(l_nextMip);
+            l_mipWidth  = l_nextWidth;
+            l_mipHeight = l_nextHeight;
+        }
     }
 
     l_uploadAllocation->GetResource()->Unmap(0, nullptr);
@@ -134,9 +174,16 @@ ImageDX& ImageDX::createFromFile(std::string_view f_path)
         );
     l_commanBuffer->reset();
     l_commanBuffer->begin();
-    l_commanBuffer->copyBuffer(
-        l_uploadAllocation->GetResource(), m_image->GetResource(), l_footprint
-    );
+
+    for (UINT l_mip = 0; l_mip < m_mipLevels; ++l_mip) {
+        l_commanBuffer->copyBuffer(
+            l_uploadAllocation->GetResource(),
+            m_image->GetResource(),
+            l_footprints[l_mip],
+            l_mip
+        );
+    }
+
     l_commanBuffer->end();
     l_commanBuffer->submit();
     m_parentDevice->waitForGPU();
