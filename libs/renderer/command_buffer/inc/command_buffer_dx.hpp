@@ -46,6 +46,7 @@ public:
     ) override final;
     CommandBufferDX& useViewport(const ViewportInfo& f_viewportInfo) override final;
     CommandBufferDX& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
+    CommandBufferDX& renderImGui() override final;
 
     CommandBufferDX& copyBuffer(
         ID3D12Resource*                    f_srcBuffer,

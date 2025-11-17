@@ -51,6 +51,7 @@ std::shared_ptr<rendering_device::RenderingDevice>
         }
             )
             .setTargetMSAASamples(8)   // TODO making this a setting
+            .enableImgui(m_useImgui)
             .create();
 
         m_mainRenderingDevice = l_renderingDevice;
@@ -98,6 +99,7 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
             )
             .setWindow(f_window)
             .setTargetMSAASamples(8)   // TODO making this a setting
+            .enableImgui(m_useImgui)
             .create();
 
         m_mainRenderingDevice = l_renderingDevice;

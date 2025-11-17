@@ -17,3 +17,5 @@ CMakeUserPresets.json
 
 libs/renderer/external/inc
 libs/renderer/external/src
+
+imgui.ini

@@ -33,6 +33,8 @@ public:
 protected:
     RenderingAPIType m_apiType{ RENDERING_API_TYPE_NONE };
     std::shared_ptr<rendering_device::RenderingDevice> m_mainRenderingDevice{ nullptr };
+
+    bool m_useImgui{ true };
 };
 }   // namespace rendering_api
 }   // namespace renderer

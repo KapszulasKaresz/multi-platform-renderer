@@ -48,6 +48,7 @@ public:
 
     virtual RenderingDevice& setWindow(window::Window* f_window) = 0;
     virtual RenderingDevice& setTargetMSAASamples(uint32_t f_sampleCount);
+    virtual RenderingDevice& enableImgui(bool f_enabled = true);
     virtual RenderingDevice& create() = 0;
 
     virtual std::shared_ptr<image::Image>                  createImage()         = 0;
@@ -66,10 +67,13 @@ public:
     uint32_t getCurrentFrame() const;
     int      getMaxFramesInFlight() const;
     uint32_t getMaxMSAASamples();
+    bool     isImGuiEnabled() const;
 
 protected:
     uint32_t m_currentFrame{ 0 };
     uint32_t m_MaxMSAASamples{ 1 };
+
+    bool m_useImGui{ false };
 };
 
 }   // namespace rendering_device

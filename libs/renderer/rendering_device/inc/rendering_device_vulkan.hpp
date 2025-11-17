@@ -90,6 +90,7 @@ private:
     void createSyncObjects();
     void createVmaAllocator();
     void createDescriptorPool();
+    void initImGui();
 
     vk::SampleCountFlagBits getMaxUsableSampleCount();
 
@@ -99,6 +100,8 @@ private:
     vk::raii::Queue                    m_queue{ nullptr };
     utils::RaiiVmaAllocator            m_allocator{};
     vk::raii::DescriptorPool           m_descriptorPool{ nullptr };
+
+    vk::raii::DescriptorPool m_imguiDescriptorPool{ nullptr };
 
     std::vector<const char*>       m_requiredExtension{};
     std::vector<vk::QueueFlagBits> m_requiredQueues{};

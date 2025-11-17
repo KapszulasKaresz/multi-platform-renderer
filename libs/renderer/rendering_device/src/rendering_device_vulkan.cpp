@@ -2,6 +2,9 @@
 
 #include <array>
 
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
+
 #include "renderer/command_buffer/inc/command_buffer_vulkan.hpp"
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
@@ -11,6 +14,7 @@
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/texture/inc/texture_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
+#include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
 
 namespace renderer {
@@ -136,6 +140,12 @@ bool RenderingDeviceVulkan::preFrame()
     }
     m_device.resetFences(*m_inFlightFences[m_currentFrame]);
 
+    if (m_useImGui) {
+        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplVulkan_NewFrame();
+        ImGui::NewFrame();
+    }
+
     return true;
 }
 
@@ -256,6 +266,9 @@ RenderingDeviceVulkan& RenderingDeviceVulkan::create()
     createDescriptorPool();
     createCommandPool();
     createSyncObjects();
+    if (m_useImGui) {
+        initImGui();
+    }
     return *this;
 }
 
@@ -590,6 +603,85 @@ void RenderingDeviceVulkan::createDescriptorPool()
     m_descriptorPool = vk::raii::DescriptorPool(m_device, l_poolInfo);
 }
 
+void RenderingDeviceVulkan::initImGui()
+{
+    window::GLFWWindow* l_glfwWindow = dynamic_cast<window::GLFWWindow*>(m_window);
+
+    if (!l_glfwWindow) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::initImGui() currently only GLFW imgui is supported"
+        );
+    }
+
+    std::array l_poolSizes = {
+        vk::DescriptorPoolSize{ vk::DescriptorType::eCombinedImageSampler, 1'000 },
+        vk::DescriptorPoolSize{         vk::DescriptorType::eSampledImage, 1'000 },
+        vk::DescriptorPoolSize{        vk::DescriptorType::eUniformBuffer, 1'000 },
+        vk::DescriptorPoolSize{        vk::DescriptorType::eStorageBuffer, 1'000 },
+    };
+
+    vk::DescriptorPoolCreateInfo l_poolInfo{
+        .flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
+        .maxSets       = 1'000,
+        .poolSizeCount = l_poolSizes.size(),
+        .pPoolSizes    = l_poolSizes.data()
+    };
+
+    m_imguiDescriptorPool = vk::raii::DescriptorPool{ m_device, l_poolInfo };
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForVulkan(l_glfwWindow->getNativeHandle(), true);
+
+    ImGui_ImplVulkan_InitInfo l_initInfo{};
+    l_initInfo.ApiVersion     = VK_API_VERSION_1_4;
+    l_initInfo.Instance       = *(m_parentApi->getNativeHandle());
+    l_initInfo.PhysicalDevice = *m_physicalDevice;
+    l_initInfo.Device         = *m_device;
+    l_initInfo.Queue          = *m_queue;
+    l_initInfo.QueueFamily    = m_queueIndex;
+    l_initInfo.DescriptorPool = *m_imguiDescriptorPool;
+
+    l_initInfo.MinImageCount = maxFramesInFlight;
+    l_initInfo.ImageCount    = maxFramesInFlight;
+    l_initInfo.PipelineInfoMain.MSAASamples =
+        static_cast<VkSampleCountFlagBits>(m_msaaSamples);
+
+    l_initInfo.PipelineInfoMain.PipelineRenderingCreateInfo = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO
+    };
+    l_initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+
+    VkFormat l_format = static_cast<VkFormat>(
+        image::ImageVulkan::convertToVkFormat(m_renderTargetWindow->getFormat())
+    );
+    l_initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.pColorAttachmentFormats =
+        &l_format;
+
+    if (m_renderTargetWindow->isDepthBufferEnabled()) {
+        l_initInfo.PipelineInfoMain.PipelineRenderingCreateInfo.depthAttachmentFormat =
+            static_cast<VkFormat>(image::ImageVulkan::findDepthFormat(m_physicalDevice));
+    }
+
+    l_initInfo.UseDynamicRendering = true;
+
+    ImGui_ImplVulkan_Init(&l_initInfo);
+
+    auto l_commandBuffer = createSingleUseCommandBuffer();
+
+    command_buffer::CommandBufferVulkan* l_commandBufferVulkan =
+        dynamic_cast<command_buffer::CommandBufferVulkan*>(l_commandBuffer.get());
+
+    l_commandBufferVulkan->begin();
+
+    l_commandBufferVulkan->end();
+    // TODO check if you need to load the texture atlas
+
+    l_commandBufferVulkan->submit();
+}
+
 vk::SampleCountFlagBits RenderingDeviceVulkan::getMaxUsableSampleCount()
 {
     vk::PhysicalDeviceProperties l_physicalDeviceProperties =
@@ -620,7 +712,14 @@ vk::SampleCountFlagBits RenderingDeviceVulkan::getMaxUsableSampleCount()
     return vk::SampleCountFlagBits::e1;
 }
 
-RenderingDeviceVulkan::~RenderingDeviceVulkan() {}
+RenderingDeviceVulkan::~RenderingDeviceVulkan()
+{
+    if (m_useImGui) {
+        ImGui_ImplVulkan_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+    }
+}
 
 }   // namespace rendering_device
 }   // namespace renderer

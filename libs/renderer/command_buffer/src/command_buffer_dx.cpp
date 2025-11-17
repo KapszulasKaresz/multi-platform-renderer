@@ -247,6 +247,11 @@ CommandBufferDX& CommandBufferDX::draw(std::shared_ptr<mesh::TriangleMesh> f_mes
     return *this;
 }
 
+CommandBufferDX& CommandBufferDX::renderImGui()
+{
+    throw std::logic_error("Unimplemented function");
+}
+
 CommandBufferDX& CommandBufferDX::copyBuffer(
     ID3D12Resource*                    f_srcBuffer,
     ID3D12Resource*                    f_dstBuffer,

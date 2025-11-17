@@ -23,6 +23,8 @@ public:
 
     static std::vector<const char*> getRequiredInstanceExtensionsVulkan();
 
+    GLFWwindow* getNativeHandle();
+
     ~GLFWWindow() override final;
 
 private:

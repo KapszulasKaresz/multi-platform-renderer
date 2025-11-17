@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <imgui_impl_vulkan.h>
+
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
@@ -73,17 +75,17 @@ CommandBufferVulkan& CommandBufferVulkan::submit()
 
 CommandBufferVulkan& CommandBufferVulkan::reset()
 {
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.reset();
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.reset();
     return *this;
 }
 
 CommandBufferVulkan& CommandBufferVulkan::begin()
 {
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
 
 
-    l_commanBuffer.begin(
+    l_commandBuffer.begin(
         m_singleUse
             ? vk::CommandBufferBeginInfo{ .flags = vk::CommandBufferUsageFlagBits::
                                               eOneTimeSubmit }
@@ -94,8 +96,8 @@ CommandBufferVulkan& CommandBufferVulkan::begin()
 
 CommandBufferVulkan& CommandBufferVulkan::end()
 {
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.end();
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.end();
     return *this;
 }
 
@@ -222,12 +224,12 @@ CommandBufferVulkan& CommandBufferVulkan::useMaterial(
     }
     l_vulkanMaterial->updateUniforms();
 
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.bindPipeline(
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.bindPipeline(
         vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
     );
 
-    l_commanBuffer.bindDescriptorSets(
+    l_commandBuffer.bindDescriptorSets(
         vk::PipelineBindPoint::eGraphics,
         l_vulkanMaterial->getPipelineLayout(),
         0,
@@ -251,8 +253,8 @@ CommandBufferVulkan& CommandBufferVulkan::useViewport(const ViewportInfo& f_view
         l_size = m_currentRenderTarget->getSize();
     }
 
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.setViewport(
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.setViewport(
         0,
         vk::Viewport(
             f_viewportInfo.m_positions.x,
@@ -263,13 +265,13 @@ CommandBufferVulkan& CommandBufferVulkan::useViewport(const ViewportInfo& f_view
             1.0f
         )
     );
-    l_commanBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), { l_size.x, l_size.y }));
+    l_commandBuffer.setScissor(0, vk::Rect2D(vk::Offset2D(0, 0), { l_size.x, l_size.y }));
     return *this;
 }
 
 CommandBufferVulkan& CommandBufferVulkan::draw(std::shared_ptr<mesh::TriangleMesh> f_mesh)
 {
-    auto&                     l_commanBuffer = selectCurrentCommandBuffer();
+    auto&                     l_commandBuffer = selectCurrentCommandBuffer();
     mesh::TriangleMeshVulkan* l_triangleMeshVulkan =
         dynamic_cast<mesh::TriangleMeshVulkan*>(f_mesh.get());
 
@@ -280,14 +282,22 @@ CommandBufferVulkan& CommandBufferVulkan::draw(std::shared_ptr<mesh::TriangleMes
         );
     }
 
-    l_commanBuffer.bindVertexBuffers(
+    l_commandBuffer.bindVertexBuffers(
         0, vk::Buffer(l_triangleMeshVulkan->getVertexBuffer().get()), { 0 }
     );
-    l_commanBuffer.bindIndexBuffer(
+    l_commandBuffer.bindIndexBuffer(
         vk::Buffer(l_triangleMeshVulkan->getIndexBuffer().get()), 0, vk::IndexType::eUint32
     );
-    l_commanBuffer.drawIndexed(l_triangleMeshVulkan->getIndicieCount(), 1, 0, 0, 0);
+    l_commandBuffer.drawIndexed(l_triangleMeshVulkan->getIndicieCount(), 1, 0, 0, 0);
 
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::renderImGui()
+{
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    ImGui::Render();
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *l_commandBuffer);
     return *this;
 }
 
@@ -297,8 +307,8 @@ CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
     vk::DeviceSize    f_size
 )
 {
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.copyBuffer(
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.copyBuffer(
         f_srcBuffer.get(), f_destBuffer.get(), vk::BufferCopy(0, 0, f_size)
     );
     return *this;
@@ -311,7 +321,7 @@ CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
     uint32_t          f_height
 )
 {
-    auto&               l_commanBuffer = selectCurrentCommandBuffer();
+    auto&               l_commandBuffer = selectCurrentCommandBuffer();
     vk::BufferImageCopy l_region{
         .bufferOffset      = 0,
         .bufferRowLength   = 0,
@@ -320,7 +330,7 @@ CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
         .imageOffset       = { 0, 0, 0 },
         .imageExtent       = { f_width, f_height, 1 }
     };
-    l_commanBuffer.copyBufferToImage(
+    l_commandBuffer.copyBufferToImage(
         f_srcBuffer.get(),
         f_destImage.get(),
         vk::ImageLayout::eTransferDstOptimal,
@@ -519,7 +529,7 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
         vk::ImageAspectFlagBits::eColor
     );
 
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
 
     vk::RenderingAttachmentInfo l_depthAttachmentInfo;
 
@@ -556,10 +566,10 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
                                   .loadOp     = vk::AttachmentLoadOp::eClear,
                                   .storeOp    = vk::AttachmentStoreOp::eDontCare,
                                   .clearValue = l_clearDepth };
-        l_commanBuffer.setDepthTestEnable(true);
+        l_commandBuffer.setDepthTestEnable(true);
     }
     else {
-        l_commanBuffer.setDepthTestEnable(false);
+        l_commandBuffer.setDepthTestEnable(false);
     }
 
     // Dummy stuff for now
@@ -592,7 +602,7 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
                                   ? &l_depthAttachmentInfo
                                   : nullptr
     };
-    l_commanBuffer.beginRendering(l_renderingInfo);
+    l_commandBuffer.beginRendering(l_renderingInfo);
 }
 
 void CommandBufferVulkan::beginRenderingImage(
@@ -690,8 +700,8 @@ void CommandBufferVulkan::endRenderingSwapchainImage(
     image::ImageVulkan* f_swapchChainImage
 )
 {
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.endRendering();
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.endRendering();
     transitionImageLayout(
         f_swapchChainImage,
         vk::ImageLayout::eColorAttachmentOptimal,
@@ -706,8 +716,8 @@ void CommandBufferVulkan::endRenderingSwapchainImage(
 
 void CommandBufferVulkan::endRenderingImage()
 {
-    auto& l_commanBuffer = selectCurrentCommandBuffer();
-    l_commanBuffer.endRendering();
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.endRendering();
 }
 
 }   // namespace command_buffer

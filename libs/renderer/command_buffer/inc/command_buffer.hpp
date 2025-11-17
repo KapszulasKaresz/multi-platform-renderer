@@ -43,6 +43,7 @@ public:
     virtual CommandBuffer& useMaterial(std::shared_ptr<material::Material> f_material) = 0;
     virtual CommandBuffer& useViewport(const ViewportInfo& f_viewportInfo)  = 0;
     virtual CommandBuffer& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) = 0;
+    virtual CommandBuffer& renderImGui()                                    = 0;
 };
 }   // namespace command_buffer
 }   // namespace renderer

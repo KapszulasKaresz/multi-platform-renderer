@@ -70,6 +70,11 @@ std::vector<const char*> GLFWWindow::getRequiredInstanceExtensionsVulkan()
     return std::vector(l_extension, l_extension + l_extensionCount);
 }
 
+GLFWwindow* GLFWWindow::getNativeHandle()
+{
+    return m_window;
+}
+
 GLFWWindow::~GLFWWindow()
 {
     glfwDestroyWindow(m_window);

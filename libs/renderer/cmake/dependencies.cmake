@@ -30,6 +30,21 @@ find_package(stb REQUIRED)
 target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
 target_link_libraries(${RENDERER_LIB_NAME} PRIVATE stb::stb)
 
+#imgui
+find_package(imgui REQUIRED)
+target_link_libraries(${RENDERER_LIB_NAME} PRIVATE imgui::imgui)
+target_include_directories(${RENDERER_LIB_NAME} PRIVATE
+    ${imgui_INCLUDE_DIRS}/../../b/src/backends
+)
+
+target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
+target_sources(${RENDERER_LIB_NAME} PRIVATE
+   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_vulkan.cpp
+   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_glfw.cpp
+)
+
+message(STATUS "ImGui include dirs: ${imgui_INCLUDE_DIRS}/../../b/src/backends")
+
 #directX
 if(WIN32)
         include_directories("$ENV{WindowsSdkDir}/Include/$ENV{WindowsSDKVersion}/um")

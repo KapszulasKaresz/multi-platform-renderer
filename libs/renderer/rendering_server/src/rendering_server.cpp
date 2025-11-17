@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <imgui.h>
+
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/render_target/inc/render_target_window.hpp"
 #include "renderer/rendering_api/inc/rendering_api.hpp"
@@ -108,6 +110,12 @@ void RenderingServer::frame()
               .m_clearColor   = glm::vec4(0.0, 0.0, 0.0, 1.0) }
         );
         m_scene->recordCommandBuffer(l_commandBuffer.get());
+
+        if (l_renderingDevice->isImGuiEnabled()) {
+            ImGui::ShowDemoWindow();
+            l_commandBuffer->renderImGui();
+        }
+
         l_commandBuffer->endRendering();
         l_commandBuffer->end();
         l_commandBuffer->submit();
