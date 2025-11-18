@@ -98,6 +98,11 @@ std::vector<UINT> UniformCollectionDX::getTextureHeapSamplerOffsets()
     return l_ret;
 }
 
+UniformCollectionDX::~UniformCollectionDX()
+{
+    m_parentDevice->getCommonDescriptorHeapManager()->free(m_heapPosition);
+}
+
 void UniformCollectionDX::createBuffer()
 {
     D3D12_RESOURCE_DESC l_resourceDesc = {};

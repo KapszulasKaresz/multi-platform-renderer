@@ -33,6 +33,8 @@ public:
     std::vector<UINT> getTextureHeapOffsets();
     std::vector<UINT> getTextureHeapSamplerOffsets();
 
+    ~UniformCollectionDX();
+
 private:
     void createBuffer();
     void computeLayout();

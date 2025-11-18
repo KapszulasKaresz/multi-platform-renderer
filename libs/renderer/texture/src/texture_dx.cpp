@@ -72,6 +72,12 @@ D3D12_TEXTURE_ADDRESS_MODE TextureDX::convertToD3D12AddressMode(AddressMode f_ad
     }
 }
 
+TextureDX::~TextureDX()
+{
+    m_parentDevice->getCommonDescriptorHeapManager()->free(m_heapPosition);
+    m_parentDevice->getCommonSamplerHeapManager()->free(m_heapPositionSampler);
+}
+
 void TextureDX::createShaderResourceView()
 {
     D3D12_SHADER_RESOURCE_VIEW_DESC l_srvDesc = {};

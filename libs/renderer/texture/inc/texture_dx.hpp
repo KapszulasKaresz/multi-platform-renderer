@@ -24,6 +24,8 @@ public:
     static D3D12_FILTER convertToD3D12Filter(Filter f_filter, MipMapMode f_mipmapMode);
     static D3D12_TEXTURE_ADDRESS_MODE convertToD3D12AddressMode(AddressMode f_addressMode);
 
+    ~TextureDX();
+
 private:
     void createShaderResourceView();
     void createSampler();
