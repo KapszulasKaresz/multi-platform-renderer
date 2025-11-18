@@ -24,7 +24,7 @@ class RenderingApi : public RenderResource {
 public:
     RenderingApi() = default;
 
-    virtual std::shared_ptr<rendering_device::RenderingDevice> getMainRenderingDevice();
+    virtual rendering_device::RenderingDevice* getMainRenderingDevice();
     virtual void createMainRenderingDeviceWindow(window::Window* f_window) = 0;
     virtual std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() = 0;
 

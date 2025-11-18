@@ -11,7 +11,7 @@ RenderingApiDX::RenderingApiDX()
     m_apiType = RENDERING_API_DIRECTX12;
 }
 
-std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRenderingDevice()
+rendering_device::RenderingDevice* RenderingApiDX::getMainRenderingDevice()
 {
     if (!m_mainRenderingDevice) {
         m_mainRenderingDevice       = createRenderingDevice();
@@ -28,7 +28,7 @@ std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRender
         l_renderingDeviceDXRaw->setTargetMSAASamples(4).enableImgui(m_useImgui).create();
     }
 
-    return m_mainRenderingDevice;
+    return m_mainRenderingDevice.get();
 }
 
 void RenderingApiDX::createMainRenderingDeviceWindow(window::Window* f_window)

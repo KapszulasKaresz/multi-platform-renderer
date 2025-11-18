@@ -13,8 +13,7 @@ class RenderingApiVulkan : public RenderingApi {
 public:
     RenderingApiVulkan();
 
-    std::shared_ptr<rendering_device::RenderingDevice>
-        getMainRenderingDevice() override final;
+    rendering_device::RenderingDevice* getMainRenderingDevice() override final;
 
     void createMainRenderingDeviceWindow(window::Window* f_window) override final;
 

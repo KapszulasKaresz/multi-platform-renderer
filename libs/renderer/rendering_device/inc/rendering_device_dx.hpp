@@ -85,6 +85,12 @@ private:
         D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle
     );
 
+    static void imguiFree(
+        ImGui_ImplDX12_InitInfo*,
+        D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle,
+        D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle
+    );
+
     rendering_api::RenderingApiDX* m_parentApi{ nullptr };
 
     Microsoft::WRL::ComPtr<IDXGIAdapter4>      m_adapter{ nullptr };

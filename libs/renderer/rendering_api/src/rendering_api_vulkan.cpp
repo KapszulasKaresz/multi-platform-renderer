@@ -13,8 +13,7 @@ RenderingApiVulkan::RenderingApiVulkan() : RenderingApi()
     m_apiType = RENDERING_API_TYPE_VULKAN;
 }
 
-std::shared_ptr<rendering_device::RenderingDevice>
-    RenderingApiVulkan::getMainRenderingDevice()
+rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
 {
     if (!m_mainRenderingDevice) {
         auto l_renderingDevice = createRenderingDevice();
@@ -57,7 +56,7 @@ std::shared_ptr<rendering_device::RenderingDevice>
         m_mainRenderingDevice = l_renderingDevice;
     }
 
-    return m_mainRenderingDevice;
+    return m_mainRenderingDevice.get();
 }
 
 void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_window)

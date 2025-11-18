@@ -2,13 +2,13 @@
 
 namespace renderer {
 namespace rendering_api {
-std::shared_ptr<rendering_device::RenderingDevice> RenderingApi::getMainRenderingDevice()
+rendering_device::RenderingDevice* RenderingApi::getMainRenderingDevice()
 {
     if (!m_mainRenderingDevice) {
         m_mainRenderingDevice = createRenderingDevice();
     }
 
-    return m_mainRenderingDevice;
+    return m_mainRenderingDevice.get();
 }
 
 RenderingAPIType RenderingApi::getRenderingAPIType() const

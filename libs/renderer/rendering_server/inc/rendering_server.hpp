@@ -58,7 +58,7 @@ public:
     );
     RenderingServer& create();
 
-    std::shared_ptr<rendering_device::RenderingDevice> getMainRenderingDevice();
+    rendering_device::RenderingDevice*                 getMainRenderingDevice();
     std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice();
 
     void frame();

@@ -382,11 +382,8 @@ void RenderingDeviceDX::initImGui()
     l_init_info.DSVFormat            = DXGI_FORMAT_UNKNOWN;
     l_init_info.SrvDescriptorHeap    = m_commonDescriptorHeap->getHeap();
     l_init_info.SrvDescriptorAllocFn = &imguiAllocation;
-    l_init_info.SrvDescriptorFreeFn  = [](ImGui_ImplDX12_InitInfo*,
-                                         D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle,
-                                         D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) {
-        return;
-    };
+    l_init_info.SrvDescriptorFreeFn  = &imguiFree;
+
     ImGui_ImplDX12_Init(&l_init_info);
 }
 
@@ -397,7 +394,7 @@ void RenderingDeviceDX::imguiAllocation(
 )
 {
     RenderingDeviceDX* l_device = dynamic_cast<RenderingDeviceDX*>(
-        rendering_server::RenderingServer::getInstance().getMainRenderingDevice().get()
+        rendering_server::RenderingServer::getInstance().getMainRenderingDevice()
     );
 
     auto l_id = l_device->getCommonDescriptorHeapManager()->addEmpty();
@@ -406,6 +403,19 @@ void RenderingDeviceDX::imguiAllocation(
     out_gpu_handle->ptr =
         l_device->getCommonDescriptorHeapManager()->getGPUHandle(l_id).ptr;
     return;
+}
+
+void RenderingDeviceDX::imguiFree(
+    ImGui_ImplDX12_InitInfo*,
+    D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle,
+    D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle
+)
+{
+    RenderingDeviceDX* l_device = dynamic_cast<RenderingDeviceDX*>(
+        rendering_server::RenderingServer::getInstance().getMainRenderingDevice()
+    );
+
+    l_device->getCommonDescriptorHeapManager()->free(cpu_handle, gpu_handle);
 }
 }   // namespace rendering_device
 }   // namespace renderer

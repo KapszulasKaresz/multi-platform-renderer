@@ -81,8 +81,7 @@ RenderingServer& RenderingServer::create()
     return *this;
 }
 
-std::shared_ptr<rendering_device::RenderingDevice>
-    RenderingServer::getMainRenderingDevice()
+rendering_device::RenderingDevice* RenderingServer::getMainRenderingDevice()
 {
     return m_renderingApi->getMainRenderingDevice();
 }

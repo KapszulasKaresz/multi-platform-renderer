@@ -37,12 +37,18 @@ public:
     ID3D12DescriptorHeap* getHeap() const;
     UINT                  getNumDescriptors() const;
 
+    void free(UINT f_idx);
+    void free(
+        D3D12_CPU_DESCRIPTOR_HANDLE f_cpuDescHandle,
+        D3D12_GPU_DESCRIPTOR_HANDLE f_gpuDescHandle
+    );
+
 private:
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
     Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_heap{ nullptr };
     UINT                                         m_descriptorSize{ 0 };
-    UINT                                         m_nextFreeHandle{ 0 };
+    std::vector<int>                             m_freeHandles{};
 
     D3D12_DESCRIPTOR_HEAP_TYPE m_type{ D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV };
 };
