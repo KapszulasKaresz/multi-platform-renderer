@@ -261,7 +261,8 @@ CommandBufferDX& CommandBufferDX::copyBuffer(
     ID3D12Resource*                    f_srcBuffer,
     ID3D12Resource*                    f_dstBuffer,
     D3D12_PLACED_SUBRESOURCE_FOOTPRINT f_footprint,
-    UINT                               f_subresourceIndex
+    UINT                               f_subresourceIndex,
+    bool                               f_transitionResource
 )
 {
     D3D12_TEXTURE_COPY_LOCATION l_dstLocation = {};
@@ -284,15 +285,17 @@ CommandBufferDX& CommandBufferDX::copyBuffer(
         nullptr   // full resource copy
     );
 
-    D3D12_RESOURCE_BARRIER l_barrier = {};
-    l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    l_barrier.Transition.pResource   = f_dstBuffer;
-    l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-    l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+    if (f_transitionResource) {
+        D3D12_RESOURCE_BARRIER l_barrier = {};
+        l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        l_barrier.Transition.pResource   = f_dstBuffer;
+        l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
 
-    l_commandList->ResourceBarrier(1, &l_barrier);
+        l_commandList->ResourceBarrier(1, &l_barrier);
+    }
 
     return *this;
 }

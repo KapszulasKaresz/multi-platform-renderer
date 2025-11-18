@@ -180,8 +180,23 @@ ImageDX& ImageDX::createFromFile(std::string_view f_path)
             l_uploadAllocation->GetResource(),
             m_image->GetResource(),
             l_footprints[l_mip],
-            l_mip
+            l_mip,
+            false
         );
+    }
+
+    auto l_commandList = l_commanBuffer->getCommandList();
+
+    {
+        D3D12_RESOURCE_BARRIER l_barrier = {};
+        l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        l_barrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+        l_barrier.Transition.pResource   = m_image->GetResource();
+        l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+
+        l_commandList->ResourceBarrier(1, &l_barrier);
     }
 
     l_commanBuffer->end();

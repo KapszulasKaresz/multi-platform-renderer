@@ -52,7 +52,8 @@ public:
         ID3D12Resource*                    f_srcBuffer,
         ID3D12Resource*                    f_dstBuffer,
         D3D12_PLACED_SUBRESOURCE_FOOTPRINT f_footprint,
-        UINT                               f_subresourceIndex
+        UINT                               f_subresourceIndex,
+        bool                               f_transitionResource = true
     );
 
     ID3D12GraphicsCommandList* getCommandList();
