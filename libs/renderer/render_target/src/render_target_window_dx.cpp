@@ -83,11 +83,19 @@ IDXGISwapChain3* RenderTargetWindowDX::getSwapchain()
 
 void RenderTargetWindowDX::resizeSwapChain()
 {
+    m_window->waitTillShown();
+
+    for (int i = 0; i < rendering_device::maxFramesInFlight; i++) {
+        m_renderTargets[i].Reset();
+    }
+
     createSwapCahin();
     createColorResource();
     if (m_useDepthBuffer) {
         createDepthResource();
     }
+    createDescriptorHeap();
+    createRenderTargets();
 }
 
 bool RenderTargetWindowDX::isMSAA()

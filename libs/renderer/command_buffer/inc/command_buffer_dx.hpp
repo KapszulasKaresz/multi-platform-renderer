@@ -86,6 +86,8 @@ protected:
         rendering_device::maxFramesInFlight>
                                                 m_commandLists{};
     Microsoft::WRL::ComPtr<ID3D12PipelineState> m_initialPipelineState{ nullptr };
+
+    bool m_renderImGui{ false };
 };
 }   // namespace command_buffer
 }   // namespace  renderer

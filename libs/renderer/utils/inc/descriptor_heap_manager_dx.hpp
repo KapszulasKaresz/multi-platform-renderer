@@ -28,6 +28,8 @@ public:
     );
     UINT addSampler(const D3D12_SAMPLER_DESC& f_desc);
 
+    UINT addEmpty();
+
     D3D12_GPU_DESCRIPTOR_HANDLE getGPUStart() const;
     D3D12_CPU_DESCRIPTOR_HANDLE getCPUHandle(UINT f_index) const;
     D3D12_GPU_DESCRIPTOR_HANDLE getGPUHandle(UINT f_index) const;

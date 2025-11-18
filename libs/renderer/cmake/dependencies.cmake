@@ -41,6 +41,8 @@ target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
 target_sources(${RENDERER_LIB_NAME} PRIVATE
    ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_vulkan.cpp
    ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_glfw.cpp
+   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_dx12.cpp
+   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_win32.cpp
 )
 
 message(STATUS "ImGui include dirs: ${imgui_INCLUDE_DIRS}/../../b/src/backends")

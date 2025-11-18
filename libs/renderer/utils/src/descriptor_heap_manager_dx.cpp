@@ -94,6 +94,13 @@ UINT DescriptorHeapManagerDX::addSampler(const D3D12_SAMPLER_DESC& f_desc)
     return l_originalFreeHandle;
 }
 
+UINT DescriptorHeapManagerDX::addEmpty()
+{
+    auto l_originalFreeHandle = m_nextFreeHandle;
+    m_nextFreeHandle++;
+    return l_originalFreeHandle;
+}
+
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeapManagerDX::getGPUStart() const
 {
     return m_heap->GetGPUDescriptorHandleForHeapStart();

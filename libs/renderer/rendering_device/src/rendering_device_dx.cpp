@@ -2,6 +2,9 @@
 
 #include <stdexcept>
 
+#include <imgui_impl_dx12.h>
+#include <imgui_impl_glfw.h>
+
 #include "renderer/command_buffer/inc/command_buffer_dx.hpp"
 #include "renderer/image/inc/image_dx.hpp"
 #include "renderer/material/inc/material_dx.hpp"
@@ -9,8 +12,10 @@
 #include "renderer/render_target/inc/render_target_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
+#include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/texture/inc/texture_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
+#include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
 
 namespace renderer {
@@ -99,20 +104,27 @@ bool RenderingDeviceDX::preFrame()
     waitForGPU();
     m_frameIndex   = m_renderTargetWindow->getSwapchain()->GetCurrentBackBufferIndex();
     m_currentFrame = m_renderTargetWindow->getSwapchain()->GetCurrentBackBufferIndex();
+
+    if (m_useImGui) {
+        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplDX12_NewFrame();
+        ImGui::NewFrame();
+    }
     return true;
 }
 
 void RenderingDeviceDX::postFrame()
 {
     m_renderTargetWindow->getSwapchain()->Present(1, 0);
+    if (m_window->isResized()) {
+        waitForGPU();
+        m_window->resizeHandled();
+        m_renderTargetWindow->resizeSwapChain();
+    }
 }
 
 void RenderingDeviceDX::finishRendering()
 {
-    if (m_window->isResized()) {
-        m_window->resizeHandled();
-        m_renderTargetWindow->resizeSwapChain();
-    }
     waitForGPU();
 }
 
@@ -132,6 +144,9 @@ RenderingDeviceDX& RenderingDeviceDX::create()
     m_valid = true;
     createRenderTargetWindow();
     createDescriptorHeapManager();
+    if (m_useImGui) {
+        initImGui();
+    }
     return *this;
 }
 
@@ -200,6 +215,10 @@ void RenderingDeviceDX::executeCommandList(ID3D12GraphicsCommandList* f_commandL
 
 RenderingDeviceDX::~RenderingDeviceDX()
 {
+    waitForGPU();
+    ImGui_ImplDX12_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     waitForGPU();
 }
 
@@ -334,6 +353,59 @@ void RenderingDeviceDX::createDescriptorHeapManager()
     m_commonSamplerHeap = std::make_shared<utils::DescriptorHeapManagerDX>(
         this, 256, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
     );
+}
+
+void RenderingDeviceDX::initImGui()
+{
+    window::GLFWWindow* l_glfwWindow = dynamic_cast<window::GLFWWindow*>(m_window);
+
+    if (!l_glfwWindow) {
+        throw std::runtime_error(
+            "RenderingDeviceDX::initImGui() currently only GLFW imgui is supported"
+        );
+    }
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGui::StyleColorsDark();
+
+    ImGui_ImplGlfw_InitForVulkan(l_glfwWindow->getNativeHandle(), true);
+
+    ImGui_ImplDX12_InitInfo l_init_info = {};
+    l_init_info.Device                  = m_device.Get();
+    l_init_info.CommandQueue            = m_commandQueue.Get();
+    l_init_info.NumFramesInFlight       = maxFramesInFlight;
+    l_init_info.RTVFormat =
+        image::ImageDX::convertToDXFormat(m_renderTargetWindow->getFormat());
+
+
+    l_init_info.DSVFormat            = DXGI_FORMAT_UNKNOWN;
+    l_init_info.SrvDescriptorHeap    = m_commonDescriptorHeap->getHeap();
+    l_init_info.SrvDescriptorAllocFn = &imguiAllocation;
+    l_init_info.SrvDescriptorFreeFn  = [](ImGui_ImplDX12_InitInfo*,
+                                         D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle,
+                                         D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle) {
+        return;
+    };
+    ImGui_ImplDX12_Init(&l_init_info);
+}
+
+void RenderingDeviceDX::imguiAllocation(
+    ImGui_ImplDX12_InitInfo*,
+    D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle,
+    D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle
+)
+{
+    RenderingDeviceDX* l_device = dynamic_cast<RenderingDeviceDX*>(
+        rendering_server::RenderingServer::getInstance().getMainRenderingDevice().get()
+    );
+
+    auto l_id = l_device->getCommonDescriptorHeapManager()->addEmpty();
+    out_cpu_handle->ptr =
+        l_device->getCommonDescriptorHeapManager()->getCPUHandle(l_id).ptr;
+    out_gpu_handle->ptr =
+        l_device->getCommonDescriptorHeapManager()->getGPUHandle(l_id).ptr;
+    return;
 }
 }   // namespace rendering_device
 }   // namespace renderer

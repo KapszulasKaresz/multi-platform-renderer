@@ -4,6 +4,7 @@
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <imgui_impl_dx12.h>
 #include <wrl.h>
 
 #include "renderer/rendering_device/inc/rendering_device.hpp"
@@ -76,6 +77,13 @@ private:
     void createSyncObjects();
     void createRenderTargetWindow();
     void createDescriptorHeapManager();
+    void initImGui();
+
+    static void imguiAllocation(
+        ImGui_ImplDX12_InitInfo*,
+        D3D12_CPU_DESCRIPTOR_HANDLE* out_cpu_handle,
+        D3D12_GPU_DESCRIPTOR_HANDLE* out_gpu_handle
+    );
 
     rendering_api::RenderingApiDX* m_parentApi{ nullptr };
 

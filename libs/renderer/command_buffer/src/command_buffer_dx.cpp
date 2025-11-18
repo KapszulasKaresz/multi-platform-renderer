@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <imgui_impl_dx12.h>
+
 #include "renderer/image/inc/image_dx.hpp"
 #include "renderer/material/inc/material_dx.hpp"
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
@@ -249,7 +251,10 @@ CommandBufferDX& CommandBufferDX::draw(std::shared_ptr<mesh::TriangleMesh> f_mes
 
 CommandBufferDX& CommandBufferDX::renderImGui()
 {
-    throw std::logic_error("Unimplemented function");
+    auto l_commandList = selectCommandList();
+    ImGui::Render();
+    m_renderImGui = true;
+    return *this;
 }
 
 CommandBufferDX& CommandBufferDX::copyBuffer(
@@ -454,10 +459,39 @@ void CommandBufferDX::endRendering(render_target::RenderTargetWindowDX* f_render
             l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
             l_barrier.Transition.pResource   = l_backBuffer;
             l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
-            l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
+            l_barrier.Transition.StateAfter  = m_renderImGui
+                                                 ? D3D12_RESOURCE_STATE_RENDER_TARGET
+                                                 : D3D12_RESOURCE_STATE_PRESENT;
             l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
             l_commandList->ResourceBarrier(1, &l_barrier);
+        }
+
+        if (m_renderImGui) {
+            D3D12_CPU_DESCRIPTOR_HANDLE
+            l_rtvHandle(
+                f_renderTarget->getDescriptorHeap()->GetCPUDescriptorHandleForHeapStart()
+            );
+            l_rtvHandle.ptr = l_rtvHandle.ptr
+                            + (m_parentDevice->getCurrentFrame()
+                               * f_renderTarget->getDescriptorSize());
+
+            l_commandList->OMSetRenderTargets(1, &l_rtvHandle, FALSE, nullptr);
+
+            ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), l_commandList);
+
+            {
+                D3D12_RESOURCE_BARRIER l_barrier = {};
+                l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+                l_barrier.Transition.pResource   = l_backBuffer;
+                l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+                l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_PRESENT;
+                l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+                l_commandList->ResourceBarrier(1, &l_barrier);
+            }
+
+            m_renderImGui = false;
         }
     }
     else {

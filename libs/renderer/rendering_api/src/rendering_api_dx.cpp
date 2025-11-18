@@ -14,9 +14,10 @@ RenderingApiDX::RenderingApiDX()
 std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRenderingDevice()
 {
     if (!m_mainRenderingDevice) {
-        auto l_renderingDevice = createRenderingDevice();
-        auto l_renderingDeviceDXRaw =
-            dynamic_cast<rendering_device::RenderingDeviceDX*>(l_renderingDevice.get());
+        m_mainRenderingDevice       = createRenderingDevice();
+        auto l_renderingDeviceDXRaw = dynamic_cast<rendering_device::RenderingDeviceDX*>(
+            m_mainRenderingDevice.get()
+        );
         if (l_renderingDeviceDXRaw == nullptr) {
             throw std::
                 runtime_error(
@@ -24,9 +25,7 @@ std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRender
                     "renderingdevice isn't a dx rendering device"
                 );
         }
-        l_renderingDeviceDXRaw->setTargetMSAASamples(4).create();
-
-        m_mainRenderingDevice = l_renderingDevice;
+        l_renderingDeviceDXRaw->setTargetMSAASamples(4).enableImgui(m_useImgui).create();
     }
 
     return m_mainRenderingDevice;
@@ -35,9 +34,10 @@ std::shared_ptr<rendering_device::RenderingDevice> RenderingApiDX::getMainRender
 void RenderingApiDX::createMainRenderingDeviceWindow(window::Window* f_window)
 {
     if (!m_mainRenderingDevice) {
-        auto l_renderingDevice = createRenderingDevice();
-        auto l_renderingDeviceDXRaw =
-            dynamic_cast<rendering_device::RenderingDeviceDX*>(l_renderingDevice.get());
+        m_mainRenderingDevice       = createRenderingDevice();
+        auto l_renderingDeviceDXRaw = dynamic_cast<rendering_device::RenderingDeviceDX*>(
+            m_mainRenderingDevice.get()
+        );
         if (l_renderingDeviceDXRaw == nullptr) {
             throw std::
                 runtime_error(
@@ -45,9 +45,10 @@ void RenderingApiDX::createMainRenderingDeviceWindow(window::Window* f_window)
                     "renderingdevice isn't a dx rendering device"
                 );
         }
-        l_renderingDeviceDXRaw->setWindow(f_window).setTargetMSAASamples(4).create();
-
-        m_mainRenderingDevice = l_renderingDevice;
+        l_renderingDeviceDXRaw->setWindow(f_window)
+            .setTargetMSAASamples(4)
+            .enableImgui(m_useImgui)
+            .create();
     }
     else {
         throw std::
