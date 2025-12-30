@@ -1,1 +1,1 @@
-Since conan doesn't have a DMA package copy the "D3D12MemAlloc.h" to the inc folder and the "D3D12MemAlloc.cpp" to the src folder from this repository (https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator/tree/master).
+Every external lib comes here which doesn't have a conan package.

@@ -19,7 +19,6 @@ After setting up the build configuration run the conan install command which wil
 ```
 conan install . -of=_build --build=missing 
 ```
-There is one dependency ([D3D12 Memory Allocator](https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator)) that is currently not available as a conan package so you need to source that manually, you can find more info about it [here](libs/renderer/external/readme.md)
 
 ### 3. Building
 Once you have the dependencies you can use the conan build command to build the project and compile the shaders.

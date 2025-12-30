@@ -2,12 +2,11 @@
 #define TRIANGLE_MESH_DX_HPP_INCLUDED
 
 #include <d3d12.h>
+#include <D3D12MemAlloc.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
 
 #include "renderer/mesh/inc/triangle_mesh.hpp"
-
-#include "D3D12MemAlloc.h"
 
 namespace renderer {
 namespace rendering_device {

@@ -3,14 +3,13 @@
 
 
 #include <d3d12.h>
+#include <D3D12MemAlloc.h>
 #include <dxgi1_6.h>
 #include <imgui_impl_dx12.h>
 #include <wrl.h>
 
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 #include "renderer/utils/inc/descriptor_heap_manager_dx.hpp"
-
-#include "D3D12MemAlloc.h"
 
 namespace renderer {
 namespace command_buffer {

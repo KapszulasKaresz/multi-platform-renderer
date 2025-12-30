@@ -13,6 +13,7 @@ class MultiPlatformRenderer(ConanFile):
         self.requires("glfw/3.4")
         self.requires("glm/1.0.1")
         self.requires("vulkan-memory-allocator/3.3.0")
+        self.requires("d3d12-memory-allocator/3.0.1")
         self.requires("stb/cci.20240531")
         self.requires("imgui/1.92.4")
 

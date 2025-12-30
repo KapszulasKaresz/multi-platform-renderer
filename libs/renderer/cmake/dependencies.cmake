@@ -34,15 +34,15 @@ target_link_libraries(${RENDERER_LIB_NAME} PRIVATE stb::stb)
 find_package(imgui REQUIRED)
 target_link_libraries(${RENDERER_LIB_NAME} PRIVATE imgui::imgui)
 target_include_directories(${RENDERER_LIB_NAME} PRIVATE
-    ${imgui_INCLUDE_DIRS}/../../b/src/backends
+        ${imgui_INCLUDE_DIRS}/../../b/src/backends
 )
 
 target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
 target_sources(${RENDERER_LIB_NAME} PRIVATE
-   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_vulkan.cpp
-   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_glfw.cpp
-   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_dx12.cpp
-   ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_win32.cpp
+        ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_vulkan.cpp
+        ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_glfw.cpp
+        ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_dx12.cpp
+        ${imgui_INCLUDE_DIRS}/../../b/src/backends/imgui_impl_win32.cpp
 )
 
 message(STATUS "ImGui include dirs: ${imgui_INCLUDE_DIRS}/../../b/src/backends")
@@ -63,3 +63,8 @@ if(WIN32)
                 d3dcompiler
         )
 endif()
+
+# D3DMemoryAllocator
+find_package(D3D12MemoryAllocator REQUIRED)
+target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
+target_link_libraries(${RENDERER_LIB_NAME} PUBLIC GPUOpen::D3D12MemoryAllocator)
