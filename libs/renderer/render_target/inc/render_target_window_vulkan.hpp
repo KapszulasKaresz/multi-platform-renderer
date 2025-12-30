@@ -31,7 +31,7 @@ public:
 
     RenderTargetWindowVulkan& setDirectRenderTarget(bool f_directRenderTarget);
 
-    RenderTargetWindowVulkan& create();
+    RenderTargetWindowVulkan& create() override;
 
     size_t                  getSwapchainImageCount() const;
     void                    recreateSwapChain();

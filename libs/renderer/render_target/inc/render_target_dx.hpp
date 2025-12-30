@@ -26,7 +26,7 @@ public:
     std::shared_ptr<image::Image> getDepthImage() override final;
     glm::ivec2                    getSize() const override final;
 
-    RenderTargetDX&       create();
+    RenderTargetDX&       create() override;
     ID3D12DescriptorHeap* getMSAADescriptorHeap();
     ID3D12DescriptorHeap* getDepthDescriptorHeap();
 

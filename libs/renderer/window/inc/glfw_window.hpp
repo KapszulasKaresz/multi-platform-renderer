@@ -25,7 +25,7 @@ public:
 
     GLFWwindow* getNativeHandle();
 
-    ~GLFWWindow() override final;
+    ~GLFWWindow();
 
 private:
     static void framebufferResizeCallback(GLFWwindow* f_window, int f_width, int f_height);
