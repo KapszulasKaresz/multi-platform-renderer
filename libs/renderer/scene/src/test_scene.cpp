@@ -5,8 +5,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <imgui.h>
+
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/material/inc/material.hpp"
+#include "renderer/scene/inc/imgui_visitor.hpp"
 
 namespace renderer {
 namespace scene {
@@ -24,6 +27,17 @@ TestScene& TestScene::setMesh(std::shared_ptr<mesh::TriangleMesh> f_mesh)
 
 TestScene& TestScene::create()
 {
+    m_rootNode = std::make_unique<Node>();
+    m_rootNode->setName("Root Node").create();
+
+    auto l_childNode1 = std::make_unique<Node>();
+    l_childNode1->setName("Child Node 1").create();
+    m_rootNode->addChild(std::move(l_childNode1));
+
+    auto l_childNode2 = std::make_unique<Node>();
+    l_childNode2->setName("Child Node 2").create();
+    m_rootNode->addChild(std::move(l_childNode2));
+
     m_valid = true;
     return *this;
 }
@@ -50,6 +64,11 @@ void TestScene::recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuff
     f_commandBuffer->useMaterial(m_material);
     f_commandBuffer->useViewport({ .m_fullScreen = true });
     f_commandBuffer->draw(m_mesh);
+
+    ImGui::Begin("Test Scene ImGui Window");
+    ImGuiVisitor l_imguiVisitor;
+    m_rootNode->applyVisitor(&l_imguiVisitor);
+    ImGui::End();
 }
 }   // namespace scene
 }   // namespace renderer
