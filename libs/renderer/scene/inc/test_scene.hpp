@@ -3,6 +3,7 @@
 
 #include "renderer/mesh/inc/triangle_mesh.hpp"
 #include "renderer/render_resource/inc/render_resource.hpp"
+#include "renderer/scene/inc/imgui_visitor.hpp"
 #include "renderer/scene/inc/node.hpp"
 
 namespace renderer {
@@ -28,6 +29,7 @@ private:
     std::shared_ptr<mesh::TriangleMesh> m_mesh{ nullptr };
 
     std::unique_ptr<Node> m_rootNode{ nullptr };
+    ImGuiVisitor          m_imguiVisitor{};
 };
 }   // namespace scene
 }   // namespace renderer

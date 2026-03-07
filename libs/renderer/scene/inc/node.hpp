@@ -32,6 +32,8 @@ public:
 
     virtual void applyVisitor(NodeVisitor* f_visitor);
 
+    virtual ~Node();
+
 protected:
     Node*                              m_parent{ nullptr };
     std::vector<std::unique_ptr<Node>> m_children;

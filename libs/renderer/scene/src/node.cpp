@@ -88,5 +88,7 @@ void Node::applyVisitor(NodeVisitor* f_visitor)
     }
 }
 
+Node::~Node() {}
+
 }   // namespace scene
 }   // namespace renderer

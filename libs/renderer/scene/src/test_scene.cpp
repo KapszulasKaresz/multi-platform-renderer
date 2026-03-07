@@ -10,6 +10,7 @@
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/material/inc/material.hpp"
 #include "renderer/scene/inc/imgui_visitor.hpp"
+#include "renderer/scene/inc/mesh_instance_node.hpp"
 
 namespace renderer {
 namespace scene {
@@ -34,8 +35,8 @@ TestScene& TestScene::create()
     l_childNode1->setName("Child Node 1").create();
     m_rootNode->addChild(std::move(l_childNode1));
 
-    auto l_childNode2 = std::make_unique<Node>();
-    l_childNode2->setName("Child Node 2").create();
+    auto l_childNode2 = std::make_unique<MeshInstanceNode>();
+    l_childNode2->setMesh(m_mesh).setMaterial(m_material).setName("Child Node 2").create();
     m_rootNode->addChild(std::move(l_childNode2));
 
     m_valid = true;
@@ -65,9 +66,8 @@ void TestScene::recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuff
     f_commandBuffer->useViewport({ .m_fullScreen = true });
     f_commandBuffer->draw(m_mesh);
 
-    ImGui::Begin("Test Scene ImGui Window");
-    ImGuiVisitor l_imguiVisitor;
-    m_rootNode->applyVisitor(&l_imguiVisitor);
+    ImGui::Begin("Test Scene tree");
+    m_rootNode->applyVisitor(&m_imguiVisitor);
     ImGui::End();
 }
 }   // namespace scene

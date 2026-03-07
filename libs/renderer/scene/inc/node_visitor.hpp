@@ -6,6 +6,8 @@
 namespace renderer {
 namespace scene {
 class Node;
+class Node3D;
+class MeshInstanceNode;
 
 enum VisitorMask : uint32_t {
     VISITOR_MASK_NONE   = 0,
@@ -16,9 +18,13 @@ enum VisitorMask : uint32_t {
 
 class NodeVisitor {
 public:
-    virtual void visit(Node& f_node) = 0;
+    virtual void visit(Node& f_node)                         = 0;
+    virtual void visit(Node3D& f_node)                       = 0;
+    virtual void visit(MeshInstanceNode& f_meshInstanceNode) = 0;
 
     VisitorMask getMask() const;
+
+    virtual ~NodeVisitor() = default;
 
 protected:
     uint32_t m_mask{ VISITOR_MASK_ALL };
