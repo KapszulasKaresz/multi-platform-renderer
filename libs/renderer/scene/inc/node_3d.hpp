@@ -10,6 +10,8 @@ public:
     Node3D();
     Node3D& create();
 
+    virtual void applyVisitor(NodeVisitor* f_visitor) override;
+
     virtual ~Node3D() = default;
 
 private:

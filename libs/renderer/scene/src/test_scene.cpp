@@ -31,7 +31,7 @@ TestScene& TestScene::create()
     m_rootNode = std::make_unique<Node>();
     m_rootNode->setName("Root Node").create();
 
-    auto l_childNode1 = std::make_unique<Node>();
+    auto l_childNode1 = std::make_unique<Node3D>();
     l_childNode1->setName("Child Node 1").create();
     m_rootNode->addChild(std::move(l_childNode1));
 
