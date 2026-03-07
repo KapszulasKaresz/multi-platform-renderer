@@ -13,6 +13,10 @@ public:
     virtual void visit(Node3D& f_node) override;
     virtual void visit(MeshInstanceNode& f_meshInstanceNode) override;
 
+    Node* getSelectedNode() const;
+
+    virtual ~ImGuiVisitor() = default;
+
 private:
     Node* m_selected{ nullptr };
 };

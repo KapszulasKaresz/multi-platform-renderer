@@ -11,6 +11,7 @@
 #include "renderer/material/inc/material.hpp"
 #include "renderer/scene/inc/imgui_visitor.hpp"
 #include "renderer/scene/inc/mesh_instance_node.hpp"
+#include "renderer/utils/inc/imgui_functions.hpp"
 
 namespace renderer {
 namespace scene {
@@ -68,6 +69,13 @@ void TestScene::recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuff
 
     ImGui::Begin("Test Scene tree");
     m_rootNode->applyVisitor(&m_imguiVisitor);
+    ImGui::End();
+
+    ImGui::Begin("Test Scene selected node");
+    auto l_selectedNode = m_imguiVisitor.getSelectedNode();
+    if (l_selectedNode) {
+        ImGui::DrawNodeDynamic(*l_selectedNode);
+    }
     ImGui::End();
 }
 }   // namespace scene

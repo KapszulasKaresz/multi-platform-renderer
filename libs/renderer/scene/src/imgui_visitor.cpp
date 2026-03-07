@@ -57,9 +57,13 @@ void ImGuiVisitor::visit(Node3D& f_node)
     IMGUI_VISIT_NODE(f_node, "Node3D | ")
 }
 
-void ImGuiVisitor::visit(MeshInstanceNode& f_node)
-{
+void ImGuiVisitor::visit(MeshInstanceNode& f_node){
     IMGUI_VISIT_NODE(f_node, "MeshInstanceNode | ")
+}
+
+Node* ImGuiVisitor::getSelectedNode() const
+{
+    return m_selected;
 }
 
 }   // namespace scene
