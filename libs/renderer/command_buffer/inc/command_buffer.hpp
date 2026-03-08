@@ -46,6 +46,8 @@ public:
     virtual CommandBuffer& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) = 0;
     virtual CommandBuffer& renderImGui()                                    = 0;
 
+    virtual render_target::RenderTarget* getCurrentRenderTarget() const = 0;
+
     // TODO: Reroute these to triangle mesh draw calls
     virtual CommandBuffer& draw(std::shared_ptr<mesh::Mesh> f_mesh);
 };

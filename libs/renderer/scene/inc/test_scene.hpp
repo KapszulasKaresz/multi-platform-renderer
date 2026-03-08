@@ -3,6 +3,7 @@
 
 #include "renderer/mesh/inc/triangle_mesh.hpp"
 #include "renderer/render_resource/inc/render_resource.hpp"
+#include "renderer/scene/camera/inc/perspective_camera.hpp"
 #include "renderer/scene/node/inc/node.hpp"
 #include "renderer/scene/node_visitor/inc/draw_visitor.hpp"
 #include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
@@ -17,6 +18,7 @@ class Material;
 }   // namespace material
 
 namespace scene {
+
 class TestScene : public RenderResource {
 public:
     TestScene& setMaterial(std::shared_ptr<material::Material> f_material);
@@ -29,9 +31,10 @@ private:
     std::shared_ptr<material::Material> m_material{ nullptr };
     std::shared_ptr<mesh::TriangleMesh> m_mesh{ nullptr };
 
-    std::unique_ptr<Node> m_rootNode{ nullptr };
-    ImGuiVisitor          m_imguiVisitor{};
-    DrawVisitor           m_drawVisitor{};
+    std::unique_ptr<Node>              m_rootNode{ nullptr };
+    ImGuiVisitor                       m_imguiVisitor{};
+    DrawVisitor                        m_drawVisitor{};
+    std::unique_ptr<PerspectiveCamera> m_camera{ nullptr };
 };
 }   // namespace scene
 }   // namespace renderer

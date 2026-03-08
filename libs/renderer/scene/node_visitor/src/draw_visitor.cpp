@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "renderer/command_buffer/inc/command_buffer.hpp"
+#include "renderer/scene/camera/inc/camera.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 #include "renderer/scene/node/inc/node.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
@@ -33,7 +34,7 @@ void DrawVisitor::visit(Node3D& f_node)
 
 void DrawVisitor::visit(MeshInstanceNode& f_node)
 {
-    if (not m_commandBuffer) {
+    if (not m_commandBuffer && not m_camera) {
         return;
     }
 
@@ -45,6 +46,16 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
         );
 
         l_modelUniform->setValue(f_node.M());
+
+        uniform::UniformSingle* l_viewUniform =
+            dynamic_cast<uniform::UniformSingle*>(l_uniformCollection->getMember("view"));
+
+        l_viewUniform->setValue(m_camera->V());
+
+        uniform::UniformSingle* l_projectionUniform =
+            dynamic_cast<uniform::UniformSingle*>(l_uniformCollection->getMember("proj"));
+
+        l_projectionUniform->setValue(m_camera->P());
 
         m_commandBuffer->useMaterial(f_node.getMaterial());
         m_commandBuffer->useViewport({ .m_fullScreen = true });
@@ -59,6 +70,11 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
 void DrawVisitor::setCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer)
 {
     m_commandBuffer = f_commandBuffer;
+}
+
+void DrawVisitor::setCamera(Camera* f_camera)
+{
+    m_camera = f_camera;
 }
 
 }   // namespace scene

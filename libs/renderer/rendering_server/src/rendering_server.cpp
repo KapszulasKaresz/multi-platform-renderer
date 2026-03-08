@@ -91,6 +91,11 @@ std::shared_ptr<rendering_device::RenderingDevice> RenderingServer::createRender
     return m_renderingApi->createRenderingDevice();
 }
 
+rendering_api::RenderingApi* RenderingServer::getRenderingApi() const
+{
+    return m_renderingApi.get();
+}
+
 void RenderingServer::frame()
 {
     if (!m_valid) {

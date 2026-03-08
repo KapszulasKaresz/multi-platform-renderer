@@ -301,6 +301,11 @@ CommandBufferVulkan& CommandBufferVulkan::renderImGui()
     return *this;
 }
 
+render_target::RenderTarget* CommandBufferVulkan::getCurrentRenderTarget() const
+{
+    return m_currentRenderTarget.get();
+}
+
 CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
     utils::VmaBuffer& f_srcBuffer,
     utils::VmaBuffer& f_destBuffer,

@@ -45,6 +45,8 @@ public:
     CommandBufferVulkan& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
     CommandBufferVulkan& renderImGui() override final;
 
+    render_target::RenderTarget* getCurrentRenderTarget() const override final;
+
     CommandBufferVulkan& copyBuffer(
         utils::VmaBuffer& f_srcBuffer,
         utils::VmaBuffer& f_destBuffer,

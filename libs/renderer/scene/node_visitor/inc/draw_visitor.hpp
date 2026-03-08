@@ -9,6 +9,8 @@ class CommandBuffer;
 }   // namespace command_buffer
 
 namespace scene {
+class Camera;
+
 class DrawVisitor : public NodeVisitor {
 public:
     DrawVisitor();
@@ -18,11 +20,14 @@ public:
     virtual void visit(MeshInstanceNode& f_meshInstanceNode) override;
 
     void setCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer);
+    void setCamera(Camera* f_camera);
 
     virtual ~DrawVisitor() = default;
 
 protected:
     command_buffer::CommandBuffer* m_commandBuffer{ nullptr };
+
+    Camera* m_camera{ nullptr };
 };
 
 }   // namespace scene

@@ -257,6 +257,11 @@ CommandBufferDX& CommandBufferDX::renderImGui()
     return *this;
 }
 
+render_target::RenderTarget* CommandBufferDX::getCurrentRenderTarget() const
+{
+    return m_currentRenderTarget.get();
+}
+
 CommandBufferDX& CommandBufferDX::copyBuffer(
     ID3D12Resource*                    f_srcBuffer,
     ID3D12Resource*                    f_dstBuffer,

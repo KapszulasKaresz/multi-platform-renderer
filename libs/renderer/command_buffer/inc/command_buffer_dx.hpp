@@ -48,6 +48,8 @@ public:
     CommandBufferDX& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
     CommandBufferDX& renderImGui() override final;
 
+    render_target::RenderTarget* getCurrentRenderTarget() const override final;
+
     CommandBufferDX& copyBuffer(
         ID3D12Resource*                    f_srcBuffer,
         ID3D12Resource*                    f_dstBuffer,
