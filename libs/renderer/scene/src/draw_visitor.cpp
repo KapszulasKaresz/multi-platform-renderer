@@ -44,7 +44,8 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
             l_uniformCollection->getMember("model")
         );
 
-        l_modelUniform->setValue(f_node.M());
+        glm::mat4 l_modelMatrix = f_node.M();
+        l_modelUniform->setValue(l_modelMatrix);
 
         m_commandBuffer->useMaterial(f_node.getMaterial());
         m_commandBuffer->useViewport({ .m_fullScreen = true });

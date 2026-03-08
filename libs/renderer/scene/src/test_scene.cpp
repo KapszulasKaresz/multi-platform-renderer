@@ -32,11 +32,11 @@ TestScene& TestScene::create()
 
     auto l_childNode1 = std::make_unique<Node3D>();
     l_childNode1->setName("Child Node 1").create();
-    m_rootNode->addChild(std::move(l_childNode1));
 
     auto l_childNode2 = std::make_unique<MeshInstanceNode>();
     l_childNode2->setMesh(m_mesh).setMaterial(m_material).setName("Child Node 2").create();
-    m_rootNode->addChild(std::move(l_childNode2));
+    l_childNode1->addChild(std::move(l_childNode2));
+    m_rootNode->addChild(std::move(l_childNode1));
 
     m_valid = true;
     return *this;

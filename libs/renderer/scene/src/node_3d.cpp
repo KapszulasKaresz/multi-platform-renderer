@@ -97,5 +97,20 @@ void Node3D::updateTransform()
     m_inverseTransform = glm::inverse(m_transform);
 }
 
+const glm::vec3& Node3D::getTranslation() const
+{
+    return m_translation;
+}
+
+const glm::quat& Node3D::getRotation() const
+{
+    return m_rotation;
+}
+
+const glm::vec3& Node3D::getScale() const
+{
+    return m_scale;
+}
+
 }   // namespace scene
 }   // namespace renderer

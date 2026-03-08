@@ -31,6 +31,19 @@ void DrawNode(renderer::scene::Node& f_node)
 void DrawNode(renderer::scene::Node3D& f_node)
 {
     if (ImGui::CollapsingHeader("Node3D")) {
+        glm::vec3 l_translation = f_node.getTranslation();
+        ImGui::SliderFloat3("Translation", &l_translation.x, -10.0f, 10.0f);
+        f_node.setTranslation(l_translation);
+
+        glm::vec3 l_rotationEuler = glm::degrees(glm::eulerAngles(f_node.getRotation()));
+        ImGui::SliderFloat3(
+            "Rotation (Euler angles)", &l_rotationEuler.x, -180.0f, 180.0f
+        );
+        f_node.setRotation(glm::quat(glm::radians(l_rotationEuler)));
+
+        glm::vec3 l_scale = f_node.getScale();
+        ImGui::SliderFloat3("Scale", &l_scale.x, -10.0f, 10.0f);
+        f_node.setScale(l_scale);
     }
     DrawNode(static_cast<renderer::scene::Node&>(f_node));
 }
