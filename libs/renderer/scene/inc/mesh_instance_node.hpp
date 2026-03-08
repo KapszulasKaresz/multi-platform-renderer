@@ -21,8 +21,8 @@ public:
     MeshInstanceNode& setMesh(std::shared_ptr<mesh::Mesh> f_mesh);
     MeshInstanceNode& create();
 
-    material::Material* getMaterial();
-    mesh::Mesh*         getMesh();
+    std::shared_ptr<material::Material> getMaterial();
+    std::shared_ptr<mesh::Mesh>         getMesh();
 
 
     virtual void applyVisitor(NodeVisitor* f_visitor) override;

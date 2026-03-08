@@ -10,10 +10,10 @@ class Node3D;
 class MeshInstanceNode;
 
 enum VisitorMask : uint32_t {
-    VISITOR_MASK_NONE   = 0,
-    VISITOR_MASK_RENDER = 1 << 0,
-    VISITOR_MASK_UI     = 1 << 1,
-    VISITOR_MASK_ALL    = ~0u,
+    VISITOR_MASK_NONE = 0,
+    VISITOR_MASK_DRAW = 1 << 0,
+    VISITOR_MASK_UI   = 1 << 1,
+    VISITOR_MASK_ALL  = ~0u,
 };
 
 class NodeVisitor {

@@ -27,14 +27,14 @@ MeshInstanceNode& MeshInstanceNode::create()
     return *this;
 }
 
-material::Material* MeshInstanceNode::getMaterial()
+std::shared_ptr<material::Material> MeshInstanceNode::getMaterial()
 {
-    return m_material.get();
+    return m_material;
 }
 
-mesh::Mesh* MeshInstanceNode::getMesh()
+std::shared_ptr<mesh::Mesh> MeshInstanceNode::getMesh()
 {
-    return m_mesh.get();
+    return m_mesh;
 }
 
 void MeshInstanceNode::applyVisitor(NodeVisitor* f_visitor)

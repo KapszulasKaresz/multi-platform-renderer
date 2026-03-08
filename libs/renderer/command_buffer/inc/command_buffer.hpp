@@ -7,6 +7,7 @@
 
 namespace renderer {
 namespace mesh {
+class Mesh;
 class TriangleMesh;
 }   // namespace mesh
 
@@ -44,6 +45,9 @@ public:
     virtual CommandBuffer& useViewport(const ViewportInfo& f_viewportInfo)  = 0;
     virtual CommandBuffer& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) = 0;
     virtual CommandBuffer& renderImGui()                                    = 0;
+
+    // TODO: Reroute these to triangle mesh draw calls
+    virtual CommandBuffer& draw(std::shared_ptr<mesh::Mesh> f_mesh);
 };
 }   // namespace command_buffer
 }   // namespace renderer
