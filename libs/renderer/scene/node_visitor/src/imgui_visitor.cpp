@@ -1,9 +1,9 @@
-#include "renderer/scene/inc/imgui_visitor.hpp"
+#include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
 
 #include <imgui.h>
 
-#include "renderer/scene/inc/mesh_instance_node.hpp"
-#include "renderer/scene/inc/node.hpp"
+#include "renderer/scene/node/inc/mesh_instance_node.hpp"
+#include "renderer/scene/node/inc/node.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
 
 namespace renderer {

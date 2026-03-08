@@ -1,7 +1,7 @@
 #ifndef MESH_INSTANCE_NODE_HPP
 #define MESH_INSTANCE_NODE_HPP
 
-#include "renderer/scene/inc/node_3d.hpp"
+#include "renderer/scene/node/inc/node_3d.hpp"
 
 namespace renderer {
 namespace material {

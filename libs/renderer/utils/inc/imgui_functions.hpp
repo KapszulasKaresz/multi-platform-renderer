@@ -3,7 +3,7 @@
 
 #include "renderer/material/inc/material.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
-#include "renderer/scene/inc/mesh_instance_node.hpp"
+#include "renderer/scene/node/inc/mesh_instance_node.hpp"
 
 namespace ImGui {
 // TODO: This is a temporary solution dynamic dispatching of ImGui drawing functions

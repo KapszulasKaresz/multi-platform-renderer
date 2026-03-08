@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "renderer/scene/inc/node.hpp"
+#include "renderer/scene/node/inc/node.hpp"
 
 namespace renderer {
 namespace scene {
@@ -29,8 +29,8 @@ public:
     const glm::quat& getRotation() const;
     const glm::vec3& getScale() const;
 
-    const glm::mat4& M() const;
-    const glm::mat4& MInv() const;
+    glm::mat4 M() const;
+    glm::mat4 MInv() const;
 
     virtual ~Node3D() = default;
 

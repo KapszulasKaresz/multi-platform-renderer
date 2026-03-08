@@ -1,7 +1,7 @@
 #ifndef IMGUI_VISITOR_HPP_INCLUDED
 #define IMGUI_VISITOR_HPP_INCLUDED
 
-#include "renderer/scene/inc/node_visitor.hpp"
+#include "renderer/scene/node_visitor/inc/node_visitor.hpp"
 
 namespace renderer {
 namespace scene {

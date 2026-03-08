@@ -3,9 +3,9 @@
 
 #include "renderer/mesh/inc/triangle_mesh.hpp"
 #include "renderer/render_resource/inc/render_resource.hpp"
-#include "renderer/scene/inc/draw_visitor.hpp"
-#include "renderer/scene/inc/imgui_visitor.hpp"
-#include "renderer/scene/inc/node.hpp"
+#include "renderer/scene/node/inc/node.hpp"
+#include "renderer/scene/node_visitor/inc/draw_visitor.hpp"
+#include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
 
 namespace renderer {
 namespace command_buffer {

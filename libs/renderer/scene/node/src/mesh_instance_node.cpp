@@ -1,4 +1,4 @@
-#include "renderer/scene/inc/mesh_instance_node.hpp"
+#include "renderer/scene/node/inc/mesh_instance_node.hpp"
 
 namespace renderer {
 namespace scene {

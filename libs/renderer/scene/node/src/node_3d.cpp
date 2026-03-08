@@ -1,4 +1,4 @@
-#include "renderer/scene/inc/node_3d.hpp"
+#include "renderer/scene/node/inc/node_3d.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -24,20 +24,20 @@ void Node3D::applyVisitor(NodeVisitor* f_visitor)
     }
 }
 
-const glm::mat4& Node3D::M() const
+glm::mat4 Node3D::M() const
 {
     if (m_parent && dynamic_cast<Node3D*>(m_parent)) {
-        auto parentTransform = static_cast<Node3D*>(m_parent)->M();
-        return parentTransform * m_transform;
+        auto l_parentTransform = static_cast<Node3D*>(m_parent)->M();
+        return l_parentTransform * m_transform;
     }
     return m_transform;
 }
 
-const glm::mat4& Node3D::MInv() const
+glm::mat4 Node3D::MInv() const
 {
     if (m_parent && dynamic_cast<Node3D*>(m_parent)) {
-        auto parentInverseTransform = static_cast<Node3D*>(m_parent)->MInv();
-        return m_inverseTransform * parentInverseTransform;
+        auto l_parentInverseTransform = static_cast<Node3D*>(m_parent)->MInv();
+        return m_inverseTransform * l_parentInverseTransform;
     }
     return m_inverseTransform;
 }

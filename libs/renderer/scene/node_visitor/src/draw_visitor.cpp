@@ -1,4 +1,4 @@
-#include "renderer/scene/inc/draw_visitor.hpp"
+#include "renderer/scene/node_visitor/inc/draw_visitor.hpp"
 
 #include <chrono>
 
@@ -6,8 +6,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "renderer/command_buffer/inc/command_buffer.hpp"
-#include "renderer/scene/inc/mesh_instance_node.hpp"
-#include "renderer/scene/inc/node.hpp"
+#include "renderer/scene/node/inc/mesh_instance_node.hpp"
+#include "renderer/scene/node/inc/node.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
 
 namespace renderer {
@@ -44,8 +44,7 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
             l_uniformCollection->getMember("model")
         );
 
-        glm::mat4 l_modelMatrix = f_node.M();
-        l_modelUniform->setValue(l_modelMatrix);
+        l_modelUniform->setValue(f_node.M());
 
         m_commandBuffer->useMaterial(f_node.getMaterial());
         m_commandBuffer->useViewport({ .m_fullScreen = true });

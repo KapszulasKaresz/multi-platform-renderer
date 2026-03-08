@@ -111,7 +111,6 @@ void RenderingServer::frame()
         m_scene->recordCommandBuffer(l_commandBuffer.get());
 
         if (l_renderingDevice->isImGuiEnabled()) {
-            ImGui::ShowDemoWindow();
             l_commandBuffer->renderImGui();
         }
 

@@ -1,4 +1,4 @@
-#include "renderer/scene/inc/node.hpp"
+#include "renderer/scene/node/inc/node.hpp"
 
 namespace renderer {
 namespace scene {
