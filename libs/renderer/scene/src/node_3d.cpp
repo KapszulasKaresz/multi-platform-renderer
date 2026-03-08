@@ -24,13 +24,22 @@ void Node3D::applyVisitor(NodeVisitor* f_visitor)
     }
 }
 
-glm::mat4 Node3D::getTransform() const
+const glm::mat4& Node3D::M() const
 {
     if (m_parent && dynamic_cast<Node3D*>(m_parent)) {
-        auto parentTransform = static_cast<Node3D*>(m_parent)->getTransform();
+        auto parentTransform = static_cast<Node3D*>(m_parent)->M();
         return parentTransform * m_transform;
     }
     return m_transform;
+}
+
+const glm::mat4& Node3D::MInv() const
+{
+    if (m_parent && dynamic_cast<Node3D*>(m_parent)) {
+        auto parentInverseTransform = static_cast<Node3D*>(m_parent)->MInv();
+        return m_inverseTransform * parentInverseTransform;
+    }
+    return m_inverseTransform;
 }
 
 Node3D& Node3D::setTransform(const glm::mat4& f_transform)

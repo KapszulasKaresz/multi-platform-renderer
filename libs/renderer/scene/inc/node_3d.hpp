@@ -15,16 +15,22 @@ public:
 
     virtual void applyVisitor(NodeVisitor* f_visitor) override;
 
-    glm::mat4 getTransform() const;
-    Node3D&   setTransform(const glm::mat4& f_transform);
-    Node3D&   setTransform(
-          const glm::vec3& f_translation,
-          const glm::quat& f_rotation,
-          const glm::vec3& f_scale
-      );
+    Node3D& setTransform(const glm::mat4& f_transform);
+    Node3D& setTransform(
+        const glm::vec3& f_translation,
+        const glm::quat& f_rotation,
+        const glm::vec3& f_scale
+    );
     Node3D& setRotation(const glm::quat& f_rotation);
     Node3D& setTranslation(const glm::vec3& f_translation);
     Node3D& setScale(const glm::vec3& f_scale);
+
+    const glm::vec3& getTranslation() const;
+    const glm::quat& getRotation() const;
+    const glm::vec3& getScale() const;
+
+    const glm::mat4& M() const;
+    const glm::mat4& MInv() const;
 
     virtual ~Node3D() = default;
 

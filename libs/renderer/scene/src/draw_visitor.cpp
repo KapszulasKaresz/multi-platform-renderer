@@ -44,7 +44,7 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
             l_uniformCollection->getMember("model")
         );
 
-        l_modelUniform->setValue(f_node.getTransform());
+        l_modelUniform->setValue(f_node.M());
 
         m_commandBuffer->useMaterial(f_node.getMaterial());
         m_commandBuffer->useViewport({ .m_fullScreen = true });
