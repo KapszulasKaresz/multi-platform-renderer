@@ -135,6 +135,13 @@ std::vector<Keys> GLFWWindow::getPressedKeys() const
     return l_pressedKeys;
 }
 
+void GLFWWindow::hideCursor(bool f_hide)
+{
+    glfwSetInputMode(
+        m_window, GLFW_CURSOR, f_hide ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL
+    );
+}
+
 std::vector<const char*> GLFWWindow::getRequiredInstanceExtensionsVulkan()
 {
     uint32_t l_extensionCount = 0;

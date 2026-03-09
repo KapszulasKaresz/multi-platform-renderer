@@ -1,5 +1,7 @@
 #include "renderer/scene/observer/inc/controlled_observer.hpp"
 
+#include <iostream>
+
 #include "renderer/scene/camera/inc/perspective_camera.hpp"
 #include "renderer/window/inc/window.hpp"
 
@@ -75,6 +77,10 @@ void ControlledObserver::update(float f_deltaTime)
                     l_isDragingCurrently = true;
                 }
             }
+        }
+
+        if (l_isDragingCurrently != m_isDraging) {
+            m_window->hideCursor(l_isDragingCurrently);
         }
 
         if (l_isDragingCurrently) {

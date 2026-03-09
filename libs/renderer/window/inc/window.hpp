@@ -98,6 +98,8 @@ public:
     virtual std::vector<MouseButtons> getPressedMouseButtons() const = 0;
     virtual std::vector<Keys>         getPressedKeys() const         = 0;
 
+    virtual void hideCursor(bool f_hide) = 0;
+
     virtual int  getWidth() const;
     virtual int  getHeight() const;
     virtual bool isResized() const;
