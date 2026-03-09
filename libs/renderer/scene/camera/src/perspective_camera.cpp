@@ -72,5 +72,41 @@ PerspectiveCamera& PerspectiveCamera::setFarPlane(float f_farPlane)
     return *this;
 }
 
+glm::vec3 PerspectiveCamera::getPosition() const
+{
+    return m_position;
+}
+
+glm::vec3 PerspectiveCamera::getFront() const
+{
+    return m_front;
+}
+
+glm::vec3 PerspectiveCamera::getUp() const
+{
+    return m_up;
+}
+
+float PerspectiveCamera::getFovY() const
+{
+    return m_fovY;
+}
+
+float PerspectiveCamera::getAspectRatio() const
+{
+    return m_aspectRatio;
+}
+
+float PerspectiveCamera::getNearPlane() const
+{
+    return m_nearPlane;
+}
+
+float PerspectiveCamera::getFarPlane() const
+{
+    return m_farPlane;
+}
+
+
 }   // namespace scene
 }   // namespace renderer

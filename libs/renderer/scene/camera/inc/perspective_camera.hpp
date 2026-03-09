@@ -20,6 +20,14 @@ public:
     PerspectiveCamera& setNearPlane(float f_nearPlane);
     PerspectiveCamera& setFarPlane(float f_farPlane);
 
+    glm::vec3 getPosition() const;
+    glm::vec3 getFront() const;
+    glm::vec3 getUp() const;
+    float     getFovY() const;
+    float     getAspectRatio() const;
+    float     getNearPlane() const;
+    float     getFarPlane() const;
+
     ~PerspectiveCamera() = default;
 
 protected:
