@@ -8,6 +8,7 @@
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/material/inc/material.hpp"
 #include "renderer/render_target/inc/render_target.hpp"
+#include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 #include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
@@ -42,16 +43,25 @@ TestScene& TestScene::create()
     m_camera = std::make_unique<PerspectiveCamera>();
     m_drawVisitor.setCamera(m_camera.get());
 
+    m_observer = std::make_unique<ControlledObserver>();
+    m_observer->setWindow(rendering_server::RenderingServer::getInstance().getWindow());
+    m_observer->setCamera(m_camera.get());
+
     m_valid = true;
     return *this;
 }
 
-void TestScene::recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer)
+void TestScene::recordCommandBuffer(
+    command_buffer::CommandBuffer* f_commandBuffer,
+    float                          f_deltaTime
+)
 {
     m_camera->setAspectRatio(
         static_cast<float>(f_commandBuffer->getCurrentRenderTarget()->getSize().x)
         / static_cast<float>(f_commandBuffer->getCurrentRenderTarget()->getSize().y)
     );
+
+    m_observer->update(f_deltaTime);
 
     m_drawVisitor.setCommandBuffer(f_commandBuffer);
     m_rootNode->applyVisitor(&m_drawVisitor);

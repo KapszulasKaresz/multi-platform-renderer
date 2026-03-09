@@ -7,6 +7,7 @@
 #include "renderer/scene/node/inc/node.hpp"
 #include "renderer/scene/node_visitor/inc/draw_visitor.hpp"
 #include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
+#include "renderer/scene/observer/inc/controlled_observer.hpp"
 
 namespace renderer {
 namespace command_buffer {
@@ -25,16 +26,20 @@ public:
     TestScene& setMesh(std::shared_ptr<mesh::TriangleMesh> f_mesh);
     TestScene& create();
 
-    void recordCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer);
+    void recordCommandBuffer(
+        command_buffer::CommandBuffer* f_commandBuffer,
+        float                          f_deltaTime
+    );
 
 private:
     std::shared_ptr<material::Material> m_material{ nullptr };
     std::shared_ptr<mesh::TriangleMesh> m_mesh{ nullptr };
 
-    std::unique_ptr<Node>              m_rootNode{ nullptr };
-    ImGuiVisitor                       m_imguiVisitor{};
-    DrawVisitor                        m_drawVisitor{};
-    std::unique_ptr<PerspectiveCamera> m_camera{ nullptr };
+    std::unique_ptr<Node>               m_rootNode{ nullptr };
+    ImGuiVisitor                        m_imguiVisitor{};
+    DrawVisitor                         m_drawVisitor{};
+    std::unique_ptr<PerspectiveCamera>  m_camera{ nullptr };
+    std::unique_ptr<ControlledObserver> m_observer{ nullptr };
 };
 }   // namespace scene
 }   // namespace renderer

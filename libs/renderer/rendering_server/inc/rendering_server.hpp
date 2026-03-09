@@ -61,6 +61,7 @@ public:
     rendering_device::RenderingDevice*                 getMainRenderingDevice();
     std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice();
     rendering_api::RenderingApi*                       getRenderingApi() const;
+    window::Window*                                    getWindow() const;
 
     void frame();
     void mainLoop();

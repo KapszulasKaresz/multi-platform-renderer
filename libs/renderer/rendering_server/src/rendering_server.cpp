@@ -1,5 +1,6 @@
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 
+#include <chrono>
 #include <stdexcept>
 
 #include <imgui.h>
@@ -96,6 +97,11 @@ rendering_api::RenderingApi* RenderingServer::getRenderingApi() const
     return m_renderingApi.get();
 }
 
+renderer::window::Window* RenderingServer::getWindow() const
+{
+    return m_window.get();
+}
+
 void RenderingServer::frame()
 {
     if (!m_valid) {
@@ -103,6 +109,14 @@ void RenderingServer::frame()
             "RenderingServer::frame() rendering server isn't created yet"
         );
     }
+
+    static auto s_lastTime    = std::chrono::steady_clock::now();
+    auto        l_currentTime = std::chrono::steady_clock::now();
+
+    float l_deltaTime = std::chrono::duration<float>(l_currentTime - s_lastTime).count();
+
+    s_lastTime = l_currentTime;
+
     auto l_renderingDevice = m_renderingApi->getMainRenderingDevice();
 
     auto l_commandBuffer = l_renderingDevice->getRenderingCommandBuffer();
@@ -113,7 +127,7 @@ void RenderingServer::frame()
             { .m_renderTarget = l_renderingDevice->getRenderTargetWindow(),
               .m_clearColor   = glm::vec4(0.0, 0.0, 0.0, 1.0) }
         );
-        m_scene->recordCommandBuffer(l_commandBuffer.get());
+        m_scene->recordCommandBuffer(l_commandBuffer.get(), l_deltaTime);
 
         if (l_renderingDevice->isImGuiEnabled()) {
             l_commandBuffer->renderImGui();
