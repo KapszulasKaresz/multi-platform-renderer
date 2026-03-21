@@ -2,8 +2,10 @@
 
 #include <imgui.h>
 
+#include "renderer/scene/node/inc/gltf_node.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 #include "renderer/scene/node/inc/node.hpp"
+#include "renderer/scene/node/inc/node_3d.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
 
 namespace renderer {
@@ -35,9 +37,7 @@ namespace scene {
         }                                                           \
                                                                     \
         if (l_isOpen) {                                             \
-            for (const auto& l_child : (NODE).getChildren()) {      \
-                l_child->applyVisitor(this);                        \
-            }                                                       \
+            NodeVisitor::visit((NODE));                             \
             ImGui::TreePop();                                       \
         }                                                           \
     }
@@ -57,9 +57,12 @@ void ImGuiVisitor::visit(Node3D& f_node)
     IMGUI_VISIT_NODE(f_node, "Node3D | ")
 }
 
-void ImGuiVisitor::visit(MeshInstanceNode& f_node){
+void ImGuiVisitor::visit(MeshInstanceNode& f_node)
+{
     IMGUI_VISIT_NODE(f_node, "MeshInstanceNode | ")
 }
+
+void ImGuiVisitor::visit(GltfNode& f_node){ IMGUI_VISIT_NODE(f_node, "GltfNode | ") }
 
 Node* ImGuiVisitor::getSelectedNode() const
 {

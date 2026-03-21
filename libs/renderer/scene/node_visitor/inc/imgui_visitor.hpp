@@ -12,6 +12,7 @@ public:
     virtual void visit(Node& f_node) override;
     virtual void visit(Node3D& f_node) override;
     virtual void visit(MeshInstanceNode& f_meshInstanceNode) override;
+    virtual void visit(GltfNode& f_node) override;
 
     Node* getSelectedNode() const;
 

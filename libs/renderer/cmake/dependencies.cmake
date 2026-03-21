@@ -69,3 +69,8 @@ endif()
 find_package(D3D12MemoryAllocator REQUIRED)
 target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
 target_link_libraries(${RENDERER_LIB_NAME} PUBLIC GPUOpen::D3D12MemoryAllocator)
+
+#tinyGLTF       
+find_package(TinyGLTF REQUIRED)
+target_compile_definitions(${RENDERER_LIB_NAME} PRIVATE)
+target_link_libraries(${RENDERER_LIB_NAME} PUBLIC TinyGLTF::TinyGLTF)

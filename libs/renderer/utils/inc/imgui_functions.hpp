@@ -3,6 +3,7 @@
 
 #include "renderer/material/inc/material.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
+#include "renderer/scene/node/inc/gltf_node.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 
 namespace ImGui {
@@ -13,6 +14,7 @@ void DrawNodeDynamic(renderer::scene::Node& f_node);
 void DrawNode(renderer::scene::Node& f_node);
 void DrawNode(renderer::scene::Node3D& f_node);
 void DrawNode(renderer::scene::MeshInstanceNode& f_node);
+void DrawNode(renderer::scene::GltfNode& f_node);
 
 void DrawMesh(renderer::mesh::Mesh& f_mesh);
 void DrawMaterial(renderer::material::Material& f_material);

@@ -15,8 +15,6 @@ class DrawVisitor : public NodeVisitor {
 public:
     DrawVisitor();
 
-    virtual void visit(Node& f_node) override;
-    virtual void visit(Node3D& f_node) override;
     virtual void visit(MeshInstanceNode& f_meshInstanceNode) override;
 
     void setCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer);

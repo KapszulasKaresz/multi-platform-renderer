@@ -7,6 +7,7 @@
 
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/scene/camera/inc/camera.hpp"
+#include "renderer/scene/node/inc/gltf_node.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 #include "renderer/scene/node/inc/node.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
@@ -16,20 +17,6 @@ namespace scene {
 DrawVisitor::DrawVisitor() : NodeVisitor()
 {
     m_mask = VISITOR_MASK_DRAW;
-}
-
-void DrawVisitor::visit(Node& f_node)
-{
-    for (const auto& l_child : f_node.getChildren()) {
-        l_child->applyVisitor(this);
-    }
-}
-
-void DrawVisitor::visit(Node3D& f_node)
-{
-    for (const auto& l_child : f_node.getChildren()) {
-        l_child->applyVisitor(this);
-    }
 }
 
 void DrawVisitor::visit(MeshInstanceNode& f_node)
@@ -62,9 +49,7 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
         m_commandBuffer->draw(f_node.getMesh());
     }
 
-    for (const auto& l_child : f_node.getChildren()) {
-        l_child->applyVisitor(this);
-    }
+    NodeVisitor::visit(f_node);
 }
 
 void DrawVisitor::setCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer)

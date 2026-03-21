@@ -8,6 +8,7 @@ namespace scene {
 class Node;
 class Node3D;
 class MeshInstanceNode;
+class GltfNode;
 
 enum VisitorMask : uint32_t {
     VISITOR_MASK_NONE = 0,
@@ -18,9 +19,11 @@ enum VisitorMask : uint32_t {
 
 class NodeVisitor {
 public:
-    virtual void visit(Node& f_node)                         = 0;
-    virtual void visit(Node3D& f_node)                       = 0;
-    virtual void visit(MeshInstanceNode& f_meshInstanceNode) = 0;
+    virtual void visit(Node& f_node);
+    virtual void visit(Node3D& f_node);
+    virtual void visit(MeshInstanceNode& f_meshInstanceNode);
+    virtual void visit(GltfNode& f_node);
+
 
     VisitorMask getMask() const;
 

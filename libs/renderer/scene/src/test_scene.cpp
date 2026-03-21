@@ -9,6 +9,7 @@
 #include "renderer/material/inc/material.hpp"
 #include "renderer/render_target/inc/render_target.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
+#include "renderer/scene/node/inc/gltf_node.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 #include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
@@ -39,6 +40,13 @@ TestScene& TestScene::create()
     l_childNode2->setMesh(m_mesh).setMaterial(m_material).setName("Child Node 2").create();
     l_childNode1->addChild(std::move(l_childNode2));
     m_rootNode->addChild(std::move(l_childNode1));
+
+    auto l_gltfNode = std::make_unique<GltfNode>();
+    l_gltfNode->setName("GLTF Node").create();
+    l_gltfNode->loadFromFile(
+        "res/models/glTF-Sample-Models/2.0/Avocado/glTF/avocado.gltf"
+    );
+    m_rootNode->addChild(std::move(l_gltfNode));
 
     m_camera = std::make_unique<PerspectiveCamera>();
     m_drawVisitor.setCamera(m_camera.get());

@@ -12,6 +12,10 @@ void DrawNodeDynamic(renderer::scene::Node& f_node)
         DrawNode(*l_meshInstanceNode);
         return;
     }
+    else if (auto* l_gltfNode = dynamic_cast<renderer::scene::GltfNode*>(&f_node)) {
+        DrawNode(*l_gltfNode);
+        return;
+    }
     else if (auto* l_node3D = dynamic_cast<renderer::scene::Node3D*>(&f_node)) {
         DrawNode(*l_node3D);
         return;
@@ -58,6 +62,13 @@ void DrawNode(renderer::scene::MeshInstanceNode& f_node)
         if (f_node.getMaterial()) {
             DrawMaterial(*f_node.getMaterial());
         }
+    }
+    DrawNode(static_cast<renderer::scene::Node3D&>(f_node));
+}
+
+void DrawNode(renderer::scene::GltfNode& f_node)
+{
+    if (ImGui::CollapsingHeader("GltfNode")) {
     }
     DrawNode(static_cast<renderer::scene::Node3D&>(f_node));
 }

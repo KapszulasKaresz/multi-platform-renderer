@@ -16,6 +16,7 @@ class MultiPlatformRenderer(ConanFile):
         self.requires("d3d12-memory-allocator/3.0.1")
         self.requires("stb/cci.20240531")
         self.requires("imgui/1.92.4")
+        self.requires("tinygltf/2.9.7")
 
     def layout(self):
         cmake_layout(self)
