@@ -130,6 +130,10 @@ void RenderingServer::frame()
         m_scene->recordCommandBuffer(l_commandBuffer.get(), l_deltaTime);
 
         if (l_renderingDevice->isImGuiEnabled()) {
+            ImGui::Begin("Rendering Server Info");
+            ImGui::Text("FPS: %.1f", 1.0f / l_deltaTime);
+            ImGui::Text("Frame time: %.3f ms", l_deltaTime * 1000.0f);
+            ImGui::End();
             l_commandBuffer->renderImGui();
         }
 

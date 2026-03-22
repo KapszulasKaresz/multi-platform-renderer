@@ -10,6 +10,9 @@ class TriangleMesh : public Mesh {
 public:
     virtual TriangleMesh& create() override;
 
+    TriangleMesh& setVertices(const std::vector<Vertex>& f_vertices);
+    TriangleMesh& setIndices(const std::vector<uint32_t>& f_indices);
+
     int getIndicieCount() const;
 
 protected:

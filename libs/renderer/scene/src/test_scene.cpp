@@ -42,10 +42,9 @@ TestScene& TestScene::create()
     m_rootNode->addChild(std::move(l_childNode1));
 
     auto l_gltfNode = std::make_unique<GltfNode>();
-    l_gltfNode->setName("GLTF Node").create();
-    l_gltfNode->loadFromFile(
-        "res/models/glTF-Sample-Models/2.0/Avocado/glTF/avocado.gltf"
-    );
+    l_gltfNode->setDefaultMaterial(m_material).setName("GLTF Node").create();
+    // l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Buggy/glTF/Buggy.gltf");
+    l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf");
     m_rootNode->addChild(std::move(l_gltfNode));
 
     m_camera = std::make_unique<PerspectiveCamera>();
