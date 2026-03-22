@@ -33,16 +33,8 @@ TestScene& TestScene::create()
     m_rootNode = std::make_unique<Node>();
     m_rootNode->setName("Root Node").create();
 
-    auto l_childNode1 = std::make_unique<Node3D>();
-    l_childNode1->setName("Child Node 1").create();
-
-    auto l_childNode2 = std::make_unique<MeshInstanceNode>();
-    l_childNode2->setMesh(m_mesh).setMaterial(m_material).setName("Child Node 2").create();
-    l_childNode1->addChild(std::move(l_childNode2));
-    m_rootNode->addChild(std::move(l_childNode1));
-
     auto l_gltfNode = std::make_unique<GltfNode>();
-    l_gltfNode->setDefaultMaterial(m_material).setName("GLTF Node").create();
+    l_gltfNode->setName("GLTF Node").create();
     // l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Buggy/glTF/Buggy.gltf");
     l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf");
     m_rootNode->addChild(std::move(l_gltfNode));

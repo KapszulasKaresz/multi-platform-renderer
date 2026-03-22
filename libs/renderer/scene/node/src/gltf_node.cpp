@@ -26,12 +26,6 @@ GltfNode& GltfNode::create()
     return *this;
 }
 
-GltfNode& GltfNode::setDefaultMaterial(std::shared_ptr<material::Material> f_material)
-{
-    m_defaultMaterial = f_material;
-    return *this;
-}
-
 void GltfNode::loadFromFile(const std::filesystem::path& f_filePath)
 {
     tinygltf::TinyGLTF l_loader;
@@ -53,7 +47,6 @@ void GltfNode::loadFromFile(const std::filesystem::path& f_filePath)
     if (!l_err.empty()) {
         std::cerr << "GLTF Loader error: " << l_err << std::endl;
     }
-
     // TODO: do all scenes
     auto l_scene = l_model.scenes[l_model.defaultScene];
 
@@ -74,7 +67,11 @@ void GltfNode::loadNodesRecursively(
     l_childNode->setName(l_node.name).create();
 
     if (l_node.matrix.size() == 16) {
-        glm::mat4 l_transform = glm::make_mat4(l_node.matrix.data());
+        glm::mat4     l_transform(1.0f);
+        const double* matrixData = l_node.matrix.data();
+        for (int i = 0; i < 16; ++i) {
+            l_transform[i / 4][i % 4] = static_cast<float>(matrixData[i]);
+        }
         l_childNode->setTransform(l_transform);
     }
     else {
@@ -83,15 +80,28 @@ void GltfNode::loadNodesRecursively(
         glm::vec3 l_scale{ 1.0f, 1.0f, 1.0f };
 
         if (l_node.translation.size() == 3) {
-            l_translation = glm::make_vec3(l_node.translation.data());
+            l_translation = glm::vec3(
+                static_cast<float>(l_node.translation[0]),
+                static_cast<float>(l_node.translation[1]),
+                static_cast<float>(l_node.translation[2])
+            );
         }
 
         if (l_node.rotation.size() == 4) {
-            l_rotation = glm::make_quat(l_node.rotation.data());
+            l_rotation = glm::quat(
+                static_cast<float>(l_node.rotation[3]),   // W
+                static_cast<float>(l_node.rotation[0]),   // X
+                static_cast<float>(l_node.rotation[1]),   // Y
+                static_cast<float>(l_node.rotation[2])    // Z
+            );
         }
 
         if (l_node.scale.size() == 3) {
-            l_scale = glm::make_vec3(l_node.scale.data());
+            l_scale = glm::vec3(
+                static_cast<float>(l_node.scale[0]),
+                static_cast<float>(l_node.scale[1]),
+                static_cast<float>(l_node.scale[2])
+            );
         }
 
         l_childNode->setTransform(l_translation, l_rotation, l_scale);
@@ -112,7 +122,8 @@ void GltfNode::loadNodesRecursively(
                                       .getMainRenderingDevice()
                                       ->createTriangleMesh();
             l_rendererMesh->setIndices(l_indices).setVertices(l_vertices).create();
-            l_meshInstanceNode->setMesh(l_rendererMesh).setMaterial(m_defaultMaterial);
+            l_meshInstanceNode->setMesh(l_rendererMesh)
+                .setMaterial(createMaterial(f_model, l_primitive.material));
 
             l_childNode->addChild(std::move(l_meshInstanceNode));
             index++;
@@ -205,7 +216,15 @@ std::vector<mesh::Vertex> GltfNode::extractVertices(
             return false;
         }
 
-        const tinygltf::Accessor&   l_accessor = f_model.accessors[l_it->second];
+        const tinygltf::Accessor& l_accessor = f_model.accessors[l_it->second];
+
+        if (l_accessor.componentType != TINYGLTF_COMPONENT_TYPE_FLOAT) {
+            throw std::runtime_error(
+                "GltfNode::extractVertices(...) Attribute " + f_name
+                + " is not of type FLOAT. Type conversion is required!"
+            );
+        }
+
         const tinygltf::BufferView& l_bufferView =
             f_model.bufferViews[l_accessor.bufferView];
         const tinygltf::Buffer& l_buffer = f_model.buffers[l_bufferView.buffer];
@@ -269,6 +288,61 @@ std::vector<mesh::Vertex> GltfNode::extractVertices(
     }
 
     return l_vertices;
+}
+
+std::shared_ptr<material::Material>
+    GltfNode::createMaterial(const tinygltf::Model& f_model, int f_materialIndex)
+{
+    auto l_materialRet = rendering_server::RenderingServer::getInstance()
+                             .getMainRenderingDevice()
+                             ->createMaterial();
+
+    const auto& l_material             = f_model.materials[f_materialIndex];
+    const auto& l_pbrMetallicRoughness = l_material.pbrMetallicRoughness;
+
+    auto l_image = rendering_server::RenderingServer::getInstance()
+                       .getMainRenderingDevice()
+                       ->createImage();
+
+    if (l_pbrMetallicRoughness.baseColorTexture.index != -1) {
+        const auto& l_texture =
+            f_model.textures[l_pbrMetallicRoughness.baseColorTexture.index];
+        const auto& l_imageData = f_model.images[l_texture.source];
+        l_image->generateMipMaps().createFromGltfImage(l_imageData);
+
+        // TODO sampler
+    }
+    else {
+        l_image->generateMipMaps().createFromFile("res/textures/test_texture.png");
+    }
+
+    auto l_texture = rendering_server::RenderingServer::getInstance()
+                         .getMainRenderingDevice()
+                         ->createTexture();
+    l_texture->setImage(l_image).create();
+
+    auto l_uniformCollection = rendering_server::RenderingServer::getInstance()
+                                   .getMainRenderingDevice()
+                                   ->createUniformCollection();
+    l_uniformCollection->addMember("model")
+        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+        .create();
+
+    l_uniformCollection->addMember("view")
+        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+        .create();
+
+    l_uniformCollection->addMember("proj")
+        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+        .create();
+
+    l_uniformCollection->addTexture(l_texture);
+    l_uniformCollection->setName("Camera").create();
+
+    l_materialRet->setShader("res/shaders/shader")
+        .addUniformCollection(l_uniformCollection)
+        .create();
+    return l_materialRet;
 }
 
 void GltfNode::applyVisitor(NodeVisitor* f_visitor)

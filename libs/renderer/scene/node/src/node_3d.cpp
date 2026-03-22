@@ -44,7 +44,8 @@ glm::mat4 Node3D::MInv() const
 
 Node3D& Node3D::setTransform(const glm::mat4& f_transform)
 {
-    m_transform = f_transform;
+    m_transform        = f_transform;
+    m_inverseTransform = glm::inverse(m_transform);
 
     glm::vec3 l_skew;
     glm::vec4 l_perspective;

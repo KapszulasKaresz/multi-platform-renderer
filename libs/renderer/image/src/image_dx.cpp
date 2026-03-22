@@ -252,6 +252,200 @@ ImageDX& ImageDX::createEmptyImage()
     return *this;
 }
 
+ImageDX& ImageDX::createFromGltfImage(const tinygltf::Image& f_gltfImage)
+{
+    if (isValid()) {
+        throw std::runtime_error(
+            "ImageDX::createFromGltfImage: cannot create an already created image"
+        );
+    }
+
+    int l_texWidth  = f_gltfImage.width;
+    int l_texHeight = f_gltfImage.height;
+
+    if (l_texWidth <= 0 || l_texHeight <= 0) {
+        throw std::runtime_error("ImageDX::createFromGltfImage: Invalid image dimensions");
+    }
+
+    m_format = IMAGE_FORMAT_RGBA8_SRGB;
+    m_size.x = l_texWidth;
+    m_size.y = l_texHeight;
+
+    if (m_hasMipMaps) {
+        m_mipLevels = static_cast<uint32_t>(
+                          std::floor(std::log2(std::max(l_texWidth, l_texHeight)))
+                      )
+                    + 1;
+    }
+    else {
+        m_mipLevels = 1;
+    }
+
+    D3D12_RESOURCE_DESC l_imgDesc = {};
+    l_imgDesc.Dimension           = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    l_imgDesc.Alignment           = 0;
+    l_imgDesc.Width               = m_size.x;
+    l_imgDesc.Height              = m_size.y;
+    l_imgDesc.DepthOrArraySize    = 1;
+    l_imgDesc.MipLevels           = m_mipLevels;
+    l_imgDesc.Format              = convertToDXFormat(m_format);
+    l_imgDesc.SampleDesc.Count    = 1;
+    l_imgDesc.SampleDesc.Quality  = 0;
+    l_imgDesc.Layout              = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    l_imgDesc.Flags               = D3D12_RESOURCE_FLAG_NONE;
+
+    D3D12MA::ALLOCATION_DESC l_allocDesc = {};
+    l_allocDesc.HeapType                 = D3D12_HEAP_TYPE_DEFAULT;
+
+    if (FAILED(m_parentDevice->getMemoryAllocator()->CreateResource(
+            &l_allocDesc,
+            &l_imgDesc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            NULL,
+            &m_image,
+            IID_NULL,
+            NULL
+        )))
+    {
+        throw std::runtime_error(
+            "ImageDX::createFromGltfImage failed to create GPU resource"
+        );
+    }
+
+    std::vector<unsigned char> l_currentMipData;
+
+    if (f_gltfImage.component == 3) {
+        l_currentMipData = expandToRGBA(f_gltfImage);
+    }
+    else {
+        l_currentMipData = f_gltfImage.image;
+    }
+
+    UINT64 l_uploadBufferSize =
+        GetRequiredIntermediateSize(m_image->GetResource(), 0, m_mipLevels);
+
+    D3D12_RESOURCE_DESC l_uploadBufferDesc = {};
+    l_uploadBufferDesc.Dimension           = D3D12_RESOURCE_DIMENSION_BUFFER;
+    l_uploadBufferDesc.Width               = l_uploadBufferSize;
+    l_uploadBufferDesc.Height              = 1;
+    l_uploadBufferDesc.DepthOrArraySize    = 1;
+    l_uploadBufferDesc.MipLevels           = 1;
+    l_uploadBufferDesc.Format              = DXGI_FORMAT_UNKNOWN;
+    l_uploadBufferDesc.SampleDesc.Count    = 1;
+    l_uploadBufferDesc.Layout              = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    D3D12MA::ALLOCATION_DESC l_uploadAllocDesc = {};
+    l_uploadAllocDesc.HeapType                 = D3D12_HEAP_TYPE_UPLOAD;
+
+    Microsoft::WRL::ComPtr<D3D12MA::Allocation> l_uploadAllocation{ nullptr };
+    if (FAILED(m_parentDevice->getMemoryAllocator()->CreateResource(
+            &l_uploadAllocDesc,
+            &l_uploadBufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            NULL,
+            &l_uploadAllocation,
+            IID_NULL,
+            NULL
+        )))
+    {
+        throw std::runtime_error(
+            "ImageDX::createFromGltfImage failed to create upload buffer"
+        );
+    }
+
+    BYTE*       l_mappedData = nullptr;
+    D3D12_RANGE l_range      = { 0, 0 };
+    l_uploadAllocation->GetResource()->Map(
+        0, &l_range, reinterpret_cast<void**>(&l_mappedData)
+    );
+
+    std::vector<D3D12_PLACED_SUBRESOURCE_FOOTPRINT> l_footprints(m_mipLevels);
+    std::vector<UINT>                               l_numRows(m_mipLevels);
+    std::vector<UINT64>                             l_rowSizes(m_mipLevels);
+    UINT64                                          l_totalBytes = 0;
+
+    m_parentDevice->getDevice()->GetCopyableFootprints(
+        &l_imgDesc,
+        0,
+        m_mipLevels,
+        0,
+        l_footprints.data(),
+        l_numRows.data(),
+        l_rowSizes.data(),
+        &l_totalBytes
+    );
+
+    int l_mipWidth  = l_texWidth;
+    int l_mipHeight = l_texHeight;
+
+    for (UINT l_mip = 0; l_mip < m_mipLevels; ++l_mip) {
+        BYTE* l_destSlice = l_mappedData + l_footprints[l_mip].Offset;
+
+        for (UINT y = 0; y < static_cast<UINT>(l_mipHeight); ++y) {
+            memcpy(
+                l_destSlice + y * l_footprints[l_mip].Footprint.RowPitch,
+                l_currentMipData.data() + y * l_mipWidth * 4,
+                l_mipWidth * 4
+            );
+        }
+
+        if (l_mip + 1 < m_mipLevels) {
+            int                        l_nextWidth  = std::max(1, l_mipWidth / 2);
+            int                        l_nextHeight = std::max(1, l_mipHeight / 2);
+            std::vector<unsigned char> l_nextMip(l_nextWidth * l_nextHeight * 4);
+
+            stbir_resize_uint8(
+                l_currentMipData.data(),
+                l_mipWidth,
+                l_mipHeight,
+                0,
+                l_nextMip.data(),
+                l_nextWidth,
+                l_nextHeight,
+                0,
+                4
+            );
+
+            l_currentMipData = std::move(l_nextMip);
+            l_mipWidth       = l_nextWidth;
+            l_mipHeight      = l_nextHeight;
+        }
+    }
+
+    l_uploadAllocation->GetResource()->Unmap(0, nullptr);
+
+    auto l_commanBuffer = dynamic_cast<command_buffer::CommandBufferDX*>(
+        m_parentDevice->createCommandBuffer().get()
+    );
+    l_commanBuffer->reset();
+    l_commanBuffer->begin();
+
+    for (UINT l_mip = 0; l_mip < m_mipLevels; ++l_mip) {
+        l_commanBuffer->copyBuffer(
+            l_uploadAllocation->GetResource(),
+            m_image->GetResource(),
+            l_footprints[l_mip],
+            l_mip,
+            false
+        );
+    }
+
+    D3D12_RESOURCE_BARRIER l_barrier = {};
+    l_barrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    l_barrier.Transition.pResource   = m_image->GetResource();
+    l_barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    l_barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    l_barrier.Transition.StateAfter  = D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+    l_commanBuffer->getCommandList()->ResourceBarrier(1, &l_barrier);
+
+    l_commanBuffer->end();
+    l_commanBuffer->submit();
+    m_parentDevice->waitForGPU();
+
+    m_valid = true;
+    return *this;
+}
+
 ImageDX& ImageDX::setFormat(image::ImageFormat f_format)
 {
     m_format = f_format;

@@ -22,6 +22,7 @@ public:
     ImageDX& create() override final;
     ImageDX& createFromFile(std::string_view f_path) override final;
     ImageDX& createEmptyImage() override final;
+    ImageDX& createFromGltfImage(const tinygltf::Image& f_gltfImage) override final;
 
     ImageDX& setFormat(image::ImageFormat f_format) override final;
     ImageDX& setColorSpace(image::ColorSpace f_colorSpace) override final;

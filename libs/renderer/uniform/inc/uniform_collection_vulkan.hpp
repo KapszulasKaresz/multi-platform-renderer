@@ -26,8 +26,6 @@ public:
     UniformSingle* addMember(const std::string& f_name) override final;
 
     UniformCollectionVulkan& setShaderstage(vk::ShaderStageFlagBits f_shaderStage);
-    UniformCollectionVulkan& setSet(uint32_t f_set);
-    uint32_t                 getSet() const;
 
     UniformCollectionVulkan& create() override final;
 

@@ -20,10 +20,7 @@ class GltfNode : public Node3D {
 public:
     GltfNode();
     GltfNode& create();
-
-    GltfNode& setDefaultMaterial(std::shared_ptr<material::Material> f_material);
-
-    void loadFromFile(const std::filesystem::path& f_filePath);
+    void      loadFromFile(const std::filesystem::path& f_filePath);
 
     virtual void applyVisitor(NodeVisitor* f_visitor) override;
 
@@ -46,7 +43,8 @@ protected:
         const tinygltf::Primitive& f_primitive
     );
 
-    std::shared_ptr<material::Material> m_defaultMaterial{ nullptr };
+    std::shared_ptr<material::Material>
+        createMaterial(const tinygltf::Model& f_model, int f_materialIndex);
 };
 
 }   // namespace scene

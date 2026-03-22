@@ -25,6 +25,7 @@ public:
     ImageVulkan& createFromSwapChainImage(vk::Image f_swapChainImage);
     ImageVulkan& createFromFile(std::string_view f_path) override final;
     ImageVulkan& createEmptyImage() override final;
+    ImageVulkan& createFromGltfImage(const tinygltf::Image& f_gltfImage) override final;
 
     ImageVulkan& setFormat(image::ImageFormat f_format) override final;
     ImageVulkan& setColorSpace(image::ColorSpace f_colorSpace) override final;
