@@ -1,9 +1,14 @@
-cbuffer cb : register(b0)
-{
-    row_major float4x4 modelMatrix : packoffset(c0);
-    row_major float4x4 viewMatrix : packoffset(c4);
-    row_major float4x4 projectionMatrix : packoffset(c8);
-};  
+struct UniformBufferCamera {
+    row_major float4x4 view;
+    row_major float4x4 proj;
+};
+
+struct UniformBufferObject {
+    row_major float4x4 model;
+};
+
+ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
+ConstantBuffer<UniformBufferObject> object : register(b1, space0);
 
 struct VertexInput
 {
@@ -24,9 +29,9 @@ struct VSOutput
 VSOutput main(VertexInput input)
 {
     VSOutput output;
-    float4 worldPos = mul(float4(input.inPosition, 1.0), modelMatrix);
-    float4 viewPos  = mul(worldPos, viewMatrix);
-    output.pos      = mul(viewPos, projectionMatrix);
+    float4 worldPos = mul(float4(input.inPosition, 1.0), object.model);
+    float4 viewPos  = mul(worldPos, camera.view);
+    output.pos      = mul(viewPos, camera.proj);
     output.normal   = input.inNormal;
     output.color    = input.inColor;
     output.fragTexCoord = input.inTexCoord;

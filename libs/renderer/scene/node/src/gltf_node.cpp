@@ -312,27 +312,35 @@ void GltfNode::createDefaultMaterial()
                          ->createTexture();
     l_texture->setImage(l_image).create();
 
-    auto l_uniformCollection = rendering_server::RenderingServer::getInstance()
-                                   .getMainRenderingDevice()
-                                   ->createUniformCollection();
-    l_uniformCollection->setUnique(false);
-    l_uniformCollection->addMember("model")
+    auto l_uniformCollectionCamera = rendering_server::RenderingServer::getInstance()
+                                         .getMainRenderingDevice()
+                                         ->createUniformCollection();
+    l_uniformCollectionCamera->setUnique(true);
+
+    l_uniformCollectionCamera->addMember("view")
         ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
         .create();
 
-    l_uniformCollection->addMember("view")
+    l_uniformCollectionCamera->addMember("proj")
         ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
         .create();
 
-    l_uniformCollection->addMember("proj")
+    l_uniformCollectionCamera->setName("Camera").create();
+
+    auto l_uniformCollectionObject = rendering_server::RenderingServer::getInstance()
+                                         .getMainRenderingDevice()
+                                         ->createUniformCollection();
+    l_uniformCollectionObject->setUnique(false);
+    l_uniformCollectionObject->addMember("model")
         ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
         .create();
 
-    l_uniformCollection->addTexture(l_texture);
-    l_uniformCollection->setName("Camera").create();
+    l_uniformCollectionObject->addTexture(l_texture);
+    l_uniformCollectionObject->setName("Object").create();
 
     m_defaultMaterial->setShader("res/shaders/shader")
-        .addUniformCollection(l_uniformCollection)
+        .addUniformCollection(l_uniformCollectionCamera)
+        .addUniformCollection(l_uniformCollectionObject)
         .create();
 }
 
@@ -368,7 +376,7 @@ std::shared_ptr<material::Material>
                          ->createTexture();
     l_texture->setImage(l_image).create();
 
-    auto l_uniformCollection = l_materialRet->getUniformCollection("Camera");
+    auto l_uniformCollection = l_materialRet->getUniformCollection("Object");
     if (l_uniformCollection) {
         l_uniformCollection->addTexture(l_texture, 0);
     }

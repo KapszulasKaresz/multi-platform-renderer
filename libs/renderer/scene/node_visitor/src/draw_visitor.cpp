@@ -26,21 +26,25 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
     }
 
     if (f_node.getMesh() && f_node.getMaterial()) {
-        auto l_uniformCollection = f_node.getMaterial()->getUniformCollection("Camera");
+        auto l_uniformCollectionCamera =
+            f_node.getMaterial()->getUniformCollection("Camera");
 
         uniform::UniformSingle* l_modelUniform = dynamic_cast<uniform::UniformSingle*>(
-            l_uniformCollection->getMember("model")
+            f_node.getMaterial()->getUniformCollection("Object")->getMember("model")
         );
 
         l_modelUniform->setValue(f_node.M());
 
-        uniform::UniformSingle* l_viewUniform =
-            dynamic_cast<uniform::UniformSingle*>(l_uniformCollection->getMember("view"));
+        uniform::UniformSingle* l_viewUniform = dynamic_cast<uniform::UniformSingle*>(
+            l_uniformCollectionCamera->getMember("view")
+        );
 
         l_viewUniform->setValue(m_camera->V());
 
         uniform::UniformSingle* l_projectionUniform =
-            dynamic_cast<uniform::UniformSingle*>(l_uniformCollection->getMember("proj"));
+            dynamic_cast<uniform::UniformSingle*>(
+                l_uniformCollectionCamera->getMember("proj")
+            );
 
         l_projectionUniform->setValue(m_camera->P());
 

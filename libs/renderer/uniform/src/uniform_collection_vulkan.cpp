@@ -18,9 +18,11 @@ UniformCollectionVulkan::UniformCollectionVulkan(
 
 void UniformCollectionVulkan::update()
 {
-    m_uniformBuffers[m_parentDevice->getCurrentFrame()].upload(
-        createStd140Buffer().data(), m_layout.m_structSize
-    );
+    if (m_uniformBuffers.size() > m_parentDevice->getCurrentFrame()) {
+        m_uniformBuffers[m_parentDevice->getCurrentFrame()].upload(
+            createStd140Buffer().data(), m_layout.m_structSize
+        );
+    }
 }
 
 size_t UniformCollectionVulkan::getSize() const
@@ -63,8 +65,8 @@ UniformCollectionVulkan& UniformCollectionVulkan::setShaderstage(
 UniformCollectionVulkan& UniformCollectionVulkan::create()
 {
     Uniform::create();
-    createDescriptorSetLayout();
     computeStd140Layout();
+    createDescriptorSetLayout();
     createUniformBuffers();
     createDescriptorSets();
     return *this;
@@ -169,11 +171,13 @@ void UniformCollectionVulkan::createDescriptorSetLayout()
 {
     std::vector<vk::DescriptorSetLayoutBinding> l_layoutBindings;
 
-    l_layoutBindings.push_back(
-        vk::DescriptorSetLayoutBinding(
-            0, vk::DescriptorType::eUniformBuffer, 1, m_shaderStage, nullptr
-        )
-    );
+    if (m_layout.m_structSize != 0) {
+        l_layoutBindings.push_back(
+            vk::DescriptorSetLayoutBinding(
+                0, vk::DescriptorType::eUniformBuffer, 1, m_shaderStage, nullptr
+            )
+        );
+    }
 
     for (int i = 1; i <= m_textures.size(); i++) {
         texture::TextureVulkan* l_rawVulkanTexture =
@@ -213,6 +217,9 @@ void UniformCollectionVulkan::createUniformBuffers()
     m_uniformBuffers.clear();
     for (int i = 0; i < m_parentDevice->getMaxFramesInFlight(); i++) {
         m_bufferSize = m_layout.m_structSize;
+        if (m_bufferSize == 0) {
+            return;
+        }
         m_uniformBuffers.push_back(
             utils::VmaBuffer(
                 m_parentDevice->getVmaAllocator(),
@@ -240,19 +247,22 @@ void UniformCollectionVulkan::createDescriptorSets()
         m_parentDevice->getLogicalDevice().allocateDescriptorSets(l_allocInfo);
 
     for (size_t i = 0; i < m_parentDevice->getMaxFramesInFlight(); i++) {
-        vk::DescriptorBufferInfo l_bufferInfo{ .buffer = m_uniformBuffers[i].get(),
-                                               .offset = 0,
-                                               .range  = m_layout.m_structSize };
-
         std::vector<vk::WriteDescriptorSet> l_descriptorWrites;
-        l_descriptorWrites.push_back(
-            vk::WriteDescriptorSet{ .dstSet          = m_descriptorSets[i],
-                                    .dstBinding      = 0,
-                                    .dstArrayElement = 0,
-                                    .descriptorCount = 1,
-                                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
-                                    .pBufferInfo     = &l_bufferInfo }
-        );
+        if (m_uniformBuffers.size() > i) {
+            vk::DescriptorBufferInfo l_bufferInfo{ .buffer = m_uniformBuffers[i].get(),
+                                                   .offset = 0,
+                                                   .range  = m_layout.m_structSize };
+
+            l_descriptorWrites.push_back(
+                vk::WriteDescriptorSet{
+                    .dstSet          = m_descriptorSets[i],
+                    .dstBinding      = 0,
+                    .dstArrayElement = 0,
+                    .descriptorCount = 1,
+                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
+                    .pBufferInfo     = &l_bufferInfo }
+            );
+        }
 
         for (int j = 0; j < m_textures.size(); j++) {
             texture::TextureVulkan* l_rawVulkanTexture =

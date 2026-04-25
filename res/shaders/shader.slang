@@ -13,26 +13,35 @@ struct VSOutput
     float2 fragTexCoord;
 };
 
-struct UniformBuffer
+struct UniformBufferCamera
 {
-    float4x4 model;
     float4x4 view;
     float4x4 proj;
 };
 
-ConstantBuffer<UniformBuffer> ubo;
+struct UniformBufferObject
+{
+    float4x4 model;
+};
+
+[vk::binding(0, 0)]
+ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
+
+[vk::binding(0, 1)]
+ConstantBuffer<UniformBufferObject> object : register(b0, space1);
 
 [shader("vertex")]
 VSOutput vertMain(VSInput input) {
     VSOutput output;
-    output.pos = mul(ubo.proj, mul(ubo.view, mul(ubo.model, float4(input.inPosition, 1.0))));
+    output.pos = mul(camera.proj, mul(camera.view, mul(object.model, float4(input.inPosition, 1.0))));
     output.normal = input.inNormal;
     output.color = input.inColor;
     output.fragTexCoord = input.inTexCoord;
     return output;
 }
 
-Sampler2D texture;
+[vk::binding(1, 1)]
+Sampler2D texture : register(t1, space1);
 
 [shader("fragment")]
 float4 fragMain(VSOutput vertIn) : SV_TARGET {

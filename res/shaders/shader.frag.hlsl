@@ -11,13 +11,6 @@ struct PixelOutput
     float4 attachment0 : SV_Target0;
 };
 
-cbuffer cb : register(b0)
-{
-    column_major float4x4 modelMatrix : packoffset(c0);
-    column_major float4x4 viewMatrix : packoffset(c4);
-    column_major float4x4 projectionMatrix : packoffset(c8);
-};
-
 Texture2D g_Texture : register(t0);
 
 SamplerState TextureSampler : register(s0); 
