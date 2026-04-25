@@ -1,16 +1,16 @@
 struct VSInput {
-    float3 inPosition;
-    float3 inNormal;
-    float2 inTexCoord;
-    float3 inColor;
+    float3 inPosition : POSITION;
+    float3 inNormal   : NORMAL;
+    float2 inTexCoord : TEXCOORD0;
+    float3 inColor    : COLOR0;
 };
 
 struct VSOutput
 {
-    float4 pos : SV_Position;
-    float3 normal : NORMAL;
-    float3 color : COLOR;
-    float2 fragTexCoord;
+    float4 pos          : SV_Position;
+    float3 normal       : NORMAL;
+    float3 color        : COLOR0;
+    float2 fragTexCoord : TEXCOORD0;
 };
 
 struct UniformBufferCamera
@@ -28,7 +28,7 @@ struct UniformBufferObject
 ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
 
 [vk::binding(0, 1)]
-ConstantBuffer<UniformBufferObject> object : register(b0, space1);
+ConstantBuffer<UniformBufferObject> object : register(b1, space0);
 
 [shader("vertex")]
 VSOutput vertMain(VSInput input) {
@@ -41,7 +41,7 @@ VSOutput vertMain(VSInput input) {
 }
 
 [vk::binding(1, 1)]
-Sampler2D texture : register(t1, space1);
+Sampler2D texture : register(t0, space0);
 
 [shader("fragment")]
 float4 fragMain(VSOutput vertIn) : SV_TARGET {
