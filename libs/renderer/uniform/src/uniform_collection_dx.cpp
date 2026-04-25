@@ -100,7 +100,31 @@ std::vector<UINT> UniformCollectionDX::getTextureHeapSamplerOffsets()
 
 std::shared_ptr<UniformCollection> UniformCollectionDX::deepCopy() const
 {
-    return nullptr;   // TODO_MATERIAL: Implement deep copy for UniformCollectionDX
+    auto                 l_copy   = m_parentDevice->createUniformCollection();
+    UniformCollectionDX* l_dxCopy = dynamic_cast<UniformCollectionDX*>(l_copy.get());
+
+    l_dxCopy->setUnique(isUniqueCollection());
+    l_dxCopy->setName(getName());
+
+    for (auto& l_member : m_members) {
+        if (l_member->getType() == UNIFORM_TYPE_STRUCT) {
+            UniformCollection* l_structMember =
+                dynamic_cast<UniformCollection*>(l_member.get());
+
+            l_copy->addMember(l_structMember->deepCopy());
+        }
+        else {
+            l_copy->addMember(l_member->getName())->setType(l_member->getType()).create();
+        }
+    }
+
+    for (auto& l_texture : m_textures) {
+        l_copy->addTexture(l_texture);
+    }
+
+    l_dxCopy->create();
+
+    return l_copy;
 }
 
 UniformCollectionDX::~UniformCollectionDX()

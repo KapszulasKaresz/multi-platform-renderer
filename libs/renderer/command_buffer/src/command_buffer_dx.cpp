@@ -159,9 +159,29 @@ CommandBufferDX& CommandBufferDX::useMaterial(
 
     l_commandList->SetPipelineState(l_dxMaterial->getPipelineState());
 
-    l_dxMaterial->updateUniforms();
-
     l_commandList->SetGraphicsRootSignature(l_dxMaterial->getRootSignature());
+
+    updateUniforms(f_material);
+
+    return *this;
+}
+
+CommandBufferDX& CommandBufferDX::updateUniforms(
+    std::shared_ptr<material::Material> f_material
+)
+{
+    material::MaterialDX* l_dxMaterial =
+        dynamic_cast<material::MaterialDX*>(f_material.get());
+
+    if (!l_dxMaterial) {
+        throw std::runtime_error(
+            "CommandBufferDX::updateUniforms(...) non dx material provided"
+        );
+    }
+
+    auto l_commandList = selectCommandList();
+
+    l_dxMaterial->updateUniforms();
 
     auto l_CBVOffsets     = l_dxMaterial->getCBVHeapOffsets();
     auto l_SRVOffsets     = l_dxMaterial->getSRVHeapOffsets();
@@ -193,14 +213,6 @@ CommandBufferDX& CommandBufferDX::useMaterial(
         l_index++;
     }
 
-    return *this;
-}
-
-CommandBufferDX& CommandBufferDX::updateUniforms(
-    std::shared_ptr<material::Material> f_material
-)
-{
-    // TODO_MATERIAL
     return *this;
 }
 

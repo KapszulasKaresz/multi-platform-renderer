@@ -239,9 +239,17 @@ ImageDX& ImageDX::createEmptyImage()
     }
     l_clearValue.Format = convertToDXFormat(m_format);
 
+    bool l_passClearValue = isDepthImage()
+                         || (m_resourceFlags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 
     if (FAILED(m_parentDevice->getMemoryAllocator()->CreateResource(
-            &l_allocDesc, &l_imgDesc, m_defaultState, &l_clearValue, &m_image, IID_NULL, NULL
+            &l_allocDesc,
+            &l_imgDesc,
+            m_defaultState,
+            l_passClearValue ? &l_clearValue : NULL,
+            &m_image,
+            IID_NULL,
+            NULL
         )))
     {
         throw std::runtime_error(

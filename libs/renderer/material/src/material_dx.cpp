@@ -18,6 +18,10 @@ MaterialDX::MaterialDX(rendering_device::RenderingDeviceDX* f_parentDevice)
 
 MaterialDX& MaterialDX::create()
 {
+    if (!isOriginal()) {
+        m_valid = true;
+        return *this;
+    }
     createRootSignature();
     createPipelineState();
     m_valid = true;
@@ -26,12 +30,22 @@ MaterialDX& MaterialDX::create()
 
 ID3D12RootSignature* MaterialDX::getRootSignature()
 {
-    return m_rootSignature.Get();
+    if (isOriginal()) {
+        return m_rootSignature.Get();
+    }
+    else {
+        return dynamic_cast<MaterialDX*>(m_original.get())->getRootSignature();
+    }
 }
 
 ID3D12PipelineState* MaterialDX::getPipelineState()
 {
-    return m_pipelineState.Get();
+    if (isOriginal()) {
+        return m_pipelineState.Get();
+    }
+    else {
+        return dynamic_cast<MaterialDX*>(m_original.get())->getPipelineState();
+    }
 }
 
 std::vector<UINT> MaterialDX::getCBVHeapOffsets()
