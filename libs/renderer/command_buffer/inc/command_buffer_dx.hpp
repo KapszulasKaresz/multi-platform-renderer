@@ -44,9 +44,14 @@ public:
     CommandBufferDX& useMaterial(
         std::shared_ptr<material::Material> f_material
     ) override final;
+    CommandBufferDX& updateUniforms(
+        std::shared_ptr<material::Material> f_material
+    ) override final;
     CommandBufferDX& useViewport(const ViewportInfo& f_viewportInfo) override final;
     CommandBufferDX& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
     CommandBufferDX& renderImGui() override final;
+
+    render_target::RenderTarget* getCurrentRenderTarget() const override final;
 
     CommandBufferDX& copyBuffer(
         ID3D12Resource*                    f_srcBuffer,

@@ -165,6 +165,101 @@ ImageVulkan& ImageVulkan::createEmptyImage()
     return *this;
 }
 
+ImageVulkan& ImageVulkan::createFromGltfImage(const tinygltf::Image& f_gltfImage)
+{
+    if (isValid()) {
+        throw std::runtime_error(
+            "ImageVulkan::createFromGltfImage: cannot create an already created image"
+        );
+    }
+
+    int l_texWidth    = f_gltfImage.width;
+    int l_texHeight   = f_gltfImage.height;
+    int l_texChannels = f_gltfImage.component;
+
+    vk::DeviceSize l_imageSize = l_texWidth * l_texHeight * 4;
+
+    if (l_texWidth <= 0 || l_texHeight <= 0) {
+        throw std::runtime_error(
+            "ImageVulkan::createFromGltfImage: Invalid image dimensions!"
+        );
+    }
+
+    if (m_hasMipMaps) {
+        m_mipLevels = static_cast<uint32_t>(
+                          std::floor(std::log2(std::max(l_texWidth, l_texHeight)))
+                      )
+                    + 1;
+    }
+    else {
+        m_mipLevels = 1;
+    }
+
+    auto l_stagingBuffer = utils::VmaBuffer(
+        m_parentDevice->getVmaAllocator(),
+        l_imageSize,
+        vk::BufferUsageFlagBits::eTransferSrc,
+        VMA_MEMORY_USAGE_CPU_TO_GPU,
+        0
+    );
+
+    if (f_gltfImage.component != 4) {
+        l_stagingBuffer.upload(expandToRGBA(f_gltfImage).data(), l_imageSize);
+    }
+    else {
+        l_stagingBuffer.upload(f_gltfImage.image.data(), l_imageSize);
+    }
+
+    m_format   = IMAGE_FORMAT_RGBA8_SRGB;
+    m_vkFormat = convertToVkFormat(m_format);
+    m_size.x   = l_texWidth;
+    m_size.y   = l_texHeight;
+
+    m_usage = vk::ImageUsageFlagBits::eTransferSrc | vk::ImageUsageFlagBits::eTransferDst
+            | vk::ImageUsageFlagBits::eSampled;
+
+    vk::ImageCreateInfo l_imageCreateInfo{
+        .imageType   = vk::ImageType::e2D,
+        .format      = m_vkFormat,
+        .extent      = { .width  = static_cast<uint32_t>(l_texWidth),
+                        .height = static_cast<uint32_t>(l_texHeight),
+                        .depth  = 1 },
+        .mipLevels   = m_mipLevels,
+        .arrayLayers = 1,
+        .samples     = vk::SampleCountFlagBits::e1,
+        .tiling      = vk::ImageTiling::eOptimal,
+        .usage       = m_usage,
+    };
+
+    m_image = utils::VmaImage(
+        m_parentDevice->getVmaAllocator(),
+        l_imageCreateInfo,
+        VMA_MEMORY_USAGE_AUTO,
+        VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT
+    );
+
+    transitionImageLayout(
+        vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal
+    );
+
+    copyBufferToImage(l_stagingBuffer, l_texWidth, l_texHeight);
+
+    if (m_hasMipMaps) {
+        createMipmaps();
+    }
+    else {
+        transitionImageLayout(
+            vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal
+        );
+    }
+
+    auto l_image = vk::Image(m_image.get());
+    m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eColor);
+
+    m_valid = true;
+    return *this;
+}
+
 ImageVulkan& ImageVulkan::setFormat(image::ImageFormat f_format)
 {
     Image::setFormat(f_format);

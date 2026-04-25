@@ -17,6 +17,10 @@ MaterialVulkan::MaterialVulkan(rendering_device::RenderingDeviceVulkan* f_parent
 
 MaterialVulkan& MaterialVulkan::create()
 {
+    if (!isOriginal()) {
+        m_valid = true;
+        return *this;
+    }
     createPipeline();
     m_valid = true;
     return *this;
@@ -24,12 +28,28 @@ MaterialVulkan& MaterialVulkan::create()
 
 vk::Pipeline MaterialVulkan::getPipeline()
 {
-    return m_graphicsPipeline;
+    if (!isValid()) {
+        throw std::runtime_error("Material pipeline is not valid");
+    }
+    if (isOriginal()) {
+        return m_graphicsPipeline;
+    }
+    else {
+        return dynamic_cast<MaterialVulkan*>(m_original.get())->getPipeline();
+    }
 }
 
 vk::PipelineLayout MaterialVulkan::getPipelineLayout()
 {
-    return m_pipelineLayout;
+    if (!isValid()) {
+        throw std::runtime_error("Material pipeline layout is not valid");
+    }
+    if (isOriginal()) {
+        return m_pipelineLayout;
+    }
+    else {
+        return dynamic_cast<MaterialVulkan*>(m_original.get())->getPipelineLayout();
+    }
 }
 
 std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()

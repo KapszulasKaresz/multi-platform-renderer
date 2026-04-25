@@ -106,5 +106,19 @@ bool Image::isDepthImage() const
     return m_format == IMAGE_FORMAT_DEPTH;
 }
 
+std::vector<unsigned char> Image::expandToRGBA(const tinygltf::Image& f_gltfImage)
+{
+    size_t                     l_pixelCount = f_gltfImage.width * f_gltfImage.height;
+    std::vector<unsigned char> l_rgbaData(l_pixelCount * 4);
+
+    for (size_t i = 0; i < l_pixelCount; ++i) {
+        l_rgbaData[i * 4 + 0] = f_gltfImage.image[i * 3 + 0];   // R
+        l_rgbaData[i * 4 + 1] = f_gltfImage.image[i * 3 + 1];   // G
+        l_rgbaData[i * 4 + 2] = f_gltfImage.image[i * 3 + 2];   // B
+        l_rgbaData[i * 4 + 3] = 255;                            // A (Opaque)
+    }
+    return l_rgbaData;
+}
+
 }   // namespace image
 }   // namespace renderer

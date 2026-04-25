@@ -21,6 +21,12 @@ public:
     void         waitTillShown() override final;
     void*        getHwnd() override final;
 
+    glm::ivec2                getCursorPosition() const override final;
+    std::vector<MouseButtons> getPressedMouseButtons() const override final;
+    std::vector<Keys>         getPressedKeys() const override final;
+
+    void hideCursor(bool f_hide) override final;
+
     static std::vector<const char*> getRequiredInstanceExtensionsVulkan();
 
     GLFWwindow* getNativeHandle();

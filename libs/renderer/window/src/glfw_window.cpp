@@ -62,6 +62,86 @@ void* GLFWWindow::getHwnd()
     return glfwGetWin32Window(m_window);
 }
 
+glm::ivec2 GLFWWindow::getCursorPosition() const
+{
+    double l_xPos, l_yPos;
+    glfwGetCursorPos(m_window, &l_xPos, &l_yPos);
+    return glm::ivec2(static_cast<int>(l_xPos), static_cast<int>(l_yPos));
+}
+
+std::vector<MouseButtons> GLFWWindow::getPressedMouseButtons() const
+{
+    std::vector<MouseButtons> l_pressedButtons;
+    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        l_pressedButtons.push_back(MouseButtons::MOUSE_BUTTON_LEFT);
+    }
+    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS) {
+        l_pressedButtons.push_back(MouseButtons::MOUSE_BUTTON_RIGHT);
+    }
+    if (glfwGetMouseButton(m_window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS) {
+        l_pressedButtons.push_back(MouseButtons::MOUSE_BUTTON_MIDDLE);
+    }
+    return l_pressedButtons;
+}
+
+std::vector<Keys> GLFWWindow::getPressedKeys() const
+{
+    std::vector<Keys> l_pressedKeys;
+
+    static const int s_keysToPoll[] = {
+        GLFW_KEY_SPACE,     GLFW_KEY_APOSTROPHE, GLFW_KEY_COMMA, GLFW_KEY_MINUS,
+        GLFW_KEY_PERIOD,    GLFW_KEY_SLASH,      GLFW_KEY_0,     GLFW_KEY_1,
+        GLFW_KEY_2,         GLFW_KEY_3,          GLFW_KEY_4,     GLFW_KEY_5,
+        GLFW_KEY_6,         GLFW_KEY_7,          GLFW_KEY_8,     GLFW_KEY_9,
+        GLFW_KEY_SEMICOLON, GLFW_KEY_EQUAL,      GLFW_KEY_A,     GLFW_KEY_B,
+        GLFW_KEY_C,         GLFW_KEY_D,          GLFW_KEY_E,     GLFW_KEY_F,
+        GLFW_KEY_G,         GLFW_KEY_H,          GLFW_KEY_I,     GLFW_KEY_J,
+        GLFW_KEY_K,         GLFW_KEY_L,          GLFW_KEY_M,     GLFW_KEY_N,
+        GLFW_KEY_O,         GLFW_KEY_P,          GLFW_KEY_Q,     GLFW_KEY_R,
+        GLFW_KEY_S,         GLFW_KEY_T,          GLFW_KEY_U,     GLFW_KEY_V,
+        GLFW_KEY_W,         GLFW_KEY_X,          GLFW_KEY_Y,     GLFW_KEY_Z
+    };
+
+    static Keys s_keyMap[GLFW_KEY_LAST + 1] = { KEY_UNKNOWN };
+    static bool s_initialized               = false;
+
+    if (!s_initialized) {
+        for (int i = 0; i <= 9; ++i) {
+            s_keyMap[GLFW_KEY_0 + i] = static_cast<Keys>(KEY_0 + i);
+        }
+
+        for (int i = 0; i <= 25; ++i) {
+            s_keyMap[GLFW_KEY_A + i] = static_cast<Keys>(KEY_A + i);
+        }
+
+        s_keyMap[GLFW_KEY_SPACE]      = KEY_SPACE;
+        s_keyMap[GLFW_KEY_APOSTROPHE] = KEY_APOSTROPHE;
+        s_keyMap[GLFW_KEY_COMMA]      = KEY_COMMA;
+        s_keyMap[GLFW_KEY_MINUS]      = KEY_MINUS;
+        s_keyMap[GLFW_KEY_PERIOD]     = KEY_PERIOD;
+        s_keyMap[GLFW_KEY_SLASH]      = KEY_SLASH;
+        s_keyMap[GLFW_KEY_SEMICOLON]  = KEY_SEMICOLON;
+        s_keyMap[GLFW_KEY_EQUAL]      = KEY_EQUAL;
+
+        s_initialized = true;
+    }
+
+    for (int l_glfwKey : s_keysToPoll) {
+        if (glfwGetKey(m_window, l_glfwKey) == GLFW_PRESS) {
+            l_pressedKeys.push_back(s_keyMap[l_glfwKey]);
+        }
+    }
+
+    return l_pressedKeys;
+}
+
+void GLFWWindow::hideCursor(bool f_hide)
+{
+    glfwSetInputMode(
+        m_window, GLFW_CURSOR, f_hide ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL
+    );
+}
+
 std::vector<const char*> GLFWWindow::getRequiredInstanceExtensionsVulkan()
 {
     uint32_t l_extensionCount = 0;

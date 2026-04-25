@@ -10,7 +10,18 @@ Uniform& UniformCollection::setType(UniformType f_type)
     return *this;
 }
 
-void UniformCollection::addMember(std::unique_ptr<Uniform> f_member, int f_position)
+Uniform& UniformCollection::setUnique(bool f_unique)
+{
+    m_isUnique = f_unique;
+    return *this;
+}
+
+bool UniformCollection::isUniqueCollection() const
+{
+    return m_isUnique;
+}
+
+void UniformCollection::addMember(std::shared_ptr<Uniform> f_member, int f_position)
 {
     if (f_position < 0) {
         m_members.push_back(std::move(f_member));
@@ -26,7 +37,7 @@ void UniformCollection::addMember(std::unique_ptr<Uniform> f_member, int f_posit
 Uniform* UniformCollection::getMember(std::string_view f_name)
 {
     auto l_it = std::find_if(
-        m_members.begin(), m_members.end(), [&](const std::unique_ptr<Uniform>& f_member) {
+        m_members.begin(), m_members.end(), [&](const std::shared_ptr<Uniform>& f_member) {
             return f_member->getName() == f_name;
         }
     );

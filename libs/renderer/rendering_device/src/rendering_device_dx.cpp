@@ -348,10 +348,10 @@ void RenderingDeviceDX::createDescriptorHeapManager()
 {
     // TODO do something with the size
     m_commonDescriptorHeap = std::make_shared<utils::DescriptorHeapManagerDX>(
-        this, 256, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        this, 1'024, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
     );
     m_commonSamplerHeap = std::make_shared<utils::DescriptorHeapManagerDX>(
-        this, 256, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+        this, 1'024, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
     );
 }
 

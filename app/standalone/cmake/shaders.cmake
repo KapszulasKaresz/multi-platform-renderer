@@ -1,7 +1,6 @@
 function(add_slang_shader_target TARGET)
     cmake_parse_arguments("SHADER" "" "" "SOURCES" ${ARGN})
     set(SHADERS_DIR ${CMAKE_SOURCE_DIR}/res/shaders)
-    set(ENTRY_POINTS -entry vertMain -entry fragMain)
 
     if(NOT DEFINED SLANGC_EXECUTABLE)
         find_program(SLANGC_EXECUTABLE slangc)
@@ -12,34 +11,61 @@ function(add_slang_shader_target TARGET)
         endif()
     endif()
 
-    add_custom_command(
-        OUTPUT ${SHADERS_DIR}
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${SHADERS_DIR}
-    )
+    file(MAKE_DIRECTORY ${SHADERS_DIR})
 
-    set(SPIRV_OUTPUTS)
+    set(COMPILED_OUTPUTS)
 
     foreach(SHADER_FILE ${SHADER_SOURCES})
         get_filename_component(FILE_NAME ${SHADER_FILE} NAME_WE)
-        set(OUTPUT_FILE ${SHADERS_DIR}/${FILE_NAME}.spv)
+
+        set(SPV_OUTPUT ${SHADERS_DIR}/${FILE_NAME}.spv)
+        set(DXIL_VERT_OUTPUT ${SHADERS_DIR}/${FILE_NAME}.vert.dxil)
+        set(DXIL_FRAG_OUTPUT ${SHADERS_DIR}/${FILE_NAME}.frag.dxil)
 
         add_custom_command(
-            OUTPUT ${OUTPUT_FILE}
+            OUTPUT ${SPV_OUTPUT}
             COMMAND ${SLANGC_EXECUTABLE}
             ${SHADER_FILE}
             -target spirv
             -profile spirv_1_4
             -emit-spirv-directly
             -fvk-use-entrypoint-name
-            ${ENTRY_POINTS}
-            -o ${OUTPUT_FILE}
-            DEPENDS ${SHADERS_DIR} ${SHADER_FILE}
-            COMMENT "Compiling Slang Shader ${SHADER_FILE} -> ${OUTPUT_FILE}"
+            -entry vertMain
+            -entry fragMain
+            -o ${SPV_OUTPUT}
+            DEPENDS ${SHADER_FILE}
+            COMMENT "Compiling Slang -> SPIR-V: ${SHADER_FILE}"
             VERBATIM
         )
 
-        list(APPEND SPIRV_OUTPUTS ${OUTPUT_FILE})
+        add_custom_command(
+            OUTPUT ${DXIL_VERT_OUTPUT}
+            COMMAND ${SLANGC_EXECUTABLE}
+            ${SHADER_FILE}
+            -target dxil
+            -profile sm_6_0
+            -entry vertMain
+            -o ${DXIL_VERT_OUTPUT}
+            DEPENDS ${SHADER_FILE}
+            COMMENT "Compiling Slang -> DXIL (Vertex): ${SHADER_FILE}"
+            VERBATIM
+        )
+
+        add_custom_command(
+            OUTPUT ${DXIL_FRAG_OUTPUT}
+            COMMAND ${SLANGC_EXECUTABLE}
+            ${SHADER_FILE}
+            -target dxil
+            -profile sm_6_0
+            -entry fragMain
+            -o ${DXIL_FRAG_OUTPUT}
+            DEPENDS ${SHADER_FILE}
+            COMMENT "Compiling Slang -> DXIL (Fragment): ${SHADER_FILE}"
+            VERBATIM
+        )
+
+        list(APPEND COMPILED_OUTPUTS ${SPV_OUTPUT} ${DXIL_VERT_OUTPUT} ${DXIL_FRAG_OUTPUT})
     endforeach()
 
-    add_custom_target(${SHADER_COMPILE_STEP} DEPENDS ${SPIRV_OUTPUTS})
+    add_custom_target(${TARGET} ALL DEPENDS ${COMPILED_OUTPUTS})
 endfunction()

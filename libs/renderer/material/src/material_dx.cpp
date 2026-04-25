@@ -18,6 +18,10 @@ MaterialDX::MaterialDX(rendering_device::RenderingDeviceDX* f_parentDevice)
 
 MaterialDX& MaterialDX::create()
 {
+    if (!isOriginal()) {
+        m_valid = true;
+        return *this;
+    }
     createRootSignature();
     createPipelineState();
     m_valid = true;
@@ -26,12 +30,22 @@ MaterialDX& MaterialDX::create()
 
 ID3D12RootSignature* MaterialDX::getRootSignature()
 {
-    return m_rootSignature.Get();
+    if (isOriginal()) {
+        return m_rootSignature.Get();
+    }
+    else {
+        return dynamic_cast<MaterialDX*>(m_original.get())->getRootSignature();
+    }
 }
 
 ID3D12PipelineState* MaterialDX::getPipelineState()
 {
-    return m_pipelineState.Get();
+    if (isOriginal()) {
+        return m_pipelineState.Get();
+    }
+    else {
+        return dynamic_cast<MaterialDX*>(m_original.get())->getPipelineState();
+    }
 }
 
 std::vector<UINT> MaterialDX::getCBVHeapOffsets()
@@ -106,62 +120,74 @@ void MaterialDX::createRootSignature()
     }
 
     std::vector<D3D12_ROOT_PARAMETER1> l_rootParameters;
+    size_t                             totalTextures = 0;
+    for (int i = 0; i < m_uniformCollections.size(); i++) {
+        totalTextures += m_uniformCollections[i]->getTextureCount();
+    }
+
+    std::vector<D3D12_DESCRIPTOR_RANGE1> l_cbvRanges(m_uniformCollections.size());
+    std::vector<D3D12_DESCRIPTOR_RANGE1> l_srvRanges(totalTextures);
+    std::vector<D3D12_DESCRIPTOR_RANGE1> l_samplerRanges(totalTextures);
+
     // CBV ranges
     for (int i = 0; i < m_uniformCollections.size(); i++) {
-        D3D12_DESCRIPTOR_RANGE1 l_range{};
-
-        l_range.BaseShaderRegister                = i;
-        l_range.RangeType                         = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
-        l_range.NumDescriptors                    = 1;
-        l_range.RegisterSpace                     = 0;
-        l_range.OffsetInDescriptorsFromTableStart = 0;
-        l_range.Flags                             = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+        l_cbvRanges[i].BaseShaderRegister = i;
+        l_cbvRanges[i].RangeType          = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+        l_cbvRanges[i].NumDescriptors     = 1;
+        l_cbvRanges[i].RegisterSpace      = 0;
+        l_cbvRanges[i].OffsetInDescriptorsFromTableStart = 0;
+        l_cbvRanges[i].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 
         D3D12_ROOT_PARAMETER1 l_rootParameter{};
         l_rootParameter.ParameterType    = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
         l_rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
         l_rootParameter.DescriptorTable.NumDescriptorRanges = 1;
-        l_rootParameter.DescriptorTable.pDescriptorRanges   = &l_range;
+        l_rootParameter.DescriptorTable.pDescriptorRanges   = &l_cbvRanges[i];
         l_rootParameters.push_back(l_rootParameter);
     }
 
     // Texture SRV ranges
-    int l_srvIndex = 0;
+    int l_srvIndex             = 0;
+    int l_currentSrvRangeIndex = 0;
     for (int i = 0; i < m_uniformCollections.size(); i++) {
-        for (int j = 0; j < static_cast<UINT>(m_uniformCollections[0]->getTextureCount());
+        for (int j = 0; j < static_cast<UINT>(m_uniformCollections[i]->getTextureCount());
              j++)
         {
-            D3D12_DESCRIPTOR_RANGE1 l_srvRange = {};
-            l_srvRange.BaseShaderRegister      = l_srvIndex++;
-            l_srvRange.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            l_srvRange.NumDescriptors          = 1;
-            l_srvRange.RegisterSpace           = 0;
-            l_srvRange.OffsetInDescriptorsFromTableStart =
+            l_srvRanges[l_currentSrvRangeIndex].BaseShaderRegister = l_srvIndex++;
+            l_srvRanges[l_currentSrvRangeIndex].RangeType =
+                D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+            l_srvRanges[l_currentSrvRangeIndex].NumDescriptors = 1;
+            l_srvRanges[l_currentSrvRangeIndex].RegisterSpace  = 0;
+            l_srvRanges[l_currentSrvRangeIndex].OffsetInDescriptorsFromTableStart =
                 D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-            l_srvRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+            l_srvRanges[l_currentSrvRangeIndex].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 
             D3D12_ROOT_PARAMETER1 l_rootParameter{};
             l_rootParameter.ParameterType    = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
             l_rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
             l_rootParameter.DescriptorTable.NumDescriptorRanges = 1;
-            l_rootParameter.DescriptorTable.pDescriptorRanges   = &l_srvRange;
+            l_rootParameter.DescriptorTable.pDescriptorRanges =
+                &l_srvRanges[l_currentSrvRangeIndex];
             l_rootParameters.push_back(l_rootParameter);
+            l_currentSrvRangeIndex++;
         }
     }
 
-    int l_samplerIndex = 0;
+    int l_samplerIndex             = 0;
+    int l_currentSamplerRangeIndex = 0;
     for (int i = 0; i < m_uniformCollections.size(); i++) {
-        for (int j = 0; j < static_cast<UINT>(m_uniformCollections[0]->getTextureCount());
+        for (int j = 0; j < static_cast<UINT>(m_uniformCollections[i]->getTextureCount());
              j++)
         {
-            D3D12_DESCRIPTOR_RANGE1 l_samplerRange = {};
-            l_samplerRange.RangeType               = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
-            l_samplerRange.BaseShaderRegister      = l_samplerIndex++;
-            l_samplerRange.NumDescriptors          = 1;
-            l_samplerRange.RegisterSpace           = 0;
-            l_samplerRange.OffsetInDescriptorsFromTableStart =
+            l_samplerRanges[l_currentSamplerRangeIndex].RangeType =
+                D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+            l_samplerRanges[l_currentSamplerRangeIndex].BaseShaderRegister =
+                l_samplerIndex++;
+            l_samplerRanges[l_currentSamplerRangeIndex].NumDescriptors = 1;
+            l_samplerRanges[l_currentSamplerRangeIndex].RegisterSpace  = 0;
+            l_samplerRanges[l_currentSamplerRangeIndex].OffsetInDescriptorsFromTableStart =
                 D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 
@@ -171,8 +197,10 @@ void MaterialDX::createRootSignature()
             l_rootParameterSampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
             l_rootParameterSampler.DescriptorTable.NumDescriptorRanges = 1;
-            l_rootParameterSampler.DescriptorTable.pDescriptorRanges   = &l_samplerRange;
+            l_rootParameterSampler.DescriptorTable.pDescriptorRanges =
+                &l_samplerRanges[l_currentSamplerRangeIndex];
             l_rootParameters.push_back(l_rootParameterSampler);
+            l_currentSamplerRangeIndex++;
         }
     }
 

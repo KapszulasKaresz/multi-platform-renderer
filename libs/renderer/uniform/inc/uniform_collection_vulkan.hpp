@@ -25,11 +25,16 @@ public:
     size_t         getAlignment() const override final;
     UniformSingle* addMember(const std::string& f_name) override final;
 
+    void addTexture(
+        std::shared_ptr<texture::Texture> f_textrue,
+        int                               f_position = -1
+    ) override final;
+
     UniformCollectionVulkan& setShaderstage(vk::ShaderStageFlagBits f_shaderStage);
-    UniformCollectionVulkan& setSet(uint32_t f_set);
-    uint32_t                 getSet() const;
 
     UniformCollectionVulkan& create() override final;
+
+    std::shared_ptr<UniformCollection> deepCopy() const override final;
 
     vk::DescriptorSetLayout  getDescriptorSetLayout() const;
     vk::raii::DescriptorSet& getDescriptorSet();

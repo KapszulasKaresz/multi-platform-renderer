@@ -32,6 +32,8 @@ public:
     std::vector<UINT> getTextureHeapOffsets();
     std::vector<UINT> getTextureHeapSamplerOffsets();
 
+    std::shared_ptr<UniformCollection> deepCopy() const override final;
+
     ~UniformCollectionDX();
 
 private:

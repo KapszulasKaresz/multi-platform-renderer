@@ -10,6 +10,24 @@ Material& Material::setShader(std::string f_shaderPath)
     return *this;
 }
 
+Material& Material::copyMaterial(std::shared_ptr<Material> f_other)
+{
+    m_original = f_other;
+
+    for (int index = 0; index < f_other->m_uniformCollections.size(); ++index) {
+        if (f_other->m_uniformCollections[index]->isUniqueCollection()) {
+            m_uniformCollections.push_back(f_other->m_uniformCollections[index]);
+        }
+        else {
+            m_uniformCollections.push_back(
+                f_other->m_uniformCollections[index]->deepCopy()
+            );
+        }
+    }
+
+    return *this;
+}
+
 Material& Material::addUniformCollection(
     std::shared_ptr<uniform::UniformCollection> f_uniformCollection
 )
@@ -35,6 +53,11 @@ std::shared_ptr<uniform::UniformCollection> Material::getUniformCollection(
     }
 
     throw std::runtime_error("Material::getUniformCollection(...) Uniform not found.");
+}
+
+bool Material::isOriginal() const
+{
+    return !m_original;
 }
 
 void Material::updateUniforms()

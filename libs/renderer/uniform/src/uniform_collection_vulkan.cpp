@@ -18,9 +18,11 @@ UniformCollectionVulkan::UniformCollectionVulkan(
 
 void UniformCollectionVulkan::update()
 {
-    m_uniformBuffers[m_parentDevice->getCurrentFrame()].upload(
-        createStd140Buffer().data(), m_layout.m_structSize
-    );
+    if (m_uniformBuffers.size() > m_parentDevice->getCurrentFrame()) {
+        m_uniformBuffers[m_parentDevice->getCurrentFrame()].upload(
+            createStd140Buffer().data(), m_layout.m_structSize
+        );
+    }
 }
 
 size_t UniformCollectionVulkan::getSize() const
@@ -35,9 +37,21 @@ size_t UniformCollectionVulkan::getAlignment() const
 
 UniformSingle* UniformCollectionVulkan::addMember(const std::string& f_name)
 {
-    m_members.push_back(std::make_unique<UniformSingleVulkan>());
+    m_members.push_back(std::make_shared<UniformSingleVulkan>());
     m_members.back()->setName(f_name);
     return dynamic_cast<UniformSingle*>(m_members.back().get());
+}
+
+void UniformCollectionVulkan::addTexture(
+    std::shared_ptr<texture::Texture> f_textrue,
+    int                               f_position
+)
+{
+    UniformCollection::addTexture(f_textrue, f_position);
+    if (m_valid) {
+        createDescriptorSetLayout();
+        createDescriptorSets();
+    }
 }
 
 UniformCollectionVulkan& UniformCollectionVulkan::setShaderstage(
@@ -51,11 +65,42 @@ UniformCollectionVulkan& UniformCollectionVulkan::setShaderstage(
 UniformCollectionVulkan& UniformCollectionVulkan::create()
 {
     Uniform::create();
-    createDescriptorSetLayout();
     computeStd140Layout();
+    createDescriptorSetLayout();
     createUniformBuffers();
     createDescriptorSets();
     return *this;
+}
+
+std::shared_ptr<UniformCollection> UniformCollectionVulkan::deepCopy() const
+{
+    auto                     l_copy = m_parentDevice->createUniformCollection();
+    UniformCollectionVulkan* l_vulkanCopy =
+        dynamic_cast<UniformCollectionVulkan*>(l_copy.get());
+
+    l_vulkanCopy->setShaderstage(m_shaderStage);
+    l_vulkanCopy->setUnique(isUniqueCollection());
+    l_vulkanCopy->setName(getName());
+
+    for (auto& l_member : m_members) {
+        if (l_member->getType() == UNIFORM_TYPE_STRUCT) {
+            UniformCollection* l_structMember =
+                dynamic_cast<UniformCollection*>(l_member.get());
+
+            l_copy->addMember(l_structMember->deepCopy());
+        }
+        else {
+            l_copy->addMember(l_member->getName())->setType(l_member->getType()).create();
+        }
+    }
+
+    for (auto& l_texture : m_textures) {
+        l_copy->addTexture(l_texture);
+    }
+
+    l_vulkanCopy->create();
+
+    return l_copy;
 }
 
 vk::DescriptorSetLayout UniformCollectionVulkan::getDescriptorSetLayout() const
@@ -126,11 +171,13 @@ void UniformCollectionVulkan::createDescriptorSetLayout()
 {
     std::vector<vk::DescriptorSetLayoutBinding> l_layoutBindings;
 
-    l_layoutBindings.push_back(
-        vk::DescriptorSetLayoutBinding(
-            0, vk::DescriptorType::eUniformBuffer, 1, m_shaderStage, nullptr
-        )
-    );
+    if (m_layout.m_structSize != 0) {
+        l_layoutBindings.push_back(
+            vk::DescriptorSetLayoutBinding(
+                0, vk::DescriptorType::eUniformBuffer, 1, m_shaderStage, nullptr
+            )
+        );
+    }
 
     for (int i = 1; i <= m_textures.size(); i++) {
         texture::TextureVulkan* l_rawVulkanTexture =
@@ -170,6 +217,9 @@ void UniformCollectionVulkan::createUniformBuffers()
     m_uniformBuffers.clear();
     for (int i = 0; i < m_parentDevice->getMaxFramesInFlight(); i++) {
         m_bufferSize = m_layout.m_structSize;
+        if (m_bufferSize == 0) {
+            return;
+        }
         m_uniformBuffers.push_back(
             utils::VmaBuffer(
                 m_parentDevice->getVmaAllocator(),
@@ -197,19 +247,22 @@ void UniformCollectionVulkan::createDescriptorSets()
         m_parentDevice->getLogicalDevice().allocateDescriptorSets(l_allocInfo);
 
     for (size_t i = 0; i < m_parentDevice->getMaxFramesInFlight(); i++) {
-        vk::DescriptorBufferInfo l_bufferInfo{ .buffer = m_uniformBuffers[i].get(),
-                                               .offset = 0,
-                                               .range  = m_layout.m_structSize };
-
         std::vector<vk::WriteDescriptorSet> l_descriptorWrites;
-        l_descriptorWrites.push_back(
-            vk::WriteDescriptorSet{ .dstSet          = m_descriptorSets[i],
-                                    .dstBinding      = 0,
-                                    .dstArrayElement = 0,
-                                    .descriptorCount = 1,
-                                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
-                                    .pBufferInfo     = &l_bufferInfo }
-        );
+        if (m_uniformBuffers.size() > i) {
+            vk::DescriptorBufferInfo l_bufferInfo{ .buffer = m_uniformBuffers[i].get(),
+                                                   .offset = 0,
+                                                   .range  = m_layout.m_structSize };
+
+            l_descriptorWrites.push_back(
+                vk::WriteDescriptorSet{
+                    .dstSet          = m_descriptorSets[i],
+                    .dstBinding      = 0,
+                    .dstArrayElement = 0,
+                    .descriptorCount = 1,
+                    .descriptorType  = vk::DescriptorType::eUniformBuffer,
+                    .pBufferInfo     = &l_bufferInfo }
+            );
+        }
 
         for (int j = 0; j < m_textures.size(); j++) {
             texture::TextureVulkan* l_rawVulkanTexture =

@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 
+#include <tiny_gltf.h>
+
 #include "renderer/render_resource/inc/render_resource.hpp"
 
 namespace renderer {
@@ -35,8 +37,9 @@ public:
     virtual Image& setSize(const glm::ivec2& f_size);
     virtual Image& setWidth(int f_width);
     virtual Image& setHeight(int f_height);
-    virtual Image& createFromFile(std::string_view f_path) = 0;
-    virtual Image& createEmptyImage()                      = 0;
+    virtual Image& createFromFile(std::string_view f_path)                 = 0;
+    virtual Image& createFromGltfImage(const tinygltf::Image& f_gltfImage) = 0;
+    virtual Image& createEmptyImage()                                      = 0;
     virtual Image& generateMipMaps(bool f_generate = true);
 
     virtual Image& create() = 0;
@@ -47,6 +50,8 @@ public:
 
 protected:
     bool isDepthImage() const;
+
+    std::vector<unsigned char> expandToRGBA(const tinygltf::Image& f_gltfImage);
 
     image::ImageFormat m_format{ image::ImageFormat::IMAGE_FORMAT_UNDEFINED };
     image::ColorSpace  m_colorSpace{ image::ColorSpace::COLOR_SPACE_LINEAR };
