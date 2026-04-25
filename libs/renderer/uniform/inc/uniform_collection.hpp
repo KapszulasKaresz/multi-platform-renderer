@@ -15,19 +15,27 @@ namespace uniform {
 class UniformCollection : public Uniform {
 public:
     Uniform& setType(UniformType f_type) override final;
+    Uniform& setUnique(bool f_unique = true);
 
-    void     addMember(std::unique_ptr<Uniform> f_member, int f_position = -1);
+    bool isUniqueCollection() const;
+
+    void     addMember(std::shared_ptr<Uniform> f_member, int f_position = -1);
     Uniform* getMember(std::string_view f_name);
     virtual UniformSingle* addMember(const std::string& f_name) = 0;
 
-    void addTexture(std::shared_ptr<texture::Texture> f_textrue, int f_position = -1);
+    virtual void
+        addTexture(std::shared_ptr<texture::Texture> f_textrue, int f_position = -1);
     texture::Texture* getTexture(std::string_view f_name);
+
+    virtual std::shared_ptr<UniformCollection> deepCopy() const = 0;
 
     int          getTextureCount() const;
     virtual void update() = 0;
 
 protected:
-    std::vector<std::unique_ptr<Uniform>>          m_members;
+    bool m_isUnique{ true };
+
+    std::vector<std::shared_ptr<Uniform>>          m_members;
     std::vector<std::shared_ptr<texture::Texture>> m_textures;
 };
 

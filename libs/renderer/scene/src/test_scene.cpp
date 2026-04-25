@@ -16,11 +16,6 @@
 
 namespace renderer {
 namespace scene {
-TestScene& TestScene::setMaterial(std::shared_ptr<material::Material> f_material)
-{
-    m_material = f_material;
-    return *this;
-}
 
 TestScene& TestScene::setMesh(std::shared_ptr<mesh::TriangleMesh> f_mesh)
 {
@@ -61,6 +56,8 @@ void TestScene::recordCommandBuffer(
     );
 
     m_observer->update(f_deltaTime);
+
+    f_commandBuffer->useViewport({ .m_fullScreen = true });
 
     m_drawVisitor.setCommandBuffer(f_commandBuffer);
     m_rootNode->applyVisitor(&m_drawVisitor);

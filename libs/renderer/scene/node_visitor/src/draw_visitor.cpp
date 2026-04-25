@@ -44,11 +44,22 @@ void DrawVisitor::visit(MeshInstanceNode& f_node)
 
         l_projectionUniform->setValue(m_camera->P());
 
-        m_commandBuffer->useMaterial(f_node.getMaterial());
-        m_commandBuffer->useViewport({ .m_fullScreen = true });
+        if (f_node.getMaterial()->isOriginal()) {
+            m_commandBuffer->useMaterial(f_node.getMaterial());
+        }
+        else {
+            m_commandBuffer->updateUniforms(f_node.getMaterial());
+        }
+
         m_commandBuffer->draw(f_node.getMesh());
     }
 
+    NodeVisitor::visit(f_node);
+}
+
+void DrawVisitor::visit(GltfNode& f_node)
+{
+    m_commandBuffer->useMaterial(f_node.getMaterial());
     NodeVisitor::visit(f_node);
 }
 

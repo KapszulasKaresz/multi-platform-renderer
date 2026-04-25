@@ -22,7 +22,6 @@ namespace scene {
 
 class TestScene : public RenderResource {
 public:
-    TestScene& setMaterial(std::shared_ptr<material::Material> f_material);
     TestScene& setMesh(std::shared_ptr<mesh::TriangleMesh> f_mesh);
     TestScene& create();
 

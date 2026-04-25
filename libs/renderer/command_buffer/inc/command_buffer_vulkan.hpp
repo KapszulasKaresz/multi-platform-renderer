@@ -41,6 +41,9 @@ public:
     CommandBufferVulkan& useMaterial(
         std::shared_ptr<material::Material> f_material
     ) override final;
+    CommandBufferVulkan& updateUniforms(
+        std::shared_ptr<material::Material> f_material
+    ) override final;
     CommandBufferVulkan& useViewport(const ViewportInfo& f_viewportInfo) override final;
     CommandBufferVulkan& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
     CommandBufferVulkan& renderImGui() override final;

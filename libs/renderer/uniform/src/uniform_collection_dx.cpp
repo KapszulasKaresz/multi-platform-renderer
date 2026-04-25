@@ -41,7 +41,7 @@ size_t UniformCollectionDX::getAlignment() const
 
 UniformSingle* UniformCollectionDX::addMember(const std::string& f_name)
 {
-    m_members.push_back(std::make_unique<UniformSingleDX>());
+    m_members.push_back(std::make_shared<UniformSingleDX>());
     m_members.back()->setName(f_name);
     return dynamic_cast<UniformSingle*>(m_members.back().get());
 }
@@ -96,6 +96,11 @@ std::vector<UINT> UniformCollectionDX::getTextureHeapSamplerOffsets()
     }
 
     return l_ret;
+}
+
+std::shared_ptr<UniformCollection> UniformCollectionDX::deepCopy() const
+{
+    return nullptr;   // TODO_MATERIAL: Implement deep copy for UniformCollectionDX
 }
 
 UniformCollectionDX::~UniformCollectionDX()

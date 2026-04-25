@@ -42,6 +42,9 @@ public:
     virtual CommandBuffer& beginRendering(const RenderBeginInfo& f_renderBeginInfo) = 0;
     virtual CommandBuffer& endRendering()                                           = 0;
     virtual CommandBuffer& useMaterial(std::shared_ptr<material::Material> f_material) = 0;
+    virtual CommandBuffer& updateUniforms(
+        std::shared_ptr<material::Material> f_material
+    )                                                                       = 0;
     virtual CommandBuffer& useViewport(const ViewportInfo& f_viewportInfo)  = 0;
     virtual CommandBuffer& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) = 0;
     virtual CommandBuffer& renderImGui()                                    = 0;

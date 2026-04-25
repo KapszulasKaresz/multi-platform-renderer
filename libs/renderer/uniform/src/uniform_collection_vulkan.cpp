@@ -35,9 +35,21 @@ size_t UniformCollectionVulkan::getAlignment() const
 
 UniformSingle* UniformCollectionVulkan::addMember(const std::string& f_name)
 {
-    m_members.push_back(std::make_unique<UniformSingleVulkan>());
+    m_members.push_back(std::make_shared<UniformSingleVulkan>());
     m_members.back()->setName(f_name);
     return dynamic_cast<UniformSingle*>(m_members.back().get());
+}
+
+void UniformCollectionVulkan::addTexture(
+    std::shared_ptr<texture::Texture> f_textrue,
+    int                               f_position
+)
+{
+    UniformCollection::addTexture(f_textrue, f_position);
+    if (m_valid) {
+        createDescriptorSetLayout();
+        createDescriptorSets();
+    }
 }
 
 UniformCollectionVulkan& UniformCollectionVulkan::setShaderstage(
@@ -56,6 +68,37 @@ UniformCollectionVulkan& UniformCollectionVulkan::create()
     createUniformBuffers();
     createDescriptorSets();
     return *this;
+}
+
+std::shared_ptr<UniformCollection> UniformCollectionVulkan::deepCopy() const
+{
+    auto                     l_copy = m_parentDevice->createUniformCollection();
+    UniformCollectionVulkan* l_vulkanCopy =
+        dynamic_cast<UniformCollectionVulkan*>(l_copy.get());
+
+    l_vulkanCopy->setShaderstage(m_shaderStage);
+    l_vulkanCopy->setUnique(isUniqueCollection());
+    l_vulkanCopy->setName(getName());
+
+    for (auto& l_member : m_members) {
+        if (l_member->getType() == UNIFORM_TYPE_STRUCT) {
+            UniformCollection* l_structMember =
+                dynamic_cast<UniformCollection*>(l_member.get());
+
+            l_copy->addMember(l_structMember->deepCopy());
+        }
+        else {
+            l_copy->addMember(l_member->getName())->setType(l_member->getType()).create();
+        }
+    }
+
+    for (auto& l_texture : m_textures) {
+        l_copy->addTexture(l_texture);
+    }
+
+    l_vulkanCopy->create();
+
+    return l_copy;
 }
 
 vk::DescriptorSetLayout UniformCollectionVulkan::getDescriptorSetLayout() const

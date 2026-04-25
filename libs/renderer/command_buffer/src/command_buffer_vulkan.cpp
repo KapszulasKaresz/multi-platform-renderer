@@ -222,12 +222,31 @@ CommandBufferVulkan& CommandBufferVulkan::useMaterial(
             "CommandBufferVulkan::useMaterial(...) non vulkan material provided"
         );
     }
-    l_vulkanMaterial->updateUniforms();
 
     auto& l_commandBuffer = selectCurrentCommandBuffer();
     l_commandBuffer.bindPipeline(
         vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
     );
+
+    updateUniforms(f_material);
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::updateUniforms(
+    std::shared_ptr<material::Material> f_material
+)
+{
+    material::MaterialVulkan* l_vulkanMaterial =
+        dynamic_cast<material::MaterialVulkan*>(f_material.get());
+
+    if (!l_vulkanMaterial) {
+        throw std::runtime_error(
+            "CommandBufferVulkan::updateUniforms(...) non vulkan material provided"
+        );
+    }
+    l_vulkanMaterial->updateUniforms();
+
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
 
     l_commandBuffer.bindDescriptorSets(
         vk::PipelineBindPoint::eGraphics,

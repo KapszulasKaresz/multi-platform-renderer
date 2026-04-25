@@ -16,6 +16,7 @@ public:
     DrawVisitor();
 
     virtual void visit(MeshInstanceNode& f_meshInstanceNode) override;
+    virtual void visit(GltfNode& f_node) override;
 
     void setCommandBuffer(command_buffer::CommandBuffer* f_commandBuffer);
     void setCamera(Camera* f_camera);

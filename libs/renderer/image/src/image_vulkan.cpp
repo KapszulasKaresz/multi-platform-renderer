@@ -177,9 +177,7 @@ ImageVulkan& ImageVulkan::createFromGltfImage(const tinygltf::Image& f_gltfImage
     int l_texHeight   = f_gltfImage.height;
     int l_texChannels = f_gltfImage.component;
 
-    vk::DeviceSize l_imageSize = l_imageSize = l_texWidth * l_texHeight * 4;
-
-    f_gltfImage.image.size();
+    vk::DeviceSize l_imageSize = l_texWidth * l_texHeight * 4;
 
     if (l_texWidth <= 0 || l_texHeight <= 0) {
         throw std::runtime_error(

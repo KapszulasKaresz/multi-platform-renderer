@@ -35,6 +35,8 @@ void GltfNode::loadFromFile(const std::filesystem::path& f_filePath)
 
     m_name = "GLTF Node " + f_filePath.filename().string();
 
+    createDefaultMaterial();
+
     m_children.clear();
 
     bool l_ret =
@@ -290,12 +292,57 @@ std::vector<mesh::Vertex> GltfNode::extractVertices(
     return l_vertices;
 }
 
+void GltfNode::createDefaultMaterial()
+{
+    m_defaultMaterial = rendering_server::RenderingServer::getInstance()
+                            .getMainRenderingDevice()
+                            ->createMaterial();
+
+    auto l_image = rendering_server::RenderingServer::getInstance()
+                       .getMainRenderingDevice()
+                       ->createImage();
+
+    l_image->generateMipMaps()
+        .setSize(glm::ivec2(1, 1))
+        .setFormat(image::ImageFormat::IMAGE_FORMAT_RGBA8_SRGB)
+        .createEmptyImage();
+
+    auto l_texture = rendering_server::RenderingServer::getInstance()
+                         .getMainRenderingDevice()
+                         ->createTexture();
+    l_texture->setImage(l_image).create();
+
+    auto l_uniformCollection = rendering_server::RenderingServer::getInstance()
+                                   .getMainRenderingDevice()
+                                   ->createUniformCollection();
+    l_uniformCollection->setUnique(false);
+    l_uniformCollection->addMember("model")
+        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+        .create();
+
+    l_uniformCollection->addMember("view")
+        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+        .create();
+
+    l_uniformCollection->addMember("proj")
+        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
+        .create();
+
+    l_uniformCollection->addTexture(l_texture);
+    l_uniformCollection->setName("Camera").create();
+
+    m_defaultMaterial->setShader("res/shaders/shader")
+        .addUniformCollection(l_uniformCollection)
+        .create();
+}
+
 std::shared_ptr<material::Material>
     GltfNode::createMaterial(const tinygltf::Model& f_model, int f_materialIndex)
 {
     auto l_materialRet = rendering_server::RenderingServer::getInstance()
                              .getMainRenderingDevice()
                              ->createMaterial();
+    l_materialRet->copyMaterial(m_defaultMaterial).create();
 
     const auto& l_material             = f_model.materials[f_materialIndex];
     const auto& l_pbrMetallicRoughness = l_material.pbrMetallicRoughness;
@@ -321,27 +368,11 @@ std::shared_ptr<material::Material>
                          ->createTexture();
     l_texture->setImage(l_image).create();
 
-    auto l_uniformCollection = rendering_server::RenderingServer::getInstance()
-                                   .getMainRenderingDevice()
-                                   ->createUniformCollection();
-    l_uniformCollection->addMember("model")
-        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
-        .create();
+    auto l_uniformCollection = l_materialRet->getUniformCollection("Camera");
+    if (l_uniformCollection) {
+        l_uniformCollection->addTexture(l_texture, 0);
+    }
 
-    l_uniformCollection->addMember("view")
-        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
-        .create();
-
-    l_uniformCollection->addMember("proj")
-        ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
-        .create();
-
-    l_uniformCollection->addTexture(l_texture);
-    l_uniformCollection->setName("Camera").create();
-
-    l_materialRet->setShader("res/shaders/shader")
-        .addUniformCollection(l_uniformCollection)
-        .create();
     return l_materialRet;
 }
 
@@ -350,6 +381,11 @@ void GltfNode::applyVisitor(NodeVisitor* f_visitor)
     if ((f_visitor->getMask() & m_visitorMask) != 0) {
         f_visitor->visit(*this);
     }
+}
+
+std::shared_ptr<material::Material> GltfNode::getMaterial() const
+{
+    return m_defaultMaterial;
 }
 
 }   // namespace scene

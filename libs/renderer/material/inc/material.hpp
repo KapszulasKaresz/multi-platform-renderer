@@ -14,6 +14,7 @@ namespace material {
 class Material : public RenderResource {
 public:
     virtual Material& setShader(std::string f_shaderPath);
+    virtual Material& copyMaterial(std::shared_ptr<Material> f_other);
     virtual Material& create() = 0;
     virtual Material& addUniformCollection(
         std::shared_ptr<uniform::UniformCollection> f_uniformCollection
@@ -23,12 +24,16 @@ public:
         std::string_view f_name
     );
 
+    bool isOriginal() const;
+
     void updateUniforms();
 
 protected:
     std::vector<std::shared_ptr<uniform::UniformCollection>> m_uniformCollections;
 
     std::string m_shaderLocation{ "" };
+
+    std::shared_ptr<Material> m_original{ nullptr };
 };
 }   // namespace material
 }   // namespace  renderer

@@ -196,6 +196,14 @@ CommandBufferDX& CommandBufferDX::useMaterial(
     return *this;
 }
 
+CommandBufferDX& CommandBufferDX::updateUniforms(
+    std::shared_ptr<material::Material> f_material
+)
+{
+    // TODO_MATERIAL
+    return *this;
+}
+
 CommandBufferDX& CommandBufferDX::useViewport(const ViewportInfo& f_viewportInfo)
 {
     auto l_commandList = selectCommandList();

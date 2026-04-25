@@ -24,6 +24,8 @@ public:
 
     virtual void applyVisitor(NodeVisitor* f_visitor) override;
 
+    std::shared_ptr<material::Material> getMaterial() const;
+
     virtual ~GltfNode() = default;
 
 protected:
@@ -42,6 +44,10 @@ protected:
         const tinygltf::Model&     f_model,
         const tinygltf::Primitive& f_primitive
     );
+
+    void createDefaultMaterial();
+
+    std::shared_ptr<material::Material> m_defaultMaterial{ nullptr };
 
     std::shared_ptr<material::Material>
         createMaterial(const tinygltf::Model& f_model, int f_materialIndex);
