@@ -13,6 +13,7 @@
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/texture/inc/texture_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_array_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
@@ -103,6 +104,11 @@ std::shared_ptr<uniform::UniformCollection>
     RenderingDeviceVulkan::createUniformCollection()
 {
     return std::make_shared<uniform::UniformCollectionVulkan>(this);
+}
+
+std::shared_ptr<uniform::UniformArray> RenderingDeviceVulkan::createUniformArray()
+{
+    return std::make_shared<uniform::UniformArrayVulkan>(this);
 }
 
 std::shared_ptr<texture::Texture> RenderingDeviceVulkan::createTexture()
@@ -589,9 +595,9 @@ void RenderingDeviceVulkan::createVmaAllocator()
 void RenderingDeviceVulkan::createDescriptorPool()
 {
     std::array l_poolSize = {
-        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, maxFramesInFlight * 2),
+        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, maxFramesInFlight * 200),
         vk::DescriptorPoolSize(
-            vk::DescriptorType::eCombinedImageSampler, maxFramesInFlight * 2
+            vk::DescriptorType::eCombinedImageSampler, maxFramesInFlight * 200
         )
     };
     vk::DescriptorPoolCreateInfo l_poolInfo{

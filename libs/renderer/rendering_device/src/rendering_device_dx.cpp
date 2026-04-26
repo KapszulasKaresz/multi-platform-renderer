@@ -89,6 +89,12 @@ std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformColl
     return std::make_shared<uniform::UniformCollectionDX>(this);
 }
 
+std::shared_ptr<uniform::UniformArray> RenderingDeviceDX::createUniformArray()
+{
+    throw std::runtime_error("RenderingDeviceDX::createUniformArray() not implemented");
+    return nullptr;   // TODO: Implement UniformArrayDX
+}
+
 std::shared_ptr<texture::Texture> RenderingDeviceDX::createTexture()
 {
     return std::make_shared<texture::TextureDX>(this);

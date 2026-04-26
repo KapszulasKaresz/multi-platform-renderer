@@ -5,6 +5,7 @@
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_array_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/utils/inc/utils.hpp"
 
@@ -61,6 +62,15 @@ std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
 
         if (l_rawCollection != nullptr) {
             l_ret.push_back(l_rawCollection->getDescriptorSet());
+        }
+    }
+
+    for (const auto& l_array : m_uniformArrays) {
+        uniform::UniformArrayVulkan* l_rawArray =
+            dynamic_cast<uniform::UniformArrayVulkan*>(l_array.get());
+
+        if (l_rawArray != nullptr) {
+            l_ret.push_back(l_rawArray->getDescriptorSet());
         }
     }
 
@@ -155,6 +165,15 @@ void MaterialVulkan::createPipeline()
 
         if (l_rawCollection != nullptr) {
             l_descriptorSetLayouts.push_back(l_rawCollection->getDescriptorSetLayout());
+        }
+    }
+
+    for (const auto& l_array : m_uniformArrays) {
+        uniform::UniformArrayVulkan* l_rawArray =
+            dynamic_cast<uniform::UniformArrayVulkan*>(l_array.get());
+
+        if (l_rawArray != nullptr) {
+            l_descriptorSetLayouts.push_back(l_rawArray->getDescriptorSetLayout());
         }
     }
 

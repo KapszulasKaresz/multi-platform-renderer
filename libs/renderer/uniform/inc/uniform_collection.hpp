@@ -14,8 +14,10 @@ namespace renderer {
 namespace uniform {
 class UniformCollection : public Uniform {
 public:
-    Uniform& setType(UniformType f_type) override final;
-    Uniform& setUnique(bool f_unique = true);
+    UniformCollection();
+
+    UniformCollection& setType(UniformType f_type) override final;
+    UniformCollection& setUnique(bool f_unique = true);
 
     bool isUniqueCollection() const;
 

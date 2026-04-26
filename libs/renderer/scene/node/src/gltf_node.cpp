@@ -12,6 +12,7 @@
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
+#include "renderer/uniform/inc/uniform_array.hpp"
 
 namespace renderer {
 namespace scene {
@@ -338,9 +339,55 @@ void GltfNode::createDefaultMaterial()
     l_uniformCollectionObject->addTexture(l_texture);
     l_uniformCollectionObject->setName("Object").create();
 
+    auto l_lightArray = rendering_server::RenderingServer::getInstance()
+                            .getMainRenderingDevice()
+                            ->createUniformArray();
+
+    l_lightArray->setMaxElementCount(10).setName("Lights");
+
+    auto l_light0 = rendering_server::RenderingServer::getInstance()
+                        .getMainRenderingDevice()
+                        ->createUniformCollection();
+    l_light0->addMember("position")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(0.0f, 10.0f, 0.0f, 1.0f))
+        .create();
+
+    l_light0->addMember("emission")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
+        .create();
+
+    l_light0->setName("Light0")
+        .setType(renderer::uniform::UNIFORM_TYPE_ARRAY_MEMBER)
+        .create();
+
+    l_lightArray->addElement(l_light0);
+
+    auto l_light1 = rendering_server::RenderingServer::getInstance()
+                        .getMainRenderingDevice()
+                        ->createUniformCollection();
+    l_light1->addMember("position")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(10.0f, 10.0f, 0.0f, 1.0f))
+        .create();
+
+    l_light1->addMember("emission")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
+        .create();
+
+    l_light1->setName("Light1")
+        .setType(renderer::uniform::UNIFORM_TYPE_ARRAY_MEMBER)
+        .create();
+
+    l_lightArray->addElement(l_light1);
+
+    l_lightArray->create();
     m_defaultMaterial->setShader("res/shaders/shader")
         .addUniformCollection(l_uniformCollectionCamera)
         .addUniformCollection(l_uniformCollectionObject)
+        .addUniformArray(l_lightArray)
         .create();
 }
 

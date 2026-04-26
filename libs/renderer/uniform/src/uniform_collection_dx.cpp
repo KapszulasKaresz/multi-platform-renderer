@@ -224,6 +224,16 @@ std::vector<uint8_t> UniformCollectionDX::createCPUBuffer()
                 m_members[i]->getSize()
             );
         }
+        else {
+            UniformCollectionDX* l_structMember =
+                dynamic_cast<UniformCollectionDX*>(m_members[i].get());
+            std::vector<uint8_t> l_structBuffer = l_structMember->createCPUBuffer();
+            std::memcpy(
+                l_buffer.data() + m_layout.m_offsets[i],
+                l_structBuffer.data(),
+                l_structBuffer.size()
+            );
+        }
     }
 
     return l_buffer;

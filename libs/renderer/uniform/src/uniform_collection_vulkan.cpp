@@ -66,9 +66,13 @@ UniformCollectionVulkan& UniformCollectionVulkan::create()
 {
     Uniform::create();
     computeStd140Layout();
-    createDescriptorSetLayout();
+    if (m_type == UNIFORM_TYPE_STRUCT) {
+        createDescriptorSetLayout();
+    }
     createUniformBuffers();
-    createDescriptorSets();
+    if (m_type == UNIFORM_TYPE_STRUCT) {
+        createDescriptorSets();
+    }
     return *this;
 }
 
@@ -111,6 +115,11 @@ vk::DescriptorSetLayout UniformCollectionVulkan::getDescriptorSetLayout() const
 vk::raii::DescriptorSet& UniformCollectionVulkan::getDescriptorSet()
 {
     return m_descriptorSets[m_parentDevice->getCurrentFrame()];
+}
+
+utils::VmaBuffer& UniformCollectionVulkan::getUniformBuffer(size_t f_index)
+{
+    return m_uniformBuffers[f_index];
 }
 
 namespace {
@@ -327,6 +336,16 @@ std::vector<uint8_t> UniformCollectionVulkan::createStd140Buffer()
                 l_buffer.data() + m_layout.m_offsets[i],
                 l_rawMember->valueAsVoid(),
                 m_members[i]->getSize()
+            );
+        }
+        else {
+            UniformCollectionVulkan* l_structMember =
+                dynamic_cast<UniformCollectionVulkan*>(m_members[i].get());
+            std::vector<uint8_t> l_structBuffer = l_structMember->createStd140Buffer();
+            std::memcpy(
+                l_buffer.data() + m_layout.m_offsets[i],
+                l_structBuffer.data(),
+                l_structBuffer.size()
             );
         }
     }
