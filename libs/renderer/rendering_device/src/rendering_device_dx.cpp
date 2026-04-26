@@ -345,7 +345,7 @@ void RenderingDeviceDX::createRenderTargetWindow()
     m_renderTargetWindow = std::make_shared<render_target::RenderTargetWindowDX>(this);
     m_renderTargetWindow->setWindow(m_window)
         .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8)
-        .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
+        .setColorSpace(image::ColorSpace::COLOR_SPACE_LINEAR)
         .setDepthBuffer(true)
         .create();
 }

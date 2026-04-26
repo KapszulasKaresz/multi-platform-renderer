@@ -394,8 +394,8 @@ void RenderingDeviceVulkan::createRenderTargetWindow()
             m_parentApi->getNativeHandle()
         )
         .setWindow(m_window)
-        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8_SRGB)
-        .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
+        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8)
+        .setColorSpace(image::ColorSpace::COLOR_SPACE_LINEAR)
         .setDepthBuffer(true)
         .create();
 }
