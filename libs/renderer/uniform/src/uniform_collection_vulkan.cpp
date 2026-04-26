@@ -69,7 +69,9 @@ UniformCollectionVulkan& UniformCollectionVulkan::create()
     if (m_type == UNIFORM_TYPE_STRUCT) {
         createDescriptorSetLayout();
     }
-    createUniformBuffers();
+    if (m_type != UNIFORM_TYPE_STRUCT_MEMBER) {
+        createUniformBuffers();
+    }
     if (m_type == UNIFORM_TYPE_STRUCT) {
         createDescriptorSets();
     }
@@ -329,7 +331,10 @@ std::vector<uint8_t> UniformCollectionVulkan::createStd140Buffer()
     std::vector<uint8_t> l_buffer(m_layout.m_structSize, 0);
 
     for (size_t i = 0; i < m_members.size(); i++) {
-        if (m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT) {
+        if (m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT
+            && m_members[i]->getType() != UniformType::UNIFORM_TYPE_ARRAY_MEMBER
+            && m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT_MEMBER)
+        {
             uniform::UniformSingle* l_rawMember =
                 dynamic_cast<uniform::UniformSingle*>(m_members[i].get());
             std::memcpy(

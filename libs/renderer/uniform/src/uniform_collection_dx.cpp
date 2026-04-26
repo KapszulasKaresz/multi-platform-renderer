@@ -36,7 +36,7 @@ size_t UniformCollectionDX::getSize() const
 
 size_t UniformCollectionDX::getAlignment() const
 {
-    return 256;
+    return m_type == UNIFORM_TYPE_STRUCT ? 256 : 16;
 }
 
 UniformSingle* UniformCollectionDX::addMember(const std::string& f_name)
@@ -49,7 +49,9 @@ UniformSingle* UniformCollectionDX::addMember(const std::string& f_name)
 UniformCollectionDX& UniformCollectionDX::create()
 {
     computeLayout();
-    createBuffer();
+    if (m_type != UNIFORM_TYPE_STRUCT_MEMBER) {
+        createBuffer();
+    }
     m_valid = true;
     return *this;
 }
@@ -198,16 +200,14 @@ void UniformCollectionDX::computeLayout()
         l_registerOffset += l_size;
 
         // Advance to next 16-byte block if filled
-        if (l_registerOffset >= 16) {
-            l_offset         = utils::alignUp(l_offset + l_registerOffset, 16);
-            l_registerOffset = 0;
-        }
+        l_offset         = utils::alignUp(l_offset + l_registerOffset, 16);
+        l_registerOffset = 0;
     }
 
     // Struct size rounded up to nearest 16
     size_t l_structSize = utils::alignUp(l_offset + l_registerOffset, 16);
 
-    m_layout.m_structSize = utils::alignUp(l_structSize, 256);
+    m_layout.m_structSize = utils::alignUp(l_structSize, getAlignment());
 }
 
 std::vector<uint8_t> UniformCollectionDX::createCPUBuffer()
@@ -215,7 +215,10 @@ std::vector<uint8_t> UniformCollectionDX::createCPUBuffer()
     std::vector<uint8_t> l_buffer(m_layout.m_structSize, 0);
 
     for (size_t i = 0; i < m_members.size(); i++) {
-        if (m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT) {
+        if (m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT
+            && m_members[i]->getType() != UniformType::UNIFORM_TYPE_ARRAY_MEMBER
+            && m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT_MEMBER)
+        {
             uniform::UniformSingle* l_rawMember =
                 dynamic_cast<uniform::UniformSingle*>(m_members[i].get());
             std::memcpy(

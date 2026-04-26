@@ -12,11 +12,13 @@ UniformCollection::UniformCollection() : Uniform()
 
 UniformCollection& UniformCollection::setType(UniformType f_type)
 {
-    if (f_type != UNIFORM_TYPE_STRUCT && f_type != UNIFORM_TYPE_ARRAY_MEMBER) {
+    if (f_type != UNIFORM_TYPE_STRUCT && f_type != UNIFORM_TYPE_ARRAY_MEMBER
+        && f_type != UNIFORM_TYPE_STRUCT_MEMBER)
+    {
         throw std::
             runtime_error(
                 "UniformCollection::setType(UniformType f_type) UniformCollection can "
-                "only " "be of type STRUCT or ARRAY_MEMBER"
+                "only " "be of type STRUCT or ARRAY_MEMBER or STRUCT_MEMBER"
             );
     }
     m_type = f_type;

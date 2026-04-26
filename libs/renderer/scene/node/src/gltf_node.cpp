@@ -341,9 +341,9 @@ void GltfNode::createDefaultMaterial()
 
     auto l_lightArray = rendering_server::RenderingServer::getInstance()
                             .getMainRenderingDevice()
-                            ->createUniformArray();
+                            ->createUniformCollection();
 
-    l_lightArray->setMaxElementCount(10).setName("Lights");
+    l_lightArray->setName("Lights");
 
     auto l_light0 = rendering_server::RenderingServer::getInstance()
                         .getMainRenderingDevice()
@@ -358,11 +358,16 @@ void GltfNode::createDefaultMaterial()
         .setValue(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
         .create();
 
-    l_light0->setName("Light0")
-        .setType(renderer::uniform::UNIFORM_TYPE_ARRAY_MEMBER)
+    l_light0->setName("Light_0")
+        .setType(renderer::uniform::UNIFORM_TYPE_STRUCT_MEMBER)
         .create();
 
-    l_lightArray->addElement(l_light0);
+    l_lightArray->addMember("lightCount")
+        ->setType(renderer::uniform::UNIFORM_TYPE_INT)
+        .setValue(2)
+        .create();
+
+    l_lightArray->addMember(l_light0);
 
     auto l_light1 = rendering_server::RenderingServer::getInstance()
                         .getMainRenderingDevice()
@@ -377,17 +382,17 @@ void GltfNode::createDefaultMaterial()
         .setValue(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
         .create();
 
-    l_light1->setName("Light1")
-        .setType(renderer::uniform::UNIFORM_TYPE_ARRAY_MEMBER)
+    l_light1->setName("Light_1")
+        .setType(renderer::uniform::UNIFORM_TYPE_STRUCT_MEMBER)
         .create();
 
-    l_lightArray->addElement(l_light1);
+    l_lightArray->addMember(l_light1);
 
     l_lightArray->create();
     m_defaultMaterial->setShader("res/shaders/shader")
         .addUniformCollection(l_uniformCollectionCamera)
         .addUniformCollection(l_uniformCollectionObject)
-        .addUniformArray(l_lightArray)
+        .addUniformCollection(l_lightArray)
         .create();
 }
 

@@ -36,6 +36,12 @@ struct UniformBufferLightCount
     int lightCount;
 };
 
+struct UniformBufferLightArray
+{
+    int lightCount;
+    UniformBufferLight lights[2];
+};
+
 [vk::binding(0, 0)]
 ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
 
@@ -43,10 +49,7 @@ ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
 ConstantBuffer<UniformBufferObject> object : register(b1, space0);
 
 [vk::binding(0, 2)]
-ConstantBuffer<UniformBufferLightCount> lightCount : register(b2, space0);
-
-[vk::binding(1, 2)]
-ConstantBuffer<UniformBufferLight> lights[10] : register(b2, space1);
+ConstantBuffer<UniformBufferLightArray> lightArray : register(b2, space0);
 
 [shader("vertex")]
 VSOutput vertMain(VSInput input) {
@@ -74,8 +77,8 @@ float4 fragMain(VSOutput vertIn) : SV_TARGET {
     float3 ambientLight = float3(0.1, 0.1, 0.1); 
     float3 diffuseLight = float3(0.0, 0.0, 0.0);
     
-    for (int i = 0; i < lightCount.lightCount; ++i) {
-        UniformBufferLight light = lights[i];
+    for (int i = 0; i < lightArray.lightCount; ++i) {
+        UniformBufferLight light = lightArray.lights[i];
         
         float3 lightDir = normalize(light.position.xyz - vertIn.worldPos);
         
