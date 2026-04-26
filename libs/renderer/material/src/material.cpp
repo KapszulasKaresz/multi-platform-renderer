@@ -93,6 +93,10 @@ void Material::updateUniforms()
     for (const auto& l_uniform : m_uniformCollections) {
         l_uniform->update();
     }
+
+    for (const auto& l_array : m_uniformArrays) {
+        l_array->update();
+    }
 }
 
 }   // namespace material

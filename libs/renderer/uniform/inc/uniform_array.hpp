@@ -18,7 +18,8 @@ public:
     size_t        getMaxElementCount() const;
 
     UniformArray& addElement(std::shared_ptr<UniformCollection> f_element);
-    UniformArray& removeElement(size_t f_index);
+    UniformArray& removeLastElement();
+    UniformArray& resize(size_t f_newElementCount);
     size_t        getCurrentElementCount() const;
 
     std::shared_ptr<UniformCollection> getElement(size_t f_index);

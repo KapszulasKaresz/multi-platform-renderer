@@ -56,20 +56,34 @@ UniformArray& UniformArray::addElement(std::shared_ptr<UniformCollection> f_elem
                 "type does not match UNIFORM_TYPE_ARRAY_MEMBER"
             );
     }
+    if (m_valid) {
+        throw std::runtime_error(
+            "UniformArray::addElement(std::shared_ptr<UniformCollection> f_element) "
+            "cannot add elements to an already created UniformArray"
+        );
+    }
     m_elements.push_back(std::move(f_element));
     m_currentElementCount++;
     return *this;
 }
 
-UniformArray& UniformArray::removeElement(size_t f_index)
+UniformArray& UniformArray::removeLastElement()
 {
-    if (f_index >= m_currentElementCount) {
+    if (m_currentElementCount > 0) {
+        m_currentElementCount--;
+    }
+    return *this;
+}
+
+UniformArray& UniformArray::resize(size_t f_newElementCount)
+{
+    if (f_newElementCount > m_maxElementCount) {
         throw std::runtime_error(
-            "UniformArray::removeElement(size_t f_index) index out of bounds"
+            "UniformArray::resize(size_t f_newElementCount) new element count cannot "
+            "exceed max element count"
         );
     }
-    m_elements.erase(m_elements.begin() + f_index);
-    m_currentElementCount--;
+    m_currentElementCount = f_newElementCount;
     return *this;
 }
 

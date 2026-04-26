@@ -34,6 +34,12 @@ UniformArrayVulkan& UniformArrayVulkan::create()
         .create();
     m_elementCountCollection->create();
 
+    if (m_currentElementCount > 0) {
+        for (int i = m_currentElementCount; i < m_maxElementCount; ++i) {
+            m_elements.push_back(m_elements[0]->deepCopy());
+        }
+    }
+
     createDescriptorSetLayout();
     createDescriptorSets();
     m_valid = true;
@@ -66,7 +72,7 @@ vk::DescriptorSetLayout UniformArrayVulkan::getDescriptorSetLayout() const
 
 vk::raii::DescriptorSet& UniformArrayVulkan::getDescriptorSet()
 {
-    return m_descriptorSets[0];
+    return m_descriptorSets[m_parentDevice->getCurrentFrame()];
 }
 
 void UniformArrayVulkan::createDescriptorSetLayout()
@@ -141,7 +147,7 @@ void UniformArrayVulkan::createDescriptorSets()
 
         for (size_t j = 0; j < m_maxElementCount; ++j) {
             UniformCollectionVulkan* l_collection =
-                dynamic_cast<UniformCollectionVulkan*>(m_elements[i].get());
+                dynamic_cast<UniformCollectionVulkan*>(m_elements[j].get());
 
             l_bufferInfos[j] = vk::DescriptorBufferInfo{
                 .buffer = l_collection->getUniformBuffer(i).get(),
