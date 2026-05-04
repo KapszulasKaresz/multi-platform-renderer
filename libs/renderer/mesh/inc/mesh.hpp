@@ -14,7 +14,7 @@ namespace mesh {
 struct Vertex {
     glm::vec3 m_position{ 0.0f, 0.0f, 0.0f };
     glm::vec3 m_normal{ 0.0f, 0.0f, 0.0f };
-    glm::vec3 m_tangent{ 0.0f, 0.0f, 0.0f };
+    glm::vec4 m_tangent{ 0.0f, 0.0f, 0.0f, 0.0f };
     glm::vec2 m_texCoord{ 0.0f, 0.0f };
     glm::vec3 m_color{ 0.0f, 0.0f, 0.0f };
 

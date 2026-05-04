@@ -215,7 +215,9 @@ ImageVulkan& ImageVulkan::createFromGltfImage(const tinygltf::Image& f_gltfImage
         l_stagingBuffer.upload(f_gltfImage.image.data(), l_imageSize);
     }
 
-    m_format   = IMAGE_FORMAT_RGBA8_SRGB;
+    if (m_format == IMAGE_FORMAT_UNDEFINED) {
+        m_format = IMAGE_FORMAT_RGBA8_SRGB;
+    }
     m_vkFormat = convertToVkFormat(m_format);
     m_size.x   = l_texWidth;
     m_size.y   = l_texHeight;

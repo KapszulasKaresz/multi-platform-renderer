@@ -16,7 +16,7 @@ std::array<vk::VertexInputAttributeDescription, 5> Vertex::getAttributeDescripti
                  1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, m_normal)
              ),
              vk::VertexInputAttributeDescription(
-                 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, m_tangent)
+                 2, 0, vk::Format::eR32G32B32A32Sfloat, offsetof(Vertex, m_tangent)
              ),
              vk::VertexInputAttributeDescription(
                  3, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, m_texCoord)

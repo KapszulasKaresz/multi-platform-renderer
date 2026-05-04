@@ -245,19 +245,22 @@ std::vector<mesh::Vertex> GltfNode::extractVertices(
         return true;
     };
 
-    const uint8_t* l_posData     = nullptr;
-    size_t         l_posStride   = 0;
-    const uint8_t* l_normData    = nullptr;
-    size_t         l_normStride  = 0;
-    const uint8_t* l_texData     = nullptr;
-    size_t         l_texStride   = 0;
-    const uint8_t* l_colorData   = nullptr;
-    size_t         l_colorStride = 0;
+    const uint8_t* l_posData       = nullptr;
+    size_t         l_posStride     = 0;
+    const uint8_t* l_normData      = nullptr;
+    size_t         l_normStride    = 0;
+    const uint8_t* l_tangentData   = nullptr;
+    size_t         l_tangentStride = 0;
+    const uint8_t* l_texData       = nullptr;
+    size_t         l_texStride     = 0;
+    const uint8_t* l_colorData     = nullptr;
+    size_t         l_colorStride   = 0;
 
-    bool hasPos   = getAttributeData("POSITION", l_posData, l_posStride);
-    bool hasNorm  = getAttributeData("NORMAL", l_normData, l_normStride);
-    bool hasTex   = getAttributeData("TEXCOORD_0", l_texData, l_texStride);
-    bool hasColor = getAttributeData("COLOR_0", l_colorData, l_colorStride);
+    bool hasPos     = getAttributeData("POSITION", l_posData, l_posStride);
+    bool hasNorm    = getAttributeData("NORMAL", l_normData, l_normStride);
+    bool hasTangent = getAttributeData("TANGENT", l_tangentData, l_tangentStride);
+    bool hasTex     = getAttributeData("TEXCOORD_0", l_texData, l_texStride);
+    bool hasColor   = getAttributeData("COLOR_0", l_colorData, l_colorStride);
 
     for (size_t i = 0; i < l_vertexCount; ++i) {
         mesh::Vertex& l_vertex = l_vertices[i];
@@ -275,6 +278,11 @@ std::vector<mesh::Vertex> GltfNode::extractVertices(
             const float* norm =
                 reinterpret_cast<const float*>(l_normData + i * l_normStride);
             l_vertex.m_normal = glm::vec3(norm[0], norm[1], norm[2]);
+        }
+        if (hasTangent) {
+            const float* tangent =
+                reinterpret_cast<const float*>(l_tangentData + i * l_tangentStride);
+            l_vertex.m_tangent = glm::vec4(tangent[0], tangent[1], tangent[2], tangent[3]);
         }
         if (hasTex) {
             const float* tex = reinterpret_cast<const float*>(l_texData + i * l_texStride);
@@ -419,34 +427,87 @@ std::shared_ptr<material::Material>
 
     const auto& l_material             = f_model.materials[f_materialIndex];
     const auto& l_pbrMetallicRoughness = l_material.pbrMetallicRoughness;
+    const auto& l_normalTexture        = l_material.normalTexture;
 
-    auto l_image = rendering_server::RenderingServer::getInstance()
-                       .getMainRenderingDevice()
-                       ->createImage();
+    auto l_imageAlbedo = rendering_server::RenderingServer::getInstance()
+                             .getMainRenderingDevice()
+                             ->createImage();
 
-    if (l_pbrMetallicRoughness.baseColorTexture.index != -1) {
-        const auto& l_texture =
-            f_model.textures[l_pbrMetallicRoughness.baseColorTexture.index];
-        const auto& l_imageData = f_model.images[l_texture.source];
-        l_image->generateMipMaps().createFromGltfImage(l_imageData);
+    auto l_imageMetallicRoughness = rendering_server::RenderingServer::getInstance()
+                                        .getMainRenderingDevice()
+                                        ->createImage();
 
+    auto l_imageNormal = rendering_server::RenderingServer::getInstance()
+                             .getMainRenderingDevice()
+                             ->createImage();
+
+    if (l_normalTexture.index != -1) {
+        const auto& l_textureNormal   = f_model.textures[l_normalTexture.index];
+        const auto& l_imageDataNormal = f_model.images[l_textureNormal.source];
+        l_imageNormal->generateMipMaps()
+            .setFormat(image::IMAGE_FORMAT_RGBA8)
+            .setColorSpace(image::COLOR_SPACE_LINEAR)
+            .createFromGltfImage(l_imageDataNormal);
         // TODO sampler
     }
     else {
-        l_image->generateMipMaps()
+        l_imageNormal->generateMipMaps()
             .setSize(glm::ivec2(1, 1))
             .setFormat(image::IMAGE_FORMAT_RGBA8)
             .createEmptyImage();
     }
 
-    auto l_texture = rendering_server::RenderingServer::getInstance()
-                         .getMainRenderingDevice()
-                         ->createTexture();
-    l_texture->setImage(l_image).create();
+    if (l_pbrMetallicRoughness.baseColorTexture.index != -1) {
+        const auto& l_textureAlbedo =
+            f_model.textures[l_pbrMetallicRoughness.baseColorTexture.index];
+        const auto& l_imageDataAlbedo = f_model.images[l_textureAlbedo.source];
+        l_imageAlbedo->generateMipMaps().createFromGltfImage(l_imageDataAlbedo);
+        // TODO sampler
+    }
+    else {
+        l_imageAlbedo->generateMipMaps()
+            .setSize(glm::ivec2(1, 1))
+            .setFormat(image::IMAGE_FORMAT_RGBA8)
+            .createEmptyImage();
+    }
+
+    if (l_pbrMetallicRoughness.metallicRoughnessTexture.index != -1) {
+        const auto& l_textureMetallicRoughness =
+            f_model.textures[l_pbrMetallicRoughness.metallicRoughnessTexture.index];
+        const auto& l_imageDataMetallicRoughness =
+            f_model.images[l_textureMetallicRoughness.source];
+        l_imageMetallicRoughness->generateMipMaps().createFromGltfImage(
+            l_imageDataMetallicRoughness
+        );
+        // TODO sampler
+    }
+    else {
+        l_imageMetallicRoughness->generateMipMaps()
+            .setSize(glm::ivec2(1, 1))
+            .setFormat(image::IMAGE_FORMAT_RGBA8)
+            .createEmptyImage();
+    }
+
+    auto l_textureAlbedo = rendering_server::RenderingServer::getInstance()
+                               .getMainRenderingDevice()
+                               ->createTexture();
+    l_textureAlbedo->setImage(l_imageAlbedo).create();
+
+    auto l_textureMetallicRoughness = rendering_server::RenderingServer::getInstance()
+                                          .getMainRenderingDevice()
+                                          ->createTexture();
+    l_textureMetallicRoughness->setImage(l_imageMetallicRoughness).create();
+
+    auto l_textureNormal = rendering_server::RenderingServer::getInstance()
+                               .getMainRenderingDevice()
+                               ->createTexture();
+    l_textureNormal->setImage(l_imageNormal).create();
 
     auto l_uniformCollection = l_materialRet->getUniformCollection("Object");
     if (l_uniformCollection) {
-        l_uniformCollection->addTexture(l_texture, 0);
+        l_uniformCollection->addTexture(l_textureAlbedo, 0);
+        l_uniformCollection->addTexture(l_textureMetallicRoughness, 1);
+        l_uniformCollection->addTexture(l_textureNormal, 2);
     }
 
     return l_materialRet;

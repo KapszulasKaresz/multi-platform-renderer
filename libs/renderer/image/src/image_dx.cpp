@@ -275,7 +275,9 @@ ImageDX& ImageDX::createFromGltfImage(const tinygltf::Image& f_gltfImage)
         throw std::runtime_error("ImageDX::createFromGltfImage: Invalid image dimensions");
     }
 
-    m_format = IMAGE_FORMAT_RGBA8_SRGB;
+    if (m_format == IMAGE_FORMAT_UNDEFINED) {
+        m_format = IMAGE_FORMAT_RGBA8_SRGB;
+    }
     m_size.x = l_texWidth;
     m_size.y = l_texHeight;
 

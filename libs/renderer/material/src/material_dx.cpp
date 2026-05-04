@@ -323,24 +323,24 @@ std::array<D3D12_INPUT_ELEMENT_DESC, 5> MaterialDX::getInputElementDescription()
 {
     std::array<D3D12_INPUT_ELEMENT_DESC, 5> l_desc = {
         D3D12_INPUT_ELEMENT_DESC{ "POSITION",
-                                 0, DXGI_FORMAT_R32G32B32_FLOAT,
+                                 0,    DXGI_FORMAT_R32G32B32_FLOAT,
                                  0,  0,
                                  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         D3D12_INPUT_ELEMENT_DESC{   "NORMAL",
-                                 0, DXGI_FORMAT_R32G32B32_FLOAT,
+                                 0,    DXGI_FORMAT_R32G32B32_FLOAT,
                                  0, 12,
                                  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         D3D12_INPUT_ELEMENT_DESC{  "TANGENT",
-                                 0, DXGI_FORMAT_R32G32B32_FLOAT,
+                                 0, DXGI_FORMAT_R32G32B32A32_FLOAT,
                                  0, 24,
                                  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         D3D12_INPUT_ELEMENT_DESC{ "TEXCOORD",
-                                 0,    DXGI_FORMAT_R32G32_FLOAT,
-                                 0, 36,
+                                 0,       DXGI_FORMAT_R32G32_FLOAT,
+                                 0, 40,
                                  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
         D3D12_INPUT_ELEMENT_DESC{    "COLOR",
-                                 0, DXGI_FORMAT_R32G32B32_FLOAT,
-                                 0, 44,
+                                 0,    DXGI_FORMAT_R32G32B32_FLOAT,
+                                 0, 48,
                                  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 }
     };
     return l_desc;
