@@ -5,6 +5,7 @@ include(cmake/shaders.cmake)
 
 set(SHADER_SLANG_SOURCES
     ${CMAKE_SOURCE_DIR}/res/shaders/shader.slang
+    ${CMAKE_SOURCE_DIR}/res/shaders/gltf_pbr.slang
 )
 
 add_slang_shader_target(${SHADER_COMPILE_STEP} SOURCES ${SHADER_SLANG_SOURCES})

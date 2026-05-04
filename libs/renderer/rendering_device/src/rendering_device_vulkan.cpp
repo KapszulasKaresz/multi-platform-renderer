@@ -78,7 +78,7 @@ std::shared_ptr<command_buffer::CommandBuffer>
 {
     auto l_commandBuffer =
         std::make_shared<command_buffer::CommandBufferVulkan>(this, m_commandPool);
-    l_commandBuffer->setUsage(true).create();
+    l_commandBuffer->setUsage(true).setRendering(false).create();
     return l_commandBuffer;
 }
 

@@ -128,6 +128,8 @@ ImageVulkan& ImageVulkan::createFromFile(std::string_view f_path)
     auto l_image = vk::Image(m_image.get());
     m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eColor);
 
+    m_currentLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+
     m_valid = true;
     return *this;
 }
@@ -162,6 +164,9 @@ ImageVulkan& ImageVulkan::createEmptyImage()
         l_image,
         isDepthImage() ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor
     );
+
+    m_currentLayout = vk::ImageLayout::eUndefined;
+    m_valid         = true;
     return *this;
 }
 
@@ -256,7 +261,8 @@ ImageVulkan& ImageVulkan::createFromGltfImage(const tinygltf::Image& f_gltfImage
     auto l_image = vk::Image(m_image.get());
     m_imageView  = createImageView(l_image, vk::ImageAspectFlagBits::eColor);
 
-    m_valid = true;
+    m_currentLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
+    m_valid         = true;
     return *this;
 }
 
@@ -301,6 +307,17 @@ ImageVulkan& ImageVulkan::setUsage(vk::ImageUsageFlags f_usage)
 {
     m_usage = f_usage;
     return *this;
+}
+
+ImageVulkan& ImageVulkan::setCurrentLayout(vk::ImageLayout f_layout)
+{
+    m_currentLayout = f_layout;
+    return *this;
+}
+
+vk::ImageLayout ImageVulkan::getCurrentLayout() const
+{
+    return m_currentLayout;
 }
 
 vk::Format ImageVulkan::convertToVkFormat(const ImageFormat f_format)
@@ -420,13 +437,7 @@ void ImageVulkan::transitionImageLayout(
 
     l_commandBufferVulkan->begin();
     l_commandBufferVulkan->transitionImageLayout(
-        this,
-        f_oldLayout,
-        f_newLayout,
-        l_srcAccessMask,
-        l_dstAccessMask,
-        l_sourceStage,
-        l_destinationStage
+        this, f_newLayout, l_srcAccessMask, l_dstAccessMask, l_sourceStage, l_destinationStage
     );
     l_commandBufferVulkan->end();
     l_commandBufferVulkan->submit();

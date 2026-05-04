@@ -55,6 +55,11 @@ Texture& Texture::setAddressModeW(AddressMode f_addressMode)
     return *this;
 }
 
+image::Image* Texture::getImage()
+{
+    return m_image.get();
+}
+
 
 }   // namespace texture
 }   // namespace renderer

@@ -13,6 +13,10 @@ namespace rendering_device {
 class RenderingDeviceVulkan;
 }   // namespace rendering_device
 
+namespace image {
+class ImageVulkan;
+}   // namespace image
+
 namespace material {
 class MaterialVulkan : public Material {
 public:
@@ -20,9 +24,10 @@ public:
 
     MaterialVulkan& create();
 
-    vk::Pipeline                   getPipeline();
-    vk::PipelineLayout             getPipelineLayout();
-    std::vector<vk::DescriptorSet> getDescriptorSets();
+    vk::Pipeline                     getPipeline();
+    vk::PipelineLayout               getPipelineLayout();
+    std::vector<vk::DescriptorSet>   getDescriptorSets();
+    std::vector<image::ImageVulkan*> getImages();
 
 private:
     void createPipeline();

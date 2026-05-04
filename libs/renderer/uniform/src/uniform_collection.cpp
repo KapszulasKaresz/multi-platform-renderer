@@ -97,6 +97,18 @@ texture::Texture* UniformCollection::getTexture(std::string_view f_name)
     throw std::runtime_error("UniformCollection::getTexture(...) texture not found.");
 }
 
+texture::Texture* UniformCollection::getTexture(int f_position)
+{
+    if (f_position < 0 || f_position >= m_textures.size()) {
+        throw std::
+            runtime_error(
+                "UniformCollection::getTexture(int f_position) texture position is out "
+                "of bounds."
+            );
+    }
+    return m_textures[f_position].get();
+}
+
 int UniformCollection::getTextureCount() const
 {
     return m_textures.size();

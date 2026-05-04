@@ -47,6 +47,8 @@ public:
     Texture& setAddressModeV(AddressMode f_addressMode);
     Texture& setAddressModeW(AddressMode f_addressMode);
 
+    image::Image* getImage();
+
 protected:
     std::shared_ptr<image::Image> m_image{ nullptr };
     std::string                   m_name{ "" };

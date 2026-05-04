@@ -275,6 +275,7 @@ void UniformCollectionVulkan::createDescriptorSets()
             );
         }
 
+        std::vector<vk::DescriptorImageInfo> l_imageInfos;
         for (int j = 0; j < m_textures.size(); j++) {
             texture::TextureVulkan* l_rawVulkanTexture =
                 dynamic_cast<texture::TextureVulkan*>(m_textures[j].get());
@@ -286,12 +287,16 @@ void UniformCollectionVulkan::createDescriptorSets()
                 );
             }
 
-            vk::DescriptorImageInfo l_imageInfo(
-                l_rawVulkanTexture->getSampler(),
-                l_rawVulkanTexture->getImageView(),
-                vk::ImageLayout::eShaderReadOnlyOptimal
+            l_imageInfos.push_back(
+                vk::DescriptorImageInfo(
+                    l_rawVulkanTexture->getSampler(),
+                    l_rawVulkanTexture->getImageView(),
+                    vk::ImageLayout::eShaderReadOnlyOptimal
+                )
             );
+        }
 
+        for (int j = 0; j < m_textures.size(); j++) {
             l_descriptorWrites.push_back(
                 vk::WriteDescriptorSet{
                     .dstSet          = m_descriptorSets[i],
@@ -299,7 +304,7 @@ void UniformCollectionVulkan::createDescriptorSets()
                     .dstArrayElement = 0,
                     .descriptorCount = 1,
                     .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
-                    .pImageInfo      = &l_imageInfo }
+                    .pImageInfo      = &l_imageInfos[j] }
             );
         }
 

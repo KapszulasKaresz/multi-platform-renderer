@@ -65,7 +65,6 @@ public:
 
     CommandBufferVulkan& transitionImageLayout(
         image::ImageVulkan*     f_image,
-        vk::ImageLayout         f_old_layout,
         vk::ImageLayout         f_new_layout,
         vk::AccessFlags2        f_src_access_mask,
         vk::AccessFlags2        f_dst_access_mask,

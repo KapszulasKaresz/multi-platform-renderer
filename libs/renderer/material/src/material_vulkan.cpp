@@ -2,6 +2,7 @@
 
 #include <vector>
 
+#include "renderer/command_buffer/inc/command_buffer_vulkan.hpp"
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
@@ -23,6 +24,29 @@ MaterialVulkan& MaterialVulkan::create()
         return *this;
     }
     createPipeline();
+
+    for (const auto& image : getImages()) {
+        if (image && image->getCurrentLayout() != vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            auto l_commandBuffer = m_parentDevice->createSingleUseCommandBuffer();
+            auto l_commandBufferVulkan =
+                dynamic_cast<command_buffer::CommandBufferVulkan*>(l_commandBuffer.get());
+
+            l_commandBufferVulkan->begin();
+            l_commandBufferVulkan->transitionImageLayout(
+                image,
+                vk::ImageLayout::eShaderReadOnlyOptimal,
+                {},
+                vk::AccessFlagBits2::eShaderSampledRead,
+                vk::PipelineStageFlagBits2::eTopOfPipe,
+                vk::PipelineStageFlagBits2::eFragmentShader,
+                vk::ImageAspectFlagBits::eColor
+            );
+            l_commandBufferVulkan->end();
+            l_commandBufferVulkan->submit();
+        }
+    }
+
     m_valid = true;
     return *this;
 }
@@ -71,6 +95,29 @@ std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
 
         if (l_rawArray != nullptr) {
             l_ret.push_back(l_rawArray->getDescriptorSet());
+        }
+    }
+
+    return l_ret;
+}
+
+std::vector<image::ImageVulkan*> MaterialVulkan::getImages()
+{
+    std::vector<image::ImageVulkan*> l_ret;
+    for (const auto& l_uniform : m_uniformCollections) {
+        uniform::UniformCollectionVulkan* l_rawCollection =
+            dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get());
+
+        if (l_rawCollection != nullptr) {
+            for (int i = 0; i < l_rawCollection->getTextureCount(); i++) {
+                image::ImageVulkan* l_image = dynamic_cast<image::ImageVulkan*>(
+                    l_rawCollection->getTexture(i)->getImage()
+                );
+
+                if (l_image != nullptr) {
+                    l_ret.push_back(l_image);
+                }
+            }
         }
     }
 

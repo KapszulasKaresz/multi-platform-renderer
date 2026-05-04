@@ -11,6 +11,7 @@ struct VSOutput
     float4 pos          : SV_Position;
     float3 worldPos     : POSITION0;
     float3 normal       : NORMAL;
+    float3 tangent      : TANGENT;
     float3 color        : COLOR0;
     float2 fragTexCoord : TEXCOORD0;
 };
@@ -60,6 +61,7 @@ VSOutput vertMain(VSInput input) {
     
     output.pos = mul(camera.proj, mul(camera.view, worldPosition));
     output.normal = normalize(mul((float3x3)object.model, input.inNormal));
+    output.tangent = normalize(mul((float3x3)object.model, input.inTangent));
     output.color = input.inColor;
     output.fragTexCoord = input.inTexCoord;
     return output;
@@ -67,6 +69,12 @@ VSOutput vertMain(VSInput input) {
 
 [vk::binding(1, 1)]
 Sampler2D texture : register(t0, space0);
+
+[vk::binding(2, 1)]
+Sampler2D textureMetallicRoughness : register(t1, space0);
+
+[vk::binding(3, 1)]
+Sampler2D textureNormal : register(t2, space0);
 
 [shader("fragment")]
 float4 fragMain(VSOutput vertIn) : SV_TARGET {

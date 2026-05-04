@@ -7,7 +7,7 @@ vk::VertexInputBindingDescription Vertex::getBindingDescription()
     return { 0, sizeof(Vertex), vk::VertexInputRate::eVertex };
 }
 
-std::array<vk::VertexInputAttributeDescription, 4> Vertex::getAttributeDescriptions()
+std::array<vk::VertexInputAttributeDescription, 5> Vertex::getAttributeDescriptions()
 {
     return { vk::VertexInputAttributeDescription(
                  0, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, m_position)
@@ -16,10 +16,13 @@ std::array<vk::VertexInputAttributeDescription, 4> Vertex::getAttributeDescripti
                  1, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, m_normal)
              ),
              vk::VertexInputAttributeDescription(
-                 2, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, m_texCoord)
+                 2, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, m_tangent)
              ),
              vk::VertexInputAttributeDescription(
-                 3, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, m_color)
+                 3, 0, vk::Format::eR32G32Sfloat, offsetof(Vertex, m_texCoord)
+             ),
+             vk::VertexInputAttributeDescription(
+                 4, 0, vk::Format::eR32G32B32Sfloat, offsetof(Vertex, m_color)
              ) };
 }
 }   // namespace mesh

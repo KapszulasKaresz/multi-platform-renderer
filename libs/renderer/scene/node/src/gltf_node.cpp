@@ -308,10 +308,21 @@ void GltfNode::createDefaultMaterial()
         .setFormat(image::ImageFormat::IMAGE_FORMAT_RGBA8_SRGB)
         .createEmptyImage();
 
-    auto l_texture = rendering_server::RenderingServer::getInstance()
-                         .getMainRenderingDevice()
-                         ->createTexture();
-    l_texture->setImage(l_image).create();
+    auto l_textureAlbedo = rendering_server::RenderingServer::getInstance()
+                               .getMainRenderingDevice()
+                               ->createTexture();
+
+    auto l_textureMetallicRoughness = rendering_server::RenderingServer::getInstance()
+                                          .getMainRenderingDevice()
+                                          ->createTexture();
+
+    auto l_textureNormal = rendering_server::RenderingServer::getInstance()
+                               .getMainRenderingDevice()
+                               ->createTexture();
+
+    l_textureAlbedo->setImage(l_image).create();
+    l_textureMetallicRoughness->setImage(l_image).create();
+    l_textureNormal->setImage(l_image).create();
 
     auto l_uniformCollectionCamera = rendering_server::RenderingServer::getInstance()
                                          .getMainRenderingDevice()
@@ -336,7 +347,9 @@ void GltfNode::createDefaultMaterial()
         ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
         .create();
 
-    l_uniformCollectionObject->addTexture(l_texture);
+    l_uniformCollectionObject->addTexture(l_textureAlbedo);
+    l_uniformCollectionObject->addTexture(l_textureMetallicRoughness);
+    l_uniformCollectionObject->addTexture(l_textureNormal);
     l_uniformCollectionObject->setName("Object").create();
 
     auto l_lightArray = rendering_server::RenderingServer::getInstance()
@@ -389,7 +402,7 @@ void GltfNode::createDefaultMaterial()
     l_lightArray->addMember(l_light1);
 
     l_lightArray->create();
-    m_defaultMaterial->setShader("res/shaders/shader")
+    m_defaultMaterial->setShader("res/shaders/gltf_pbr")
         .addUniformCollection(l_uniformCollectionCamera)
         .addUniformCollection(l_uniformCollectionObject)
         .addUniformCollection(l_lightArray)
@@ -420,7 +433,10 @@ std::shared_ptr<material::Material>
         // TODO sampler
     }
     else {
-        l_image->generateMipMaps().createFromFile("res/textures/test_texture.png");
+        l_image->generateMipMaps()
+            .setSize(glm::ivec2(1, 1))
+            .setFormat(image::IMAGE_FORMAT_RGBA8)
+            .createEmptyImage();
     }
 
     auto l_texture = rendering_server::RenderingServer::getInstance()
