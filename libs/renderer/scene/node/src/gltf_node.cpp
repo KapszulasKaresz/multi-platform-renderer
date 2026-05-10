@@ -441,6 +441,12 @@ std::shared_ptr<material::Material>
                              .getMainRenderingDevice()
                              ->createImage();
 
+    auto l_uniformCollection = l_materialRet->getUniformCollection("Object");
+
+    if (!l_uniformCollection) {
+        return l_materialRet;
+    }
+
     if (l_normalTexture.index != -1) {
         const auto& l_textureNormal   = f_model.textures[l_normalTexture.index];
         const auto& l_imageDataNormal = f_model.images[l_textureNormal.source];
@@ -448,13 +454,13 @@ std::shared_ptr<material::Material>
             .setFormat(image::IMAGE_FORMAT_RGBA8)
             .setColorSpace(image::COLOR_SPACE_LINEAR)
             .createFromGltfImage(l_imageDataNormal);
+
+        auto l_textureNormalEngine = rendering_server::RenderingServer::getInstance()
+                                         .getMainRenderingDevice()
+                                         ->createTexture();
+        l_textureNormalEngine->setImage(l_imageNormal).create();
+        l_uniformCollection->addTexture(l_textureNormalEngine, 2);
         // TODO sampler
-    }
-    else {
-        l_imageNormal->generateMipMaps()
-            .setSize(glm::ivec2(1, 1))
-            .setFormat(image::IMAGE_FORMAT_RGBA8)
-            .createEmptyImage();
     }
 
     if (l_pbrMetallicRoughness.baseColorTexture.index != -1) {
@@ -462,13 +468,14 @@ std::shared_ptr<material::Material>
             f_model.textures[l_pbrMetallicRoughness.baseColorTexture.index];
         const auto& l_imageDataAlbedo = f_model.images[l_textureAlbedo.source];
         l_imageAlbedo->generateMipMaps().createFromGltfImage(l_imageDataAlbedo);
+
+        auto l_textureAlbedoEngine = rendering_server::RenderingServer::getInstance()
+                                         .getMainRenderingDevice()
+                                         ->createTexture();
+        l_textureAlbedoEngine->setImage(l_imageAlbedo).create();
+
+        l_uniformCollection->addTexture(l_textureAlbedoEngine, 0);
         // TODO sampler
-    }
-    else {
-        l_imageAlbedo->generateMipMaps()
-            .setSize(glm::ivec2(1, 1))
-            .setFormat(image::IMAGE_FORMAT_RGBA8)
-            .createEmptyImage();
     }
 
     if (l_pbrMetallicRoughness.metallicRoughnessTexture.index != -1) {
@@ -479,35 +486,16 @@ std::shared_ptr<material::Material>
         l_imageMetallicRoughness->generateMipMaps().createFromGltfImage(
             l_imageDataMetallicRoughness
         );
+
+        auto l_textureMetallicRoughnessEngine =
+            rendering_server::RenderingServer::getInstance()
+                .getMainRenderingDevice()
+                ->createTexture();
+        l_textureMetallicRoughnessEngine->setImage(l_imageMetallicRoughness).create();
+
+
+        l_uniformCollection->addTexture(l_textureMetallicRoughnessEngine, 1);
         // TODO sampler
-    }
-    else {
-        l_imageMetallicRoughness->generateMipMaps()
-            .setSize(glm::ivec2(1, 1))
-            .setFormat(image::IMAGE_FORMAT_RGBA8)
-            .createEmptyImage();
-    }
-
-    auto l_textureAlbedo = rendering_server::RenderingServer::getInstance()
-                               .getMainRenderingDevice()
-                               ->createTexture();
-    l_textureAlbedo->setImage(l_imageAlbedo).create();
-
-    auto l_textureMetallicRoughness = rendering_server::RenderingServer::getInstance()
-                                          .getMainRenderingDevice()
-                                          ->createTexture();
-    l_textureMetallicRoughness->setImage(l_imageMetallicRoughness).create();
-
-    auto l_textureNormal = rendering_server::RenderingServer::getInstance()
-                               .getMainRenderingDevice()
-                               ->createTexture();
-    l_textureNormal->setImage(l_imageNormal).create();
-
-    auto l_uniformCollection = l_materialRet->getUniformCollection("Object");
-    if (l_uniformCollection) {
-        l_uniformCollection->addTexture(l_textureAlbedo, 0);
-        l_uniformCollection->addTexture(l_textureMetallicRoughness, 1);
-        l_uniformCollection->addTexture(l_textureNormal, 2);
     }
 
     return l_materialRet;
