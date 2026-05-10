@@ -5,4 +5,7 @@ target_sources(${RENDERER_LIB_NAME} PRIVATE
     "src/uniform_single_dx.cpp"
     "src/uniform_collection.cpp"
     "src/uniform_collection_vulkan.cpp"
-    "src/uniform_collection_dx.cpp")
+    "src/uniform_collection_dx.cpp"
+    "src/uniform_array.cpp"
+    "src/uniform_array_vulkan.cpp"
+)

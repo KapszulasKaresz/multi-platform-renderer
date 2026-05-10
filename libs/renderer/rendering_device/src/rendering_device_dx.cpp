@@ -89,6 +89,12 @@ std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformColl
     return std::make_shared<uniform::UniformCollectionDX>(this);
 }
 
+std::shared_ptr<uniform::UniformArray> RenderingDeviceDX::createUniformArray()
+{
+    throw std::runtime_error("RenderingDeviceDX::createUniformArray() not implemented");
+    return nullptr;   // TODO: Implement UniformArrayDX
+}
+
 std::shared_ptr<texture::Texture> RenderingDeviceDX::createTexture()
 {
     return std::make_shared<texture::TextureDX>(this);
@@ -339,7 +345,7 @@ void RenderingDeviceDX::createRenderTargetWindow()
     m_renderTargetWindow = std::make_shared<render_target::RenderTargetWindowDX>(this);
     m_renderTargetWindow->setWindow(m_window)
         .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8)
-        .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
+        .setColorSpace(image::ColorSpace::COLOR_SPACE_LINEAR)
         .setDepthBuffer(true)
         .create();
 }

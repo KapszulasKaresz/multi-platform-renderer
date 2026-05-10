@@ -66,9 +66,15 @@ UniformCollectionVulkan& UniformCollectionVulkan::create()
 {
     Uniform::create();
     computeStd140Layout();
-    createDescriptorSetLayout();
-    createUniformBuffers();
-    createDescriptorSets();
+    if (m_type == UNIFORM_TYPE_STRUCT) {
+        createDescriptorSetLayout();
+    }
+    if (m_type != UNIFORM_TYPE_STRUCT_MEMBER) {
+        createUniformBuffers();
+    }
+    if (m_type == UNIFORM_TYPE_STRUCT) {
+        createDescriptorSets();
+    }
     return *this;
 }
 
@@ -111,6 +117,11 @@ vk::DescriptorSetLayout UniformCollectionVulkan::getDescriptorSetLayout() const
 vk::raii::DescriptorSet& UniformCollectionVulkan::getDescriptorSet()
 {
     return m_descriptorSets[m_parentDevice->getCurrentFrame()];
+}
+
+utils::VmaBuffer& UniformCollectionVulkan::getUniformBuffer(size_t f_index)
+{
+    return m_uniformBuffers[f_index];
 }
 
 namespace {
@@ -264,6 +275,7 @@ void UniformCollectionVulkan::createDescriptorSets()
             );
         }
 
+        std::vector<vk::DescriptorImageInfo> l_imageInfos;
         for (int j = 0; j < m_textures.size(); j++) {
             texture::TextureVulkan* l_rawVulkanTexture =
                 dynamic_cast<texture::TextureVulkan*>(m_textures[j].get());
@@ -275,12 +287,16 @@ void UniformCollectionVulkan::createDescriptorSets()
                 );
             }
 
-            vk::DescriptorImageInfo l_imageInfo(
-                l_rawVulkanTexture->getSampler(),
-                l_rawVulkanTexture->getImageView(),
-                vk::ImageLayout::eShaderReadOnlyOptimal
+            l_imageInfos.push_back(
+                vk::DescriptorImageInfo(
+                    l_rawVulkanTexture->getSampler(),
+                    l_rawVulkanTexture->getImageView(),
+                    vk::ImageLayout::eShaderReadOnlyOptimal
+                )
             );
+        }
 
+        for (int j = 0; j < m_textures.size(); j++) {
             l_descriptorWrites.push_back(
                 vk::WriteDescriptorSet{
                     .dstSet          = m_descriptorSets[i],
@@ -288,7 +304,7 @@ void UniformCollectionVulkan::createDescriptorSets()
                     .dstArrayElement = 0,
                     .descriptorCount = 1,
                     .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
-                    .pImageInfo      = &l_imageInfo }
+                    .pImageInfo      = &l_imageInfos[j] }
             );
         }
 
@@ -320,13 +336,26 @@ std::vector<uint8_t> UniformCollectionVulkan::createStd140Buffer()
     std::vector<uint8_t> l_buffer(m_layout.m_structSize, 0);
 
     for (size_t i = 0; i < m_members.size(); i++) {
-        if (m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT) {
+        if (m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT
+            && m_members[i]->getType() != UniformType::UNIFORM_TYPE_ARRAY_MEMBER
+            && m_members[i]->getType() != UniformType::UNIFORM_TYPE_STRUCT_MEMBER)
+        {
             uniform::UniformSingle* l_rawMember =
                 dynamic_cast<uniform::UniformSingle*>(m_members[i].get());
             std::memcpy(
                 l_buffer.data() + m_layout.m_offsets[i],
                 l_rawMember->valueAsVoid(),
                 m_members[i]->getSize()
+            );
+        }
+        else {
+            UniformCollectionVulkan* l_structMember =
+                dynamic_cast<UniformCollectionVulkan*>(m_members[i].get());
+            std::vector<uint8_t> l_structBuffer = l_structMember->createStd140Buffer();
+            std::memcpy(
+                l_buffer.data() + m_layout.m_offsets[i],
+                l_structBuffer.data(),
+                l_structBuffer.size()
             );
         }
     }

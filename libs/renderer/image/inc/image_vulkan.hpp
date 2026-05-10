@@ -35,8 +35,10 @@ public:
     );
     vk::PipelineStageFlagBits2 getShaderStageDestination() const;
 
-    ImageVulkan& setSampleCount(uint32_t f_samples);
-    ImageVulkan& setUsage(vk::ImageUsageFlags f_usage);
+    ImageVulkan&    setSampleCount(uint32_t f_samples);
+    ImageVulkan&    setUsage(vk::ImageUsageFlags f_usage);
+    ImageVulkan&    setCurrentLayout(vk::ImageLayout f_layout);
+    vk::ImageLayout getCurrentLayout() const;
 
     static vk::Format        convertToVkFormat(const ImageFormat f_format);
     static vk::ColorSpaceKHR convertToVkColorSpace(const ColorSpace f_colorSpace);
@@ -74,7 +76,9 @@ private:
     uint32_t            m_samples{ 1 };
     vk::ImageUsageFlags m_usage{ vk::ImageUsageFlagBits::eSampled };
 
-    vk::Format               m_vkFormat{ vk::Format::eUndefined };
+    vk::Format m_vkFormat{ vk::Format::eUndefined };
+
+    vk::ImageLayout          m_currentLayout{ vk::ImageLayout::eUndefined };
     std::optional<vk::Image> m_swapchainImage{};
 };
 }   // namespace image

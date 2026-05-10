@@ -365,7 +365,6 @@ CommandBufferVulkan& CommandBufferVulkan::copyBuffer(
 
 CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
     image::ImageVulkan*     f_image,
-    vk::ImageLayout         f_old_layout,
     vk::ImageLayout         f_new_layout,
     vk::AccessFlags2        f_src_access_mask,
     vk::AccessFlags2        f_dst_access_mask,
@@ -381,7 +380,7 @@ CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
         .srcAccessMask       = f_src_access_mask,
         .dstStageMask        = f_dst_stage_mask,
         .dstAccessMask       = f_dst_access_mask,
-        .oldLayout           = f_old_layout,
+        .oldLayout           = f_image->getCurrentLayout(),
         .newLayout           = f_new_layout,
         .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
@@ -396,6 +395,8 @@ CommandBufferVulkan& CommandBufferVulkan::transitionImageLayout(
                                              .imageMemoryBarrierCount = 1,
                                              .pImageMemoryBarriers    = &l_barrier };
     l_commandBuffer.pipelineBarrier2(l_dependency_info);
+
+    f_image->setCurrentLayout(f_new_layout);
     return *this;
 }
 
@@ -533,7 +534,6 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
 {
     transitionImageLayout(
         f_swapchChainImage,
-        vk::ImageLayout::eUndefined,
         vk::ImageLayout::eColorAttachmentOptimal,
         {},   // srcAccessMask (no need to wait for previous operations)
         vk::AccessFlagBits2::eColorAttachmentWrite,           // dstAccessMask
@@ -544,7 +544,6 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
 
     transitionImageLayout(
         f_colorImage,
-        vk::ImageLayout::eUndefined,
         vk::ImageLayout::eColorAttachmentOptimal,
         {},
         vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -573,7 +572,6 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
         // Transition the depth image to DEPTH_ATTACHMENT_OPTIMAL
         transitionImageLayout(
             l_depthImageVulkan,
-            vk::ImageLayout::eUndefined,
             vk::ImageLayout::eDepthAttachmentOptimal,
             {},
             vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
@@ -636,7 +634,6 @@ void CommandBufferVulkan::beginRenderingImage(
 {
     transitionImageLayout(
         f_colorImage,
-        vk::ImageLayout::eUndefined,
         vk::ImageLayout::eColorAttachmentOptimal,
         {},
         vk::AccessFlagBits2::eColorAttachmentWrite,
@@ -663,7 +660,6 @@ void CommandBufferVulkan::beginRenderingImage(
 
         transitionImageLayout(
             l_depthImageVulkan,
-            vk::ImageLayout::eUndefined,
             vk::ImageLayout::eDepthAttachmentOptimal,
             {},
             vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
@@ -728,7 +724,6 @@ void CommandBufferVulkan::endRenderingSwapchainImage(
     l_commandBuffer.endRendering();
     transitionImageLayout(
         f_swapchChainImage,
-        vk::ImageLayout::eColorAttachmentOptimal,
         vk::ImageLayout::ePresentSrcKHR,
         vk::AccessFlagBits2::eColorAttachmentWrite,           // srcAccessMask
         {},                                                   // dstAccessMask

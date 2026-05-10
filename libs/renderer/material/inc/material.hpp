@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "renderer/render_resource/inc/render_resource.hpp"
+#include "renderer/uniform/inc/uniform_array.hpp"
 #include "renderer/uniform/inc/uniform_collection.hpp"
 
 namespace renderer {
@@ -24,12 +25,20 @@ public:
         std::string_view f_name
     );
 
+    virtual Material& addUniformArray(
+        std::shared_ptr<uniform::UniformArray> f_uniformArray
+    );
+    virtual std::shared_ptr<uniform::UniformArray> getUniformArray(
+        std::string_view f_name
+    );
+
     bool isOriginal() const;
 
     void updateUniforms();
 
 protected:
     std::vector<std::shared_ptr<uniform::UniformCollection>> m_uniformCollections;
+    std::vector<std::shared_ptr<uniform::UniformArray>>      m_uniformArrays;
 
     std::string m_shaderLocation{ "" };
 

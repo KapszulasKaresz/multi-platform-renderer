@@ -12,6 +12,7 @@
 #include "renderer/rendering_device/inc/rendering_device.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
+#include "renderer/uniform/inc/uniform_array.hpp"
 
 namespace renderer {
 namespace scene {
@@ -244,19 +245,22 @@ std::vector<mesh::Vertex> GltfNode::extractVertices(
         return true;
     };
 
-    const uint8_t* l_posData     = nullptr;
-    size_t         l_posStride   = 0;
-    const uint8_t* l_normData    = nullptr;
-    size_t         l_normStride  = 0;
-    const uint8_t* l_texData     = nullptr;
-    size_t         l_texStride   = 0;
-    const uint8_t* l_colorData   = nullptr;
-    size_t         l_colorStride = 0;
+    const uint8_t* l_posData       = nullptr;
+    size_t         l_posStride     = 0;
+    const uint8_t* l_normData      = nullptr;
+    size_t         l_normStride    = 0;
+    const uint8_t* l_tangentData   = nullptr;
+    size_t         l_tangentStride = 0;
+    const uint8_t* l_texData       = nullptr;
+    size_t         l_texStride     = 0;
+    const uint8_t* l_colorData     = nullptr;
+    size_t         l_colorStride   = 0;
 
-    bool hasPos   = getAttributeData("POSITION", l_posData, l_posStride);
-    bool hasNorm  = getAttributeData("NORMAL", l_normData, l_normStride);
-    bool hasTex   = getAttributeData("TEXCOORD_0", l_texData, l_texStride);
-    bool hasColor = getAttributeData("COLOR_0", l_colorData, l_colorStride);
+    bool hasPos     = getAttributeData("POSITION", l_posData, l_posStride);
+    bool hasNorm    = getAttributeData("NORMAL", l_normData, l_normStride);
+    bool hasTangent = getAttributeData("TANGENT", l_tangentData, l_tangentStride);
+    bool hasTex     = getAttributeData("TEXCOORD_0", l_texData, l_texStride);
+    bool hasColor   = getAttributeData("COLOR_0", l_colorData, l_colorStride);
 
     for (size_t i = 0; i < l_vertexCount; ++i) {
         mesh::Vertex& l_vertex = l_vertices[i];
@@ -274,6 +278,11 @@ std::vector<mesh::Vertex> GltfNode::extractVertices(
             const float* norm =
                 reinterpret_cast<const float*>(l_normData + i * l_normStride);
             l_vertex.m_normal = glm::vec3(norm[0], norm[1], norm[2]);
+        }
+        if (hasTangent) {
+            const float* tangent =
+                reinterpret_cast<const float*>(l_tangentData + i * l_tangentStride);
+            l_vertex.m_tangent = glm::vec4(tangent[0], tangent[1], tangent[2], tangent[3]);
         }
         if (hasTex) {
             const float* tex = reinterpret_cast<const float*>(l_texData + i * l_texStride);
@@ -307,10 +316,21 @@ void GltfNode::createDefaultMaterial()
         .setFormat(image::ImageFormat::IMAGE_FORMAT_RGBA8_SRGB)
         .createEmptyImage();
 
-    auto l_texture = rendering_server::RenderingServer::getInstance()
-                         .getMainRenderingDevice()
-                         ->createTexture();
-    l_texture->setImage(l_image).create();
+    auto l_textureAlbedo = rendering_server::RenderingServer::getInstance()
+                               .getMainRenderingDevice()
+                               ->createTexture();
+
+    auto l_textureMetallicRoughness = rendering_server::RenderingServer::getInstance()
+                                          .getMainRenderingDevice()
+                                          ->createTexture();
+
+    auto l_textureNormal = rendering_server::RenderingServer::getInstance()
+                               .getMainRenderingDevice()
+                               ->createTexture();
+
+    l_textureAlbedo->setImage(l_image).create();
+    l_textureMetallicRoughness->setImage(l_image).create();
+    l_textureNormal->setImage(l_image).create();
 
     auto l_uniformCollectionCamera = rendering_server::RenderingServer::getInstance()
                                          .getMainRenderingDevice()
@@ -335,12 +355,65 @@ void GltfNode::createDefaultMaterial()
         ->setType(renderer::uniform::UNIFORM_TYPE_MAT4X4)
         .create();
 
-    l_uniformCollectionObject->addTexture(l_texture);
+    l_uniformCollectionObject->addTexture(l_textureAlbedo);
+    l_uniformCollectionObject->addTexture(l_textureMetallicRoughness);
+    l_uniformCollectionObject->addTexture(l_textureNormal);
     l_uniformCollectionObject->setName("Object").create();
 
-    m_defaultMaterial->setShader("res/shaders/shader")
+    auto l_lightArray = rendering_server::RenderingServer::getInstance()
+                            .getMainRenderingDevice()
+                            ->createUniformCollection();
+
+    l_lightArray->setName("Lights");
+
+    auto l_light0 = rendering_server::RenderingServer::getInstance()
+                        .getMainRenderingDevice()
+                        ->createUniformCollection();
+    l_light0->addMember("position")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(0.0f, 10.0f, 0.0f, 1.0f))
+        .create();
+
+    l_light0->addMember("emission")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
+        .create();
+
+    l_light0->setName("Light_0")
+        .setType(renderer::uniform::UNIFORM_TYPE_STRUCT_MEMBER)
+        .create();
+
+    l_lightArray->addMember("lightCount")
+        ->setType(renderer::uniform::UNIFORM_TYPE_INT)
+        .setValue(2)
+        .create();
+
+    l_lightArray->addMember(l_light0);
+
+    auto l_light1 = rendering_server::RenderingServer::getInstance()
+                        .getMainRenderingDevice()
+                        ->createUniformCollection();
+    l_light1->addMember("position")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(10.0f, 10.0f, 0.0f, 1.0f))
+        .create();
+
+    l_light1->addMember("emission")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
+        .create();
+
+    l_light1->setName("Light_1")
+        .setType(renderer::uniform::UNIFORM_TYPE_STRUCT_MEMBER)
+        .create();
+
+    l_lightArray->addMember(l_light1);
+
+    l_lightArray->create();
+    m_defaultMaterial->setShader("res/shaders/gltf_pbr")
         .addUniformCollection(l_uniformCollectionCamera)
         .addUniformCollection(l_uniformCollectionObject)
+        .addUniformCollection(l_lightArray)
         .create();
 }
 
@@ -354,31 +427,75 @@ std::shared_ptr<material::Material>
 
     const auto& l_material             = f_model.materials[f_materialIndex];
     const auto& l_pbrMetallicRoughness = l_material.pbrMetallicRoughness;
+    const auto& l_normalTexture        = l_material.normalTexture;
 
-    auto l_image = rendering_server::RenderingServer::getInstance()
-                       .getMainRenderingDevice()
-                       ->createImage();
+    auto l_imageAlbedo = rendering_server::RenderingServer::getInstance()
+                             .getMainRenderingDevice()
+                             ->createImage();
 
-    if (l_pbrMetallicRoughness.baseColorTexture.index != -1) {
-        const auto& l_texture =
-            f_model.textures[l_pbrMetallicRoughness.baseColorTexture.index];
-        const auto& l_imageData = f_model.images[l_texture.source];
-        l_image->generateMipMaps().createFromGltfImage(l_imageData);
+    auto l_imageMetallicRoughness = rendering_server::RenderingServer::getInstance()
+                                        .getMainRenderingDevice()
+                                        ->createImage();
 
-        // TODO sampler
-    }
-    else {
-        l_image->generateMipMaps().createFromFile("res/textures/test_texture.png");
-    }
-
-    auto l_texture = rendering_server::RenderingServer::getInstance()
-                         .getMainRenderingDevice()
-                         ->createTexture();
-    l_texture->setImage(l_image).create();
+    auto l_imageNormal = rendering_server::RenderingServer::getInstance()
+                             .getMainRenderingDevice()
+                             ->createImage();
 
     auto l_uniformCollection = l_materialRet->getUniformCollection("Object");
-    if (l_uniformCollection) {
-        l_uniformCollection->addTexture(l_texture, 0);
+
+    if (!l_uniformCollection) {
+        return l_materialRet;
+    }
+
+    if (l_normalTexture.index != -1) {
+        const auto& l_textureNormal   = f_model.textures[l_normalTexture.index];
+        const auto& l_imageDataNormal = f_model.images[l_textureNormal.source];
+        l_imageNormal->generateMipMaps()
+            .setFormat(image::IMAGE_FORMAT_RGBA8)
+            .setColorSpace(image::COLOR_SPACE_LINEAR)
+            .createFromGltfImage(l_imageDataNormal);
+
+        auto l_textureNormalEngine = rendering_server::RenderingServer::getInstance()
+                                         .getMainRenderingDevice()
+                                         ->createTexture();
+        l_textureNormalEngine->setImage(l_imageNormal).create();
+        l_uniformCollection->addTexture(l_textureNormalEngine, 2);
+        // TODO sampler
+    }
+
+    if (l_pbrMetallicRoughness.baseColorTexture.index != -1) {
+        const auto& l_textureAlbedo =
+            f_model.textures[l_pbrMetallicRoughness.baseColorTexture.index];
+        const auto& l_imageDataAlbedo = f_model.images[l_textureAlbedo.source];
+        l_imageAlbedo->generateMipMaps().createFromGltfImage(l_imageDataAlbedo);
+
+        auto l_textureAlbedoEngine = rendering_server::RenderingServer::getInstance()
+                                         .getMainRenderingDevice()
+                                         ->createTexture();
+        l_textureAlbedoEngine->setImage(l_imageAlbedo).create();
+
+        l_uniformCollection->addTexture(l_textureAlbedoEngine, 0);
+        // TODO sampler
+    }
+
+    if (l_pbrMetallicRoughness.metallicRoughnessTexture.index != -1) {
+        const auto& l_textureMetallicRoughness =
+            f_model.textures[l_pbrMetallicRoughness.metallicRoughnessTexture.index];
+        const auto& l_imageDataMetallicRoughness =
+            f_model.images[l_textureMetallicRoughness.source];
+        l_imageMetallicRoughness->generateMipMaps().createFromGltfImage(
+            l_imageDataMetallicRoughness
+        );
+
+        auto l_textureMetallicRoughnessEngine =
+            rendering_server::RenderingServer::getInstance()
+                .getMainRenderingDevice()
+                ->createTexture();
+        l_textureMetallicRoughnessEngine->setImage(l_imageMetallicRoughness).create();
+
+
+        l_uniformCollection->addTexture(l_textureMetallicRoughnessEngine, 1);
+        // TODO sampler
     }
 
     return l_materialRet;

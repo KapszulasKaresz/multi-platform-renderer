@@ -5,12 +5,27 @@
 
 namespace renderer {
 namespace uniform {
-Uniform& UniformCollection::setType(UniformType f_type)
+UniformCollection::UniformCollection() : Uniform()
 {
+    m_type = UNIFORM_TYPE_STRUCT;
+}
+
+UniformCollection& UniformCollection::setType(UniformType f_type)
+{
+    if (f_type != UNIFORM_TYPE_STRUCT && f_type != UNIFORM_TYPE_ARRAY_MEMBER
+        && f_type != UNIFORM_TYPE_STRUCT_MEMBER)
+    {
+        throw std::
+            runtime_error(
+                "UniformCollection::setType(UniformType f_type) UniformCollection can "
+                "only " "be of type STRUCT or ARRAY_MEMBER or STRUCT_MEMBER"
+            );
+    }
+    m_type = f_type;
     return *this;
 }
 
-Uniform& UniformCollection::setUnique(bool f_unique)
+UniformCollection& UniformCollection::setUnique(bool f_unique)
 {
     m_isUnique = f_unique;
     return *this;
@@ -28,7 +43,7 @@ void UniformCollection::addMember(std::shared_ptr<Uniform> f_member, int f_posit
     }
     else {
         if (m_members.size() <= f_position) {
-            m_members.resize(f_position - 1);
+            m_members.resize(f_position + 1);
         }
         m_members[f_position] = std::move(f_member);
     }
@@ -59,7 +74,7 @@ void UniformCollection::addTexture(
     }
     else {
         if (m_textures.size() <= f_position) {
-            m_textures.resize(f_position - 1);
+            m_textures.resize(f_position + 1);
         }
         m_textures[f_position] = std::move(f_textrue);
     }
@@ -80,6 +95,18 @@ texture::Texture* UniformCollection::getTexture(std::string_view f_name)
     }
 
     throw std::runtime_error("UniformCollection::getTexture(...) texture not found.");
+}
+
+texture::Texture* UniformCollection::getTexture(int f_position)
+{
+    if (f_position < 0 || f_position >= m_textures.size()) {
+        throw std::
+            runtime_error(
+                "UniformCollection::getTexture(int f_position) texture position is out "
+                "of bounds."
+            );
+    }
+    return m_textures[f_position].get();
 }
 
 int UniformCollection::getTextureCount() const

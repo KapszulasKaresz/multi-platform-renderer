@@ -33,7 +33,7 @@ private:
     void createRootSignature();
     void createPipelineState();
 
-    static std::array<D3D12_INPUT_ELEMENT_DESC, 4> getInputElementDescription();
+    static std::array<D3D12_INPUT_ELEMENT_DESC, 5> getInputElementDescription();
 
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 

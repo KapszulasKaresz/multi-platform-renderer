@@ -13,6 +13,7 @@
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/texture/inc/texture_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_array_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
@@ -77,7 +78,7 @@ std::shared_ptr<command_buffer::CommandBuffer>
 {
     auto l_commandBuffer =
         std::make_shared<command_buffer::CommandBufferVulkan>(this, m_commandPool);
-    l_commandBuffer->setUsage(true).create();
+    l_commandBuffer->setUsage(true).setRendering(false).create();
     return l_commandBuffer;
 }
 
@@ -103,6 +104,11 @@ std::shared_ptr<uniform::UniformCollection>
     RenderingDeviceVulkan::createUniformCollection()
 {
     return std::make_shared<uniform::UniformCollectionVulkan>(this);
+}
+
+std::shared_ptr<uniform::UniformArray> RenderingDeviceVulkan::createUniformArray()
+{
+    return std::make_shared<uniform::UniformArrayVulkan>(this);
 }
 
 std::shared_ptr<texture::Texture> RenderingDeviceVulkan::createTexture()
@@ -388,8 +394,8 @@ void RenderingDeviceVulkan::createRenderTargetWindow()
             m_parentApi->getNativeHandle()
         )
         .setWindow(m_window)
-        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8_SRGB)
-        .setColorSpace(image::ColorSpace::COLOR_SPACE_SRGB_NON_LINEAR)
+        .setFormat(image::ImageFormat::IMAGE_FORMAT_BGRA8)
+        .setColorSpace(image::ColorSpace::COLOR_SPACE_LINEAR)
         .setDepthBuffer(true)
         .create();
 }
@@ -589,9 +595,9 @@ void RenderingDeviceVulkan::createVmaAllocator()
 void RenderingDeviceVulkan::createDescriptorPool()
 {
     std::array l_poolSize = {
-        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, maxFramesInFlight * 2),
+        vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, maxFramesInFlight * 200),
         vk::DescriptorPoolSize(
-            vk::DescriptorType::eCombinedImageSampler, maxFramesInFlight * 2
+            vk::DescriptorType::eCombinedImageSampler, maxFramesInFlight * 200
         )
     };
     vk::DescriptorPoolCreateInfo l_poolInfo{

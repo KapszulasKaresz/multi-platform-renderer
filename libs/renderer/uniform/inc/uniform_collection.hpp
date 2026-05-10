@@ -14,8 +14,10 @@ namespace renderer {
 namespace uniform {
 class UniformCollection : public Uniform {
 public:
-    Uniform& setType(UniformType f_type) override final;
-    Uniform& setUnique(bool f_unique = true);
+    UniformCollection();
+
+    UniformCollection& setType(UniformType f_type) override final;
+    UniformCollection& setUnique(bool f_unique = true);
 
     bool isUniqueCollection() const;
 
@@ -26,6 +28,7 @@ public:
     virtual void
         addTexture(std::shared_ptr<texture::Texture> f_textrue, int f_position = -1);
     texture::Texture* getTexture(std::string_view f_name);
+    texture::Texture* getTexture(int f_position);
 
     virtual std::shared_ptr<UniformCollection> deepCopy() const = 0;
 

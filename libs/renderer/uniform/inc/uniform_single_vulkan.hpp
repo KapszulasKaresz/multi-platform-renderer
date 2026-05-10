@@ -1,5 +1,5 @@
-#ifndef UNIFORM_VULKAN_HPP_INCLUDED
-#define UNIFORM_VULKAN_HPP_INCLUDED
+#ifndef UNIFORM_SINGLE_VULKAN_HPP_INCLUDED
+#define UNIFORM_SINGLE_VULKAN_HPP_INCLUDED
 
 #include "renderer/uniform/inc/uniform_single.hpp"
 

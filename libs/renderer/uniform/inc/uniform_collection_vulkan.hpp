@@ -7,6 +7,7 @@
 #include <vulkan/vulkan_raii.hpp>
 
 #include "renderer/uniform/inc/uniform_collection.hpp"
+#include "renderer/uniform/inc/uniform_vulkan.hpp"
 #include "renderer/utils/inc/vulkan_buffer_utils.hpp"
 
 namespace renderer {
@@ -15,7 +16,7 @@ class RenderingDeviceVulkan;
 }   // namespace rendering_device
 
 namespace uniform {
-class UniformCollectionVulkan : public UniformCollection {
+class UniformCollectionVulkan : public UniformCollection, public UniformVulkan {
 public:
     UniformCollectionVulkan(rendering_device::RenderingDeviceVulkan* f_parentDevice);
 
@@ -36,8 +37,10 @@ public:
 
     std::shared_ptr<UniformCollection> deepCopy() const override final;
 
-    vk::DescriptorSetLayout  getDescriptorSetLayout() const;
-    vk::raii::DescriptorSet& getDescriptorSet();
+    vk::DescriptorSetLayout  getDescriptorSetLayout() const override final;
+    vk::raii::DescriptorSet& getDescriptorSet() override final;
+
+    utils::VmaBuffer& getUniformBuffer(size_t f_index);
 
 private:
     void createDescriptorSetLayout();
