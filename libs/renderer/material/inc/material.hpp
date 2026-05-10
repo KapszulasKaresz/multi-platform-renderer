@@ -12,8 +12,17 @@
 
 namespace renderer {
 namespace material {
+enum MaterialType {
+    MATERIAL_TYPE_RENDER,
+    MATERIAL_TYPE_COMPUTE,
+    MATERIAL_TYPE_MAX
+};
+
 class Material : public RenderResource {
 public:
+    Material&    setMaterialType(MaterialType f_materialType);
+    MaterialType getMaterialType() const;
+
     virtual Material& setShader(std::string f_shaderPath);
     virtual Material& copyMaterial(std::shared_ptr<Material> f_other);
     virtual Material& create() = 0;
@@ -43,6 +52,8 @@ protected:
     std::string m_shaderLocation{ "" };
 
     std::shared_ptr<Material> m_original{ nullptr };
+
+    MaterialType m_materialType{ MaterialType::MATERIAL_TYPE_RENDER };
 };
 }   // namespace material
 }   // namespace  renderer

@@ -4,6 +4,17 @@
 
 namespace renderer {
 namespace material {
+Material& Material::setMaterialType(MaterialType f_materialType)
+{
+    m_materialType = f_materialType;
+    return *this;
+}
+
+MaterialType Material::getMaterialType() const
+{
+    return m_materialType;
+}
+
 Material& Material::setShader(std::string f_shaderPath)
 {
     m_shaderLocation = f_shaderPath;

@@ -17,7 +17,7 @@
     ],
     "configurations": [
         {
-            "name": "Launch",
+            "name": "standalone dbg",
             "request": "launch",
             "args": [
                 "--api",
@@ -29,6 +29,20 @@
             "console": "internalConsole",
             "type": "cppvsdbg",
             "program": "${workspaceFolder}/_build/build/${input:BuildType}/app/standalone/MultiPlatformRenderer_standalone.exe",
+        },
+        {
+            "name": "compute_demo dbg",
+            "request": "launch",
+            "args": [
+                "--api",
+                "vk"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "console": "internalConsole",
+            "type": "cppvsdbg",
+            "program": "${workspaceFolder}/_build/build/${input:BuildType}/app/compute_demo/MultiPlatformRenderer_compute_demo.exe",
         }
     ]
 }
