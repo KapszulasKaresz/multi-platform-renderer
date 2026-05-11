@@ -8,7 +8,11 @@ set(SHADER_SLANG_SOURCES
     ${CMAKE_SOURCE_DIR}/res/shaders/gltf_pbr.slang
 )
 
-add_slang_shader_target(${SHADER_COMPILE_STEP} SOURCES ${SHADER_SLANG_SOURCES})
+set(SHADER_COMPUTE_SOURCES
+    ${CMAKE_SOURCE_DIR}/res/shaders/compute.slang
+)
+
+add_slang_shader_target(${SHADER_COMPILE_STEP} SOURCES ${SHADER_SLANG_SOURCES} COMPUTE_SOURCES ${SHADER_COMPUTE_SOURCES})
 
 add_executable(${STANDALONE_PROJECT_NAME}
     src/main.cpp)

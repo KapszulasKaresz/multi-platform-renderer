@@ -223,10 +223,23 @@ CommandBufferVulkan& CommandBufferVulkan::useMaterial(
         );
     }
 
-    auto& l_commandBuffer = selectCurrentCommandBuffer();
-    l_commandBuffer.bindPipeline(
-        vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
-    );
+    if (l_vulkanMaterial->getMaterialType()
+        == material::MaterialType::MATERIAL_TYPE_RENDER)
+    {
+        auto& l_commandBuffer = selectCurrentCommandBuffer();
+        l_commandBuffer.bindPipeline(
+            vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
+        );
+    }
+    else if (l_vulkanMaterial->getMaterialType()
+             == material::MaterialType::MATERIAL_TYPE_COMPUTE)
+    {
+        auto& l_commandBuffer = selectCurrentCommandBuffer();
+        l_commandBuffer.bindPipeline(
+            vk::PipelineBindPoint::eCompute, l_vulkanMaterial->getPipeline()
+        );
+    }
+
 
     updateUniforms(f_material);
     return *this;
@@ -317,6 +330,17 @@ CommandBufferVulkan& CommandBufferVulkan::renderImGui()
     auto& l_commandBuffer = selectCurrentCommandBuffer();
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *l_commandBuffer);
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::dispatchCompute(
+    uint32_t f_groupCountX,
+    uint32_t f_groupCountY,
+    uint32_t f_groupCountZ
+)
+{
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.dispatch(f_groupCountX, f_groupCountY, f_groupCountZ);
     return *this;
 }
 

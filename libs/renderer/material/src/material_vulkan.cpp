@@ -23,7 +23,16 @@ MaterialVulkan& MaterialVulkan::create()
         m_valid = true;
         return *this;
     }
-    createPipeline();
+
+    if (getMaterialType() == MaterialType::MATERIAL_TYPE_RENDER) {
+        createGraphicsPipeline();
+    }
+    else if (getMaterialType() == MaterialType::MATERIAL_TYPE_COMPUTE) {
+        createComputePipeline();
+    }
+    else {
+        throw std::runtime_error("MaterialVulkan::create() Unsupported material type");
+    }
 
     for (const auto& image : getImages()) {
         if (image && image->getCurrentLayout() != vk::ImageLayout::eShaderReadOnlyOptimal)
@@ -57,7 +66,7 @@ vk::Pipeline MaterialVulkan::getPipeline()
         throw std::runtime_error("Material pipeline is not valid");
     }
     if (isOriginal()) {
-        return m_graphicsPipeline;
+        return m_pipeline;
     }
     else {
         return dynamic_cast<MaterialVulkan*>(m_original.get())->getPipeline();
@@ -124,7 +133,7 @@ std::vector<image::ImageVulkan*> MaterialVulkan::getImages()
     return l_ret;
 }
 
-void MaterialVulkan::createPipeline()
+void MaterialVulkan::createGraphicsPipeline()
 {
     vk::raii::ShaderModule l_shaderModule =
         createShaderModule(utils::readFile(m_shaderLocation + ".spv"));
@@ -258,7 +267,54 @@ void MaterialVulkan::createPipeline()
         .renderPass          = nullptr
     };
 
-    m_graphicsPipeline =
+    m_pipeline =
+        vk::raii::Pipeline(m_parentDevice->getLogicalDevice(), nullptr, l_pipelineInfo);
+}
+
+void MaterialVulkan::createComputePipeline()
+{
+    vk::raii::ShaderModule l_shaderModule =
+        createShaderModule(utils::readFile(m_shaderLocation + ".comp.spv"));
+
+    vk::PipelineShaderStageCreateInfo l_computeStageInfo{
+        .stage  = vk::ShaderStageFlagBits::eCompute,
+        .module = l_shaderModule,
+        .pName  = "computeMain"
+    };
+
+    std::vector<vk::DescriptorSetLayout> l_descriptorSetLayouts;
+    for (const auto& l_uniform : m_uniformCollections) {
+        uniform::UniformCollectionVulkan* l_rawCollection =
+            dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get());
+
+        if (l_rawCollection != nullptr) {
+            l_descriptorSetLayouts.push_back(l_rawCollection->getDescriptorSetLayout());
+        }
+    }
+
+    for (const auto& l_array : m_uniformArrays) {
+        uniform::UniformArrayVulkan* l_rawArray =
+            dynamic_cast<uniform::UniformArrayVulkan*>(l_array.get());
+
+        if (l_rawArray != nullptr) {
+            l_descriptorSetLayouts.push_back(l_rawArray->getDescriptorSetLayout());
+        }
+    }
+
+    vk::PipelineLayoutCreateInfo l_pipelineLayoutInfo{
+        .setLayoutCount         = static_cast<uint32_t>(l_descriptorSetLayouts.size()),
+        .pSetLayouts            = l_descriptorSetLayouts.data(),
+        .pushConstantRangeCount = 0
+    };
+
+    m_pipelineLayout = vk::raii::PipelineLayout(
+        m_parentDevice->getLogicalDevice(), l_pipelineLayoutInfo
+    );
+
+    vk::ComputePipelineCreateInfo l_pipelineInfo{ .stage  = l_computeStageInfo,
+                                                  .layout = *m_pipelineLayout };
+
+    m_pipeline =
         vk::raii::Pipeline(m_parentDevice->getLogicalDevice(), nullptr, l_pipelineInfo);
 }
 

@@ -24,6 +24,7 @@ public:
         createRenderingDevice() override final;
 
     RenderingApiDX& create();
+    RenderingApiDX& setUseImGui(bool f_use) override;
 
     Microsoft::WRL::ComPtr<IDXGIFactory7> getFactory();
     bool                                  isDebugEnabled() const;

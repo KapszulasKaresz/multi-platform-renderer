@@ -31,7 +31,6 @@ rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
         l_renderingDeviceVulkanRaw->addQueue(vk::QueueFlagBits::eGraphics)
             .addQueue(vk::QueueFlagBits::eCompute)
             .setEnableSampleShading()
-            .addExtension(vk::KHRSwapchainExtensionName)
             .addExtension(vk::KHRSpirv14ExtensionName)
             .addExtension(vk::KHRSynchronization2ExtensionName)
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
@@ -160,6 +159,12 @@ RenderingApiVulkan& RenderingApiVulkan::create()
 vk::raii::Instance& RenderingApiVulkan::getNativeHandle()
 {
     return m_instance;
+}
+
+RenderingApiVulkan& RenderingApiVulkan::setUseImGui(bool f_use)
+{
+    RenderingApi::setUseImGui(f_use);
+    return *this;
 }
 
 void RenderingApiVulkan::createInstance()

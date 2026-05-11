@@ -277,6 +277,15 @@ CommandBufferDX& CommandBufferDX::renderImGui()
     return *this;
 }
 
+CommandBufferDX& CommandBufferDX::dispatchCompute(
+    uint32_t f_groupCountX,
+    uint32_t f_groupCountY,
+    uint32_t f_groupCountZ
+)
+{
+    throw std::runtime_error("CommandBufferDX::dispatchCompute(...) not implemented yet");
+}
+
 render_target::RenderTarget* CommandBufferDX::getCurrentRenderTarget() const
 {
     return m_currentRenderTarget.get();

@@ -28,6 +28,8 @@ public:
     virtual void createMainRenderingDeviceWindow(window::Window* f_window) = 0;
     virtual std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() = 0;
 
+    virtual RenderingApi& setUseImGui(bool f_use);
+
     RenderingAPIType getRenderingAPIType() const;
 
 protected:

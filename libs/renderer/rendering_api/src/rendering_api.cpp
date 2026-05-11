@@ -11,6 +11,12 @@ rendering_device::RenderingDevice* RenderingApi::getMainRenderingDevice()
     return m_mainRenderingDevice.get();
 }
 
+RenderingApi& RenderingApi::setUseImGui(bool f_use)
+{
+    m_useImgui = f_use;
+    return *this;
+}
+
 RenderingAPIType RenderingApi::getRenderingAPIType() const
 {
     return m_apiType;

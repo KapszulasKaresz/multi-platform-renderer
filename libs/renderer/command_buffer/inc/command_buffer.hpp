@@ -48,6 +48,11 @@ public:
     virtual CommandBuffer& useViewport(const ViewportInfo& f_viewportInfo)  = 0;
     virtual CommandBuffer& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) = 0;
     virtual CommandBuffer& renderImGui()                                    = 0;
+    virtual CommandBuffer& dispatchCompute(
+        uint32_t f_groupCountX,
+        uint32_t f_groupCountY,
+        uint32_t f_groupCountZ
+    ) = 0;
 
     virtual render_target::RenderTarget* getCurrentRenderTarget() const = 0;
 

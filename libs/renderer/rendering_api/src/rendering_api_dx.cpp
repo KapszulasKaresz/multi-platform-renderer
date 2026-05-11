@@ -80,6 +80,12 @@ RenderingApiDX& RenderingApiDX::create()
     return *this;
 }
 
+RenderingApiDX& RenderingApiDX::setUseImGui(bool f_use)
+{
+    RenderingApi::setUseImGui(f_use);
+    return *this;
+}
+
 Microsoft::WRL::ComPtr<IDXGIFactory7> RenderingApiDX::getFactory()
 {
     return m_dxgiFactory;
