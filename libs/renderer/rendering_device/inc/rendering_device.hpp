@@ -27,6 +27,10 @@ namespace image {
 class Image;
 }   // namespace image
 
+namespace uniform {
+class UniformStorageBuffer;
+}   // namespace uniform
+
 namespace render_target {
 class RenderTarget;
 class RenderTargetWindow;
@@ -61,6 +65,8 @@ public:
     virtual std::shared_ptr<uniform::UniformArray>       createUniformArray()      = 0;
     virtual std::shared_ptr<texture::Texture>            createTexture()           = 0;
     virtual std::shared_ptr<render_target::RenderTarget> createRenderTarget()      = 0;
+    virtual std::shared_ptr<uniform::UniformStorageBuffer>
+        createUniformStorageBuffer() = 0;
 
     virtual bool preFrame()        = 0;
     virtual void postFrame()       = 0;

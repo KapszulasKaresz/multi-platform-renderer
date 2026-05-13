@@ -105,6 +105,14 @@ std::shared_ptr<render_target::RenderTarget> RenderingDeviceDX::createRenderTarg
     return std::make_shared<render_target::RenderTargetDX>(this);
 }
 
+std::shared_ptr<uniform::UniformStorageBuffer>
+    RenderingDeviceDX::createUniformStorageBuffer()
+{
+    throw std::runtime_error(
+        "RenderingDeviceDX::createUniformStorageBuffer() not implemented"
+    );
+}
+
 bool RenderingDeviceDX::preFrame()
 {
     waitForGPU();

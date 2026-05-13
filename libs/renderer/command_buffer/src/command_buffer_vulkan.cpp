@@ -223,22 +223,11 @@ CommandBufferVulkan& CommandBufferVulkan::useMaterial(
         );
     }
 
-    if (l_vulkanMaterial->getMaterialType()
-        == material::MaterialType::MATERIAL_TYPE_RENDER)
-    {
-        auto& l_commandBuffer = selectCurrentCommandBuffer();
-        l_commandBuffer.bindPipeline(
-            vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
-        );
-    }
-    else if (l_vulkanMaterial->getMaterialType()
-             == material::MaterialType::MATERIAL_TYPE_COMPUTE)
-    {
-        auto& l_commandBuffer = selectCurrentCommandBuffer();
-        l_commandBuffer.bindPipeline(
-            vk::PipelineBindPoint::eCompute, l_vulkanMaterial->getPipeline()
-        );
-    }
+
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.bindPipeline(
+        l_vulkanMaterial->getPipelineBindPoint(), l_vulkanMaterial->getPipeline()
+    );
 
 
     updateUniforms(f_material);
@@ -262,7 +251,7 @@ CommandBufferVulkan& CommandBufferVulkan::updateUniforms(
     auto& l_commandBuffer = selectCurrentCommandBuffer();
 
     l_commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eGraphics,
+        l_vulkanMaterial->getPipelineBindPoint(),
         l_vulkanMaterial->getPipelineLayout(),
         0,
         l_vulkanMaterial->getDescriptorSets(),

@@ -31,7 +31,9 @@ public:
         int                               f_position = -1
     ) override final;
 
-    UniformCollectionVulkan& setShaderstage(vk::ShaderStageFlagBits f_shaderStage);
+    UniformCollectionVulkan& setShaderstage(
+        vk::Flags<vk::ShaderStageFlagBits> f_shaderStage
+    );
 
     UniformCollectionVulkan& create() override final;
 
@@ -57,7 +59,9 @@ private:
 
     rendering_device::RenderingDeviceVulkan* m_parentDevice{ nullptr };
 
-    vk::ShaderStageFlagBits       m_shaderStage{ vk::ShaderStageFlagBits::eAllGraphics };
+    vk::Flags<vk::ShaderStageFlagBits> m_shaderStage{
+        vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics
+    };
     vk::raii::DescriptorSetLayout m_descriptorSetLayout{ nullptr };
 
     std::vector<vk::raii::DescriptorSet> m_descriptorSets{};

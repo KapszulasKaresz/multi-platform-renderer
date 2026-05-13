@@ -9,6 +9,7 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 #include "renderer/uniform/inc/uniform_array.hpp"
 #include "renderer/uniform/inc/uniform_collection.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer.hpp"
 
 namespace renderer {
 namespace material {
@@ -26,11 +27,18 @@ public:
     virtual Material& setShader(std::string f_shaderPath);
     virtual Material& copyMaterial(std::shared_ptr<Material> f_other);
     virtual Material& create() = 0;
+
     virtual Material& addUniformCollection(
         std::shared_ptr<uniform::UniformCollection> f_uniformCollection
     );
-
     virtual std::shared_ptr<uniform::UniformCollection> getUniformCollection(
+        std::string_view f_name
+    );
+
+    virtual Material& addUniformStorageBuffer(
+        std::shared_ptr<uniform::UniformStorageBuffer> f_uniformStorageBuffer
+    );
+    virtual std::shared_ptr<uniform::UniformStorageBuffer> getUniformStorageBuffer(
         std::string_view f_name
     );
 
@@ -46,8 +54,9 @@ public:
     void updateUniforms();
 
 protected:
-    std::vector<std::shared_ptr<uniform::UniformCollection>> m_uniformCollections;
-    std::vector<std::shared_ptr<uniform::UniformArray>>      m_uniformArrays;
+    std::vector<std::shared_ptr<uniform::UniformCollection>>    m_uniformCollections;
+    std::vector<std::shared_ptr<uniform::UniformArray>>         m_uniformArrays;
+    std::vector<std::shared_ptr<uniform::UniformStorageBuffer>> m_uniformStorageBuffers;
 
     std::string m_shaderLocation{ "" };
 

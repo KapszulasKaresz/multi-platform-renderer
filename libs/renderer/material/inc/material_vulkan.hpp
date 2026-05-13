@@ -29,6 +29,8 @@ public:
     std::vector<vk::DescriptorSet>   getDescriptorSets();
     std::vector<image::ImageVulkan*> getImages();
 
+    vk::PipelineBindPoint getPipelineBindPoint() const;
+
 private:
     void createGraphicsPipeline();
     void createComputePipeline();

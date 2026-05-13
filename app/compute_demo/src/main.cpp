@@ -1,3 +1,4 @@
+#include <array>
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
@@ -17,6 +18,7 @@
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/uniform/inc/uniform_collection.hpp"
 #include "renderer/uniform/inc/uniform_single.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer.hpp"
 #include "renderer/window/inc/window.hpp"
 
 int main(int argc, const char* argv[])
@@ -49,15 +51,34 @@ int main(int argc, const char* argv[])
     auto l_computeMaterial = l_computeDevice->createMaterial();
     l_computeMaterial
         ->setMaterialType(renderer::material::MaterialType::MATERIAL_TYPE_COMPUTE)
-        .setShader("res/shaders/compiled/compute")
-        .create();
+        .setShader("res/shaders/compiled/compute");
+
+    auto l_computeBuffer = l_computeDevice->createUniformStorageBuffer();
+
+    std::array<float, 4> l_computeData{ 1.0f, 2.0f, 3.0f, 4.0f };
+
+    l_computeBuffer->setName("ComputeBuffer").create();
+    l_computeBuffer->setValue(l_computeData);
+
+    l_computeMaterial->addUniformStorageBuffer(l_computeBuffer);
+
+    l_computeMaterial->create();
 
     auto l_commandBuffer = l_computeDevice->createCommandBuffer();
     l_commandBuffer->begin();
     l_commandBuffer->useMaterial(l_computeMaterial);
-    l_commandBuffer->dispatchCompute(1, 1, 1);
+    l_commandBuffer->dispatchCompute(4, 1, 1);
     l_commandBuffer->end();
     l_commandBuffer->submit();
+
+    l_computeData.fill(0.0f);
+
+    l_computeBuffer->getValue(l_computeData);
+
+    std::cout << "Compute data:";
+    for (const auto& value : l_computeData) {
+        std::cout << " " << value;
+    }
 
     return EXIT_SUCCESS;
 }

@@ -41,6 +41,11 @@ Material& Material::copyMaterial(std::shared_ptr<Material> f_other)
         // TODO not deep copy if needed
     }
 
+    for (int index = 0; index < f_other->m_uniformStorageBuffers.size(); ++index) {
+        m_uniformStorageBuffers.push_back(f_other->m_uniformStorageBuffers[index]);
+        // TODO not deep copy if needed
+    }
+
     return *this;
 }
 
@@ -69,6 +74,33 @@ std::shared_ptr<uniform::UniformCollection> Material::getUniformCollection(
     }
 
     throw std::runtime_error("Material::getUniformCollection(...) Uniform not found.");
+}
+
+Material& Material::addUniformStorageBuffer(
+    std::shared_ptr<uniform::UniformStorageBuffer> f_uniformStorageBuffer
+)
+{
+    m_uniformStorageBuffers.push_back(f_uniformStorageBuffer);
+    return *this;
+}
+
+std::shared_ptr<uniform::UniformStorageBuffer> Material::getUniformStorageBuffer(
+    std::string_view f_name
+)
+{
+    auto l_it = std::find_if(
+        m_uniformStorageBuffers.begin(),
+        m_uniformStorageBuffers.end(),
+        [&](const std::shared_ptr<uniform::UniformStorageBuffer>& f_member) {
+            return f_member->getName() == f_name;
+        }
+    );
+
+    if (l_it != m_uniformStorageBuffers.end()) {
+        return *l_it;
+    }
+
+    throw std::runtime_error("Material::getUniformStorageBuffer(...) Uniform not found.");
 }
 
 Material& Material::addUniformArray(std::shared_ptr<uniform::UniformArray> f_uniformArray)

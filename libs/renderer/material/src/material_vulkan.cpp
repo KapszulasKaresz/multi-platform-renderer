@@ -8,6 +8,7 @@
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_array_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer_vulkan.hpp"
 #include "renderer/utils/inc/utils.hpp"
 
 namespace renderer {
@@ -107,6 +108,15 @@ std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
         }
     }
 
+    for (const auto& l_storageBuffer : m_uniformStorageBuffers) {
+        uniform::UniformStorageBufferVulkan* l_rawStorageBuffer =
+            dynamic_cast<uniform::UniformStorageBufferVulkan*>(l_storageBuffer.get());
+
+        if (l_rawStorageBuffer != nullptr) {
+            l_ret.push_back(l_rawStorageBuffer->getDescriptorSet());
+        }
+    }
+
     return l_ret;
 }
 
@@ -131,6 +141,13 @@ std::vector<image::ImageVulkan*> MaterialVulkan::getImages()
     }
 
     return l_ret;
+}
+
+vk::PipelineBindPoint MaterialVulkan::getPipelineBindPoint() const
+{
+    return getMaterialType() == MaterialType::MATERIAL_TYPE_RENDER
+             ? vk::PipelineBindPoint::eGraphics
+             : vk::PipelineBindPoint::eCompute;
 }
 
 void MaterialVulkan::createGraphicsPipeline()
@@ -233,6 +250,15 @@ void MaterialVulkan::createGraphicsPipeline()
         }
     }
 
+    for (const auto& l_storageBuffer : m_uniformStorageBuffers) {
+        uniform::UniformStorageBufferVulkan* l_rawStorageBuffer =
+            dynamic_cast<uniform::UniformStorageBufferVulkan*>(l_storageBuffer.get());
+
+        if (l_rawStorageBuffer != nullptr) {
+            l_descriptorSetLayouts.push_back(l_rawStorageBuffer->getDescriptorSetLayout());
+        }
+    }
+
     vk::PipelineLayoutCreateInfo l_pipelineLayoutInfo{
         .setLayoutCount         = static_cast<uint32_t>(l_descriptorSetLayouts.size()),
         .pSetLayouts            = l_descriptorSetLayouts.data(),
@@ -298,6 +324,15 @@ void MaterialVulkan::createComputePipeline()
 
         if (l_rawArray != nullptr) {
             l_descriptorSetLayouts.push_back(l_rawArray->getDescriptorSetLayout());
+        }
+    }
+
+    for (const auto& l_storageBuffer : m_uniformStorageBuffers) {
+        uniform::UniformStorageBufferVulkan* l_rawStorageBuffer =
+            dynamic_cast<uniform::UniformStorageBufferVulkan*>(l_storageBuffer.get());
+
+        if (l_rawStorageBuffer != nullptr) {
+            l_descriptorSetLayouts.push_back(l_rawStorageBuffer->getDescriptorSetLayout());
         }
     }
 
