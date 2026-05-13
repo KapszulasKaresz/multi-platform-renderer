@@ -65,8 +65,11 @@ int main(int argc, const char* argv[])
     l_computeMaterial->create();
 
     auto l_commandBuffer = l_computeDevice->createCommandBuffer();
+    l_commandBuffer->reset();
     l_commandBuffer->begin();
     l_commandBuffer->useMaterial(l_computeMaterial);
+    l_commandBuffer->dispatchCompute(4, 1, 1);
+    l_commandBuffer->syncStorageBuffer(l_computeBuffer.get());
     l_commandBuffer->dispatchCompute(4, 1, 1);
     l_commandBuffer->end();
     l_commandBuffer->submit();

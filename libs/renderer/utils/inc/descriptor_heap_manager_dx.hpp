@@ -22,6 +22,10 @@ public:
     );
 
     UINT addCBV(const D3D12_CONSTANT_BUFFER_VIEW_DESC& f_cbvDesc);
+    UINT addUAV(
+        ID3D12Resource*                         f_resource,
+        const D3D12_UNORDERED_ACCESS_VIEW_DESC& f_uavDesc
+    );
     UINT addSRV(
         ID3D12Resource*                        f_resource,
         const D3D12_SHADER_RESOURCE_VIEW_DESC& f_srvDesc

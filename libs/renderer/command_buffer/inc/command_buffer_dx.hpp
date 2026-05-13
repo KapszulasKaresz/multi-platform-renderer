@@ -55,6 +55,9 @@ public:
         uint32_t f_groupCountY,
         uint32_t f_groupCountZ
     ) override final;
+    CommandBufferDX& syncStorageBuffer(
+        uniform::UniformStorageBuffer* f_buffer
+    ) override final;
 
     render_target::RenderTarget* getCurrentRenderTarget() const override final;
 

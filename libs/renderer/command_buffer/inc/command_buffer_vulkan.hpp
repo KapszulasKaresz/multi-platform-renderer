@@ -53,6 +53,10 @@ public:
         uint32_t f_groupCountZ
     ) override final;
 
+    CommandBufferVulkan& syncStorageBuffer(
+        uniform::UniformStorageBuffer* f_buffer
+    ) override final;
+
     render_target::RenderTarget* getCurrentRenderTarget() const override final;
 
     CommandBufferVulkan& copyBuffer(

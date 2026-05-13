@@ -25,6 +25,8 @@ public:
 
     size_t getAlignment() const override final;
 
+    utils::VmaBuffer& getBuffer();
+
 protected:
     void createDescriptorSetLayout();
     void createDescriptorSet();

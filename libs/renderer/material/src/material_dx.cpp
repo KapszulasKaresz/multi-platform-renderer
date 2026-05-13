@@ -6,6 +6,7 @@
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer_dx.hpp"
 #include "renderer/utils/inc/utils.hpp"
 
 namespace renderer {
@@ -23,7 +24,14 @@ MaterialDX& MaterialDX::create()
         return *this;
     }
     createRootSignature();
-    createPipelineState();
+
+    if (getMaterialType() == MaterialType::MATERIAL_TYPE_COMPUTE) {
+        createComputePipelineState();
+    }
+    else {
+        createPipelineState();
+    }
+
     m_valid = true;
     return *this;
 }
@@ -62,6 +70,25 @@ std::vector<UINT> MaterialDX::getCBVHeapOffsets()
         }
 
         l_ret.push_back(l_uniformDX->getHeapOffset());
+    }
+
+    return l_ret;
+}
+
+std::vector<UINT> MaterialDX::getUAVHeapOffsets()
+{
+    std::vector<UINT> l_ret;
+    for (auto l_storageBuffer : m_uniformStorageBuffers) {
+        uniform::UniformStorageBufferDX* l_storageBufferDX =
+            dynamic_cast<uniform::UniformStorageBufferDX*>(l_storageBuffer.get());
+
+        if (!l_storageBufferDX) {
+            throw std::runtime_error(
+                "MaterialDX::getUAVHeapOffsets() non dx storage buffer in the material"
+            );
+        }
+
+        l_ret.push_back(l_storageBufferDX->getHeapOffset());
     }
 
     return l_ret;
@@ -126,6 +153,7 @@ void MaterialDX::createRootSignature()
     }
 
     std::vector<D3D12_DESCRIPTOR_RANGE1> l_cbvRanges(m_uniformCollections.size());
+    std::vector<D3D12_DESCRIPTOR_RANGE1> l_uavRanges(m_uniformStorageBuffers.size());
     std::vector<D3D12_DESCRIPTOR_RANGE1> l_srvRanges(totalTextures);
     std::vector<D3D12_DESCRIPTOR_RANGE1> l_samplerRanges(totalTextures);
 
@@ -144,6 +172,24 @@ void MaterialDX::createRootSignature()
 
         l_rootParameter.DescriptorTable.NumDescriptorRanges = 1;
         l_rootParameter.DescriptorTable.pDescriptorRanges   = &l_cbvRanges[i];
+        l_rootParameters.push_back(l_rootParameter);
+    }
+
+    // UAV ranges
+    for (int i = 0; i < m_uniformStorageBuffers.size(); i++) {
+        l_uavRanges[i].BaseShaderRegister = i;
+        l_uavRanges[i].RangeType          = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+        l_uavRanges[i].NumDescriptors     = 1;
+        l_uavRanges[i].RegisterSpace      = 0;
+        l_uavRanges[i].OffsetInDescriptorsFromTableStart = 0;
+        l_uavRanges[i].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+
+        D3D12_ROOT_PARAMETER1 l_rootParameter{};
+        l_rootParameter.ParameterType    = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+        l_rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+        l_rootParameter.DescriptorTable.NumDescriptorRanges = 1;
+        l_rootParameter.DescriptorTable.pDescriptorRanges   = &l_uavRanges[i];
         l_rootParameters.push_back(l_rootParameter);
     }
 
@@ -315,6 +361,29 @@ void MaterialDX::createPipelineState()
     {
         throw std::runtime_error(
             "MaterialDX::createPipelineState() failed to create pipeline"
+        );
+    }
+}
+
+void MaterialDX::createComputePipelineState()
+{
+    D3D12_COMPUTE_PIPELINE_STATE_DESC l_psoDesc = {};
+
+    l_psoDesc.pRootSignature = m_rootSignature.Get();
+
+    D3D12_SHADER_BYTECODE l_csBytecode;
+    std::vector<char> l_csBytecodeData = utils::readFile(m_shaderLocation + ".comp.dxil");
+    l_csBytecode.pShaderBytecode       = l_csBytecodeData.data();
+    l_csBytecode.BytecodeLength        = l_csBytecodeData.size();
+    l_psoDesc.CS                       = l_csBytecode;
+
+
+    if (FAILED(m_parentDevice->getDevice()->CreateComputePipelineState(
+            &l_psoDesc, IID_PPV_ARGS(&m_pipelineState)
+        )))
+    {
+        throw std::runtime_error(
+            "MaterialDX::createComputePipelineState() failed to create pipeline"
         );
     }
 }

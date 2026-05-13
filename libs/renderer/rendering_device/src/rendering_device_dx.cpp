@@ -15,6 +15,7 @@
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/texture/inc/texture_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer_dx.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
 
@@ -108,9 +109,7 @@ std::shared_ptr<render_target::RenderTarget> RenderingDeviceDX::createRenderTarg
 std::shared_ptr<uniform::UniformStorageBuffer>
     RenderingDeviceDX::createUniformStorageBuffer()
 {
-    throw std::runtime_error(
-        "RenderingDeviceDX::createUniformStorageBuffer() not implemented"
-    );
+    return std::make_shared<uniform::UniformStorageBufferDX>(this);
 }
 
 bool RenderingDeviceDX::preFrame()
@@ -230,10 +229,12 @@ void RenderingDeviceDX::executeCommandList(ID3D12GraphicsCommandList* f_commandL
 RenderingDeviceDX::~RenderingDeviceDX()
 {
     waitForGPU();
-    ImGui_ImplDX12_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    waitForGPU();
+    if (m_useImGui) {
+        ImGui_ImplDX12_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        waitForGPU();
+    }
 }
 
 void RenderingDeviceDX::createAdapter()

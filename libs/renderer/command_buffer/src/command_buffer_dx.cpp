@@ -10,6 +10,7 @@
 #include "renderer/render_target/inc/render_target_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer_dx.hpp"
 
 namespace renderer {
 namespace command_buffer {
@@ -54,6 +55,7 @@ CommandBufferDX& CommandBufferDX::create()
 CommandBufferDX& CommandBufferDX::submit()
 {
     m_parentDevice->executeCommandList(selectCommandList());
+    m_parentDevice->waitForGPU();
     return *this;
 }
 
@@ -159,7 +161,13 @@ CommandBufferDX& CommandBufferDX::useMaterial(
 
     l_commandList->SetPipelineState(l_dxMaterial->getPipelineState());
 
-    l_commandList->SetGraphicsRootSignature(l_dxMaterial->getRootSignature());
+    if (l_dxMaterial->getMaterialType() == material::MaterialType::MATERIAL_TYPE_COMPUTE)
+    {
+        l_commandList->SetComputeRootSignature(l_dxMaterial->getRootSignature());
+    }
+    else {
+        l_commandList->SetGraphicsRootSignature(l_dxMaterial->getRootSignature());
+    }
 
     updateUniforms(f_material);
 
@@ -184,32 +192,97 @@ CommandBufferDX& CommandBufferDX::updateUniforms(
     l_dxMaterial->updateUniforms();
 
     auto l_CBVOffsets     = l_dxMaterial->getCBVHeapOffsets();
+    auto l_UAVOffsets     = l_dxMaterial->getUAVHeapOffsets();
     auto l_SRVOffsets     = l_dxMaterial->getSRVHeapOffsets();
     auto l_samplerOffsets = l_dxMaterial->getSamplerHeapOffsets();
 
     int l_index = 0;
 
     for (int i = 0; i < l_CBVOffsets.size(); i++) {
-        l_commandList->SetGraphicsRootDescriptorTable(
-            l_index,
-            m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(l_CBVOffsets[i])
-        );
+        if (l_dxMaterial->getMaterialType()
+            == material::MaterialType::MATERIAL_TYPE_COMPUTE)
+        {
+            l_commandList->SetComputeRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(
+                    l_CBVOffsets[i]
+                )
+            );
+        }
+        else {
+            l_commandList->SetGraphicsRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(
+                    l_CBVOffsets[i]
+                )
+            );
+        }
+        l_index++;
+    }
+
+    for (int i = 0; i < l_UAVOffsets.size(); i++) {
+        if (l_dxMaterial->getMaterialType()
+            == material::MaterialType::MATERIAL_TYPE_COMPUTE)
+        {
+            l_commandList->SetComputeRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(
+                    l_UAVOffsets[i]
+                )
+            );
+        }
+        else {
+            l_commandList->SetGraphicsRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(
+                    l_UAVOffsets[i]
+                )
+            );
+        }
         l_index++;
     }
 
     for (int i = 0; i < l_SRVOffsets.size(); i++) {
-        l_commandList->SetGraphicsRootDescriptorTable(
-            l_index,
-            m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(l_SRVOffsets[i])
-        );
+        if (l_dxMaterial->getMaterialType()
+            == material::MaterialType::MATERIAL_TYPE_COMPUTE)
+        {
+            l_commandList->SetComputeRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(
+                    l_SRVOffsets[i]
+                )
+            );
+        }
+        else {
+            l_commandList->SetGraphicsRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonDescriptorHeapManager()->getGPUHandle(
+                    l_SRVOffsets[i]
+                )
+            );
+        }
         l_index++;
     }
 
     for (int i = 0; i < l_samplerOffsets.size(); i++) {
-        l_commandList->SetGraphicsRootDescriptorTable(
-            l_index,
-            m_parentDevice->getCommonSamplerHeapManager()->getGPUHandle(l_samplerOffsets[i])
-        );
+        if (l_dxMaterial->getMaterialType()
+            == material::MaterialType::MATERIAL_TYPE_COMPUTE)
+        {
+            l_commandList->SetComputeRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonSamplerHeapManager()->getGPUHandle(
+                    l_samplerOffsets[i]
+                )
+            );
+        }
+        else {
+            l_commandList->SetGraphicsRootDescriptorTable(
+                l_index,
+                m_parentDevice->getCommonSamplerHeapManager()->getGPUHandle(
+                    l_samplerOffsets[i]
+                )
+            );
+        }
         l_index++;
     }
 
@@ -283,7 +356,27 @@ CommandBufferDX& CommandBufferDX::dispatchCompute(
     uint32_t f_groupCountZ
 )
 {
-    throw std::runtime_error("CommandBufferDX::dispatchCompute(...) not implemented yet");
+    auto l_commandList = selectCommandList();
+    l_commandList->Dispatch(f_groupCountX, f_groupCountY, f_groupCountZ);
+    return *this;
+}
+
+CommandBufferDX& CommandBufferDX::syncStorageBuffer(
+    uniform::UniformStorageBuffer* f_buffer
+)
+{
+    auto l_UniformStorageBufferVulkan =
+        dynamic_cast<uniform::UniformStorageBufferDX*>(f_buffer);
+
+    auto l_commandList = selectCommandList();
+
+    D3D12_RESOURCE_BARRIER l_uavBarrier = {};
+    l_uavBarrier.Type                   = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+    l_uavBarrier.Flags                  = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    l_uavBarrier.UAV.pResource = l_UniformStorageBufferVulkan->getBuffer()->GetResource();
+
+    l_commandList->ResourceBarrier(1, &l_uavBarrier);
+    return *this;
 }
 
 render_target::RenderTarget* CommandBufferDX::getCurrentRenderTarget() const

@@ -14,6 +14,8 @@ class UniformStorageBuffer : public Uniform {
 public:
     UniformStorageBuffer();
 
+    size_t getSize() const override final;
+
     virtual void setValueRaw(std::span<const std::byte> f_dataView) = 0;
 
     template <typename T>

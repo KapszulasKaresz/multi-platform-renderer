@@ -92,6 +92,11 @@ size_t UniformStorageBufferVulkan::getAlignment() const
     return 16;
 }
 
+utils::VmaBuffer& UniformStorageBufferVulkan::getBuffer()
+{
+    return m_buffer;
+}
+
 void UniformStorageBufferVulkan::createDescriptorSetLayout()
 {
     std::vector<vk::DescriptorSetLayoutBinding> l_layoutBindings;

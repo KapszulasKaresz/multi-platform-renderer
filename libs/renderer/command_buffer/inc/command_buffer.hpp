@@ -15,6 +15,10 @@ namespace material {
 class Material;
 }   // namespace material
 
+namespace uniform {
+class UniformStorageBuffer;
+}   // namespace uniform
+
 namespace render_target {
 class RenderTarget;
 }   // namespace render_target
@@ -53,6 +57,8 @@ public:
         uint32_t f_groupCountY,
         uint32_t f_groupCountZ
     ) = 0;
+
+    virtual CommandBuffer& syncStorageBuffer(uniform::UniformStorageBuffer* f_buffer) = 0;
 
     virtual render_target::RenderTarget* getCurrentRenderTarget() const = 0;
 
