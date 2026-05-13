@@ -45,3 +45,4 @@ There is an example standalone app in the repository which uses the renderer lib
 | Mip-map generation      |   ✅    |       ✅ |
 | MSAA                    |   ✅    |       ✅ |
 | ImGui                   |   ✅    |       ✅ |
+| Compute                 |   ✅    |       ✅ |
