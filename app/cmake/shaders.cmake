@@ -80,6 +80,7 @@ function(add_slang_shader_target TARGET)
             -target spirv
             -profile spirv_1_4
             -emit-spirv-directly
+            -fvk-use-scalar-layout
             -fvk-use-entrypoint-name
             -entry computeMain
             -o ${SPV_COMP_OUTPUT}

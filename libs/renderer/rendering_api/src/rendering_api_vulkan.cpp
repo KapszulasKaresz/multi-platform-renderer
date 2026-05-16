@@ -40,7 +40,7 @@ rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
                                         true } }, // vk::PhysicalDeviceFeatures2
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
-                    {}, // vk::PhysicalDeviceVulkan12Features
+                    { .scalarBlockLayout = true }, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features
@@ -87,7 +87,7 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
                                         true } }, // vk::PhysicalDeviceFeatures2
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
-                    {}, // vk::PhysicalDeviceVulkan12Features
+                    { .scalarBlockLayout = true }, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features

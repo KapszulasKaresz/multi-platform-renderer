@@ -55,7 +55,9 @@ int main(int argc, const char* argv[])
 
     auto l_computeBuffer = l_computeDevice->createUniformStorageBuffer();
 
-    std::array<float, 4> l_computeData{ 1.0f, 2.0f, 3.0f, 4.0f };
+    std::array<glm::vec3, 4> l_computeData{
+        glm::vec3(1.0f), glm::vec3(2.0f), glm::vec3(3.0f), glm::vec3(4.0f)
+    };
 
     l_computeBuffer->setName("ComputeBuffer").create();
     l_computeBuffer->setValue(l_computeData);
@@ -74,14 +76,16 @@ int main(int argc, const char* argv[])
     l_commandBuffer->end();
     l_commandBuffer->submit();
 
-    l_computeData.fill(0.0f);
+    l_computeData.fill(glm::vec3(0.0f));
 
     l_computeBuffer->getValue(l_computeData);
 
     std::cout << "Compute data:";
     for (const auto& value : l_computeData) {
-        std::cout << " " << value;
+        std::cout << " " << value.x << ", " << value.y << ", " << value.z << ";"
+                  << std::endl;
     }
+    std::cout << std::endl;
 
     return EXIT_SUCCESS;
 }
