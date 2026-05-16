@@ -54,6 +54,8 @@ public:
     void postFrame() override final;
     void finishRendering() override final;
 
+    std::string getDeviceName() const override final;
+
     RenderingDeviceDX& setWindow(window::Window* f_window) override final;
     RenderingDeviceDX& create() override final;
 
@@ -79,6 +81,7 @@ private:
     void createSyncObjects();
     void createRenderTargetWindow();
     void createDescriptorHeapManager();
+    void createDeviceNameString();
     void initImGui();
 
     static void imguiAllocation(
@@ -110,6 +113,8 @@ private:
 
     std::shared_ptr<utils::DescriptorHeapManagerDX> m_commonDescriptorHeap{ nullptr };
     std::shared_ptr<utils::DescriptorHeapManagerDX> m_commonSamplerHeap{ nullptr };
+
+    std::string m_deviceName{ "Unknown D3D12 Device" };
 
     // Sync objects
     UINT                                m_frameIndex{ 0 };

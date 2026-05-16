@@ -200,6 +200,16 @@ void RenderingDeviceVulkan::finishRendering()
     m_device.waitIdle();
 }
 
+std::string RenderingDeviceVulkan::getDeviceName() const
+{
+    if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::getDeviceName() device isn't valid"
+        );
+    }
+    return m_physicalDevice.getProperties().deviceName;
+}
+
 RenderingDeviceVulkan& RenderingDeviceVulkan::addExtension(const char* f_extensionName)
 {
     if (m_valid) {

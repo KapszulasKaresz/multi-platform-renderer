@@ -80,7 +80,15 @@ int main(int argc, const char* argv[])
 
     l_computeBuffer->getValue(l_computeData);
 
-    std::cout << "Compute data:";
+    std::cout << "API used: "
+              << (l_renderingServer.getRenderingApi()->getRenderingAPIType()
+                          == renderer::rendering_api::RENDERING_API_TYPE_VULKAN
+                      ? "Vulkan"
+                      : "DirectX 12")
+              << std::endl;
+    std::cout << "Device used: " << l_computeDevice->getDeviceName() << std::endl;
+
+    std::cout << "Compute data:" << std::endl;
     for (const auto& value : l_computeData) {
         std::cout << " " << value.x << ", " << value.y << ", " << value.z << ";"
                   << std::endl;

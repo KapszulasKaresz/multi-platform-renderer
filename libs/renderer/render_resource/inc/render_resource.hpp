@@ -7,7 +7,7 @@
 namespace renderer {
 class RenderResource {
 public:
-    virtual bool isValid();
+    virtual bool isValid() const;
 
 protected:
     bool m_valid{ false };

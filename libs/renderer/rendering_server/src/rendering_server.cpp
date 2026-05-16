@@ -133,6 +133,17 @@ void RenderingServer::frame()
             ImGui::Begin("Rendering Server Info");
             ImGui::Text("FPS: %.1f", 1.0f / l_deltaTime);
             ImGui::Text("Frame time: %.3f ms", l_deltaTime * 1000.0f);
+            ImGui::Text(
+                "Render API: %s",
+                m_renderingApi->getRenderingAPIType()
+                        == rendering_api::RENDERING_API_TYPE_VULKAN
+                    ? "Vulkan"
+                : m_renderingApi->getRenderingAPIType()
+                        == rendering_api::RENDERING_API_TYPE_DIRECTX12
+                    ? "DirectX 12"
+                    : "Unknown"
+            );
+            ImGui::Text("Device: %s", l_renderingDevice->getDeviceName().c_str());
             ImGui::End();
             l_commandBuffer->renderImGui();
         }

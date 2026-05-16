@@ -2,6 +2,7 @@
 #define RENDERING_DEVICE_VULKAN_HPP_INCLUDED
 
 #include <cstdint>
+#include <string>
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
@@ -57,6 +58,8 @@ public:
     bool preFrame() override final;
     void postFrame() override final;
     void finishRendering() override final;
+
+    std::string getDeviceName() const override final;
 
     using FeatureChain = vk::StructureChain<VULKAN_FEATURE_CHAIN>;
 

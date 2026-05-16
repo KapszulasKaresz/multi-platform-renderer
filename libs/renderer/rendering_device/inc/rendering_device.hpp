@@ -2,6 +2,7 @@
 #define RENDERING_DEVICE_HPP_INCLUDED
 
 #include <memory>
+#include <string>
 
 #include "renderer/render_resource/inc/render_resource.hpp"
 
@@ -71,6 +72,8 @@ public:
     virtual bool preFrame()        = 0;
     virtual void postFrame()       = 0;
     virtual void finishRendering() = 0;
+
+    virtual std::string getDeviceName() const = 0;
 
     uint32_t getCurrentFrame() const;
     int      getMaxFramesInFlight() const;
