@@ -47,10 +47,14 @@ public:
     std::shared_ptr<uniform::UniformArray>       createUniformArray() override final;
     std::shared_ptr<texture::Texture>            createTexture() override final;
     std::shared_ptr<render_target::RenderTarget> createRenderTarget() override final;
+    std::shared_ptr<uniform::UniformStorageBuffer>
+        createUniformStorageBuffer() override final;
 
     bool preFrame() override final;
     void postFrame() override final;
     void finishRendering() override final;
+
+    std::string getDeviceName() const override final;
 
     RenderingDeviceDX& setWindow(window::Window* f_window) override final;
     RenderingDeviceDX& create() override final;
@@ -77,6 +81,7 @@ private:
     void createSyncObjects();
     void createRenderTargetWindow();
     void createDescriptorHeapManager();
+    void createDeviceNameString();
     void initImGui();
 
     static void imguiAllocation(
@@ -108,6 +113,8 @@ private:
 
     std::shared_ptr<utils::DescriptorHeapManagerDX> m_commonDescriptorHeap{ nullptr };
     std::shared_ptr<utils::DescriptorHeapManagerDX> m_commonSamplerHeap{ nullptr };
+
+    std::string m_deviceName{ "Unknown D3D12 Device" };
 
     // Sync objects
     UINT                                m_frameIndex{ 0 };

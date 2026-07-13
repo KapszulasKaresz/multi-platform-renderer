@@ -8,7 +8,7 @@ namespace renderer {
 namespace rendering_api {
 RenderingApiDX::RenderingApiDX()
 {
-    m_apiType = RENDERING_API_DIRECTX12;
+    m_apiType = RENDERING_API_TYPE_DIRECTX12;
 }
 
 rendering_device::RenderingDevice* RenderingApiDX::getMainRenderingDevice()
@@ -77,6 +77,12 @@ RenderingApiDX& RenderingApiDX::create()
     createFactory();
 
     m_valid = true;
+    return *this;
+}
+
+RenderingApiDX& RenderingApiDX::setUseImGui(bool f_use)
+{
+    RenderingApi::setUseImGui(f_use);
     return *this;
 }
 

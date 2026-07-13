@@ -30,6 +30,10 @@ public:
 
     VkBuffer      get() const;
     VmaAllocation getAllocation() const;
+    size_t        getSize() const;
+
+    std::vector<uint8_t> copyDataToCPU();
+    bool                 isHostVisible() const;
 
     void upload(const void* f_src, VkDeviceSize f_size, VkDeviceSize f_offset = 0);
 

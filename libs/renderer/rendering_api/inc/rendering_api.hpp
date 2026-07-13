@@ -16,7 +16,7 @@ namespace rendering_api {
 enum RenderingAPIType {
     RENDERING_API_TYPE_NONE,
     RENDERING_API_TYPE_VULKAN,
-    RENDERING_API_DIRECTX12,
+    RENDERING_API_TYPE_DIRECTX12,
     RENDERING_API_TYPE_MAX
 };
 
@@ -27,6 +27,8 @@ public:
     virtual rendering_device::RenderingDevice* getMainRenderingDevice();
     virtual void createMainRenderingDeviceWindow(window::Window* f_window) = 0;
     virtual std::shared_ptr<rendering_device::RenderingDevice> createRenderingDevice() = 0;
+
+    virtual RenderingApi& setUseImGui(bool f_use);
 
     RenderingAPIType getRenderingAPIType() const;
 

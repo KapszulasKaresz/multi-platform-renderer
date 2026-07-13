@@ -47,6 +47,15 @@ public:
     CommandBufferVulkan& useViewport(const ViewportInfo& f_viewportInfo) override final;
     CommandBufferVulkan& draw(std::shared_ptr<mesh::TriangleMesh> f_mesh) override final;
     CommandBufferVulkan& renderImGui() override final;
+    CommandBufferVulkan& dispatchCompute(
+        uint32_t f_groupCountX,
+        uint32_t f_groupCountY,
+        uint32_t f_groupCountZ
+    ) override final;
+
+    CommandBufferVulkan& syncStorageBuffer(
+        uniform::UniformStorageBuffer* f_buffer
+    ) override final;
 
     render_target::RenderTarget* getCurrentRenderTarget() const override final;
 

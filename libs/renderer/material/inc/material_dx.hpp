@@ -26,12 +26,14 @@ public:
     ID3D12PipelineState* getPipelineState();
 
     std::vector<UINT> getCBVHeapOffsets();
+    std::vector<UINT> getUAVHeapOffsets();
     std::vector<UINT> getSRVHeapOffsets();
     std::vector<UINT> getSamplerHeapOffsets();
 
 private:
     void createRootSignature();
     void createPipelineState();
+    void createComputePipelineState();
 
     static std::array<D3D12_INPUT_ELEMENT_DESC, 5> getInputElementDescription();
 

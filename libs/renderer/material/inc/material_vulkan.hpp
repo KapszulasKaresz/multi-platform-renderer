@@ -29,8 +29,11 @@ public:
     std::vector<vk::DescriptorSet>   getDescriptorSets();
     std::vector<image::ImageVulkan*> getImages();
 
+    vk::PipelineBindPoint getPipelineBindPoint() const;
+
 private:
-    void createPipeline();
+    void createGraphicsPipeline();
+    void createComputePipeline();
 
     [[nodiscard]]
     vk::raii::ShaderModule createShaderModule(const std::vector<char>& f_code) const;
@@ -38,7 +41,7 @@ private:
     rendering_device::RenderingDeviceVulkan* m_parentDevice{ nullptr };
 
     vk::raii::PipelineLayout m_pipelineLayout{ nullptr };
-    vk::raii::Pipeline       m_graphicsPipeline{ nullptr };
+    vk::raii::Pipeline       m_pipeline{ nullptr };
 };
 }   // namespace material
 }   // namespace  renderer

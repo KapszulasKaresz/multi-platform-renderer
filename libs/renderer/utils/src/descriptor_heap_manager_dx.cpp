@@ -57,6 +57,34 @@ UINT DescriptorHeapManagerDX::addCBV(const D3D12_CONSTANT_BUFFER_VIEW_DESC& f_cb
     return l_originalFreeHandle;
 }
 
+UINT DescriptorHeapManagerDX::addUAV(
+    ID3D12Resource*                         f_resource,
+    const D3D12_UNORDERED_ACCESS_VIEW_DESC& f_uavDesc
+)
+{
+    if (m_type != D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV) {
+        throw std::runtime_error(
+            "DescriptorHeapManagerDX::addUAV() type must be "
+            "D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV"
+        );
+    }
+    if (m_freeHandles.size() == 0) {
+        throw std::runtime_error(
+            "DescriptorHeapManagerDX::addUAV(...) Descriptor heap full"
+        );
+    }
+
+    auto l_originalFreeHandle = m_freeHandles.back();
+    auto l_handle             = getCPUHandle(l_originalFreeHandle);
+    m_freeHandles.pop_back();
+
+    m_parentDevice->getDevice()->CreateUnorderedAccessView(
+        f_resource, nullptr, &f_uavDesc, l_handle
+    );
+
+    return l_originalFreeHandle;
+}
+
 UINT DescriptorHeapManagerDX::addSRV(
     ID3D12Resource*                        f_resource,
     const D3D12_SHADER_RESOURCE_VIEW_DESC& f_srvDesc

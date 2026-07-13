@@ -31,7 +31,6 @@ rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
         l_renderingDeviceVulkanRaw->addQueue(vk::QueueFlagBits::eGraphics)
             .addQueue(vk::QueueFlagBits::eCompute)
             .setEnableSampleShading()
-            .addExtension(vk::KHRSwapchainExtensionName)
             .addExtension(vk::KHRSpirv14ExtensionName)
             .addExtension(vk::KHRSynchronization2ExtensionName)
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
@@ -41,7 +40,7 @@ rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
                                         true } }, // vk::PhysicalDeviceFeatures2
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
-                    {}, // vk::PhysicalDeviceVulkan12Features
+                    { .scalarBlockLayout = true }, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features
@@ -88,7 +87,7 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
                                         true } }, // vk::PhysicalDeviceFeatures2
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
-                    {}, // vk::PhysicalDeviceVulkan12Features
+                    { .scalarBlockLayout = true }, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features
@@ -160,6 +159,12 @@ RenderingApiVulkan& RenderingApiVulkan::create()
 vk::raii::Instance& RenderingApiVulkan::getNativeHandle()
 {
     return m_instance;
+}
+
+RenderingApiVulkan& RenderingApiVulkan::setUseImGui(bool f_use)
+{
+    RenderingApi::setUseImGui(f_use);
+    return *this;
 }
 
 void RenderingApiVulkan::createInstance()

@@ -2,6 +2,7 @@
 #define RENDERING_DEVICE_VULKAN_HPP_INCLUDED
 
 #include <cstdint>
+#include <string>
 
 #include <vulkan/vulkan.hpp>
 #include <vulkan/vulkan_raii.hpp>
@@ -51,10 +52,14 @@ public:
     std::shared_ptr<uniform::UniformArray>       createUniformArray() override final;
     std::shared_ptr<texture::Texture>            createTexture() override final;
     std::shared_ptr<render_target::RenderTarget> createRenderTarget() override final;
+    std::shared_ptr<uniform::UniformStorageBuffer>
+        createUniformStorageBuffer() override final;
 
     bool preFrame() override final;
     void postFrame() override final;
     void finishRendering() override final;
+
+    std::string getDeviceName() const override final;
 
     using FeatureChain = vk::StructureChain<VULKAN_FEATURE_CHAIN>;
 

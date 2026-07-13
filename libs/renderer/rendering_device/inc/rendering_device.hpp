@@ -2,6 +2,7 @@
 #define RENDERING_DEVICE_HPP_INCLUDED
 
 #include <memory>
+#include <string>
 
 #include "renderer/render_resource/inc/render_resource.hpp"
 
@@ -26,6 +27,10 @@ class TriangleMesh;
 namespace image {
 class Image;
 }   // namespace image
+
+namespace uniform {
+class UniformStorageBuffer;
+}   // namespace uniform
 
 namespace render_target {
 class RenderTarget;
@@ -61,10 +66,14 @@ public:
     virtual std::shared_ptr<uniform::UniformArray>       createUniformArray()      = 0;
     virtual std::shared_ptr<texture::Texture>            createTexture()           = 0;
     virtual std::shared_ptr<render_target::RenderTarget> createRenderTarget()      = 0;
+    virtual std::shared_ptr<uniform::UniformStorageBuffer>
+        createUniformStorageBuffer() = 0;
 
     virtual bool preFrame()        = 0;
     virtual void postFrame()       = 0;
     virtual void finishRendering() = 0;
+
+    virtual std::string getDeviceName() const = 0;
 
     uint32_t getCurrentFrame() const;
     int      getMaxFramesInFlight() const;

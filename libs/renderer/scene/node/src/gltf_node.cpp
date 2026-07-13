@@ -410,7 +410,7 @@ void GltfNode::createDefaultMaterial()
     l_lightArray->addMember(l_light1);
 
     l_lightArray->create();
-    m_defaultMaterial->setShader("res/shaders/gltf_pbr")
+    m_defaultMaterial->setShader("res/shaders/compiled/gltf_pbr")
         .addUniformCollection(l_uniformCollectionCamera)
         .addUniformCollection(l_uniformCollectionObject)
         .addUniformCollection(l_lightArray)

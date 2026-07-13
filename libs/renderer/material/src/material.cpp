@@ -4,6 +4,17 @@
 
 namespace renderer {
 namespace material {
+Material& Material::setMaterialType(MaterialType f_materialType)
+{
+    m_materialType = f_materialType;
+    return *this;
+}
+
+MaterialType Material::getMaterialType() const
+{
+    return m_materialType;
+}
+
 Material& Material::setShader(std::string f_shaderPath)
 {
     m_shaderLocation = f_shaderPath;
@@ -27,6 +38,11 @@ Material& Material::copyMaterial(std::shared_ptr<Material> f_other)
 
     for (int index = 0; index < f_other->m_uniformArrays.size(); ++index) {
         m_uniformArrays.push_back(f_other->m_uniformArrays[index]);
+        // TODO not deep copy if needed
+    }
+
+    for (int index = 0; index < f_other->m_uniformStorageBuffers.size(); ++index) {
+        m_uniformStorageBuffers.push_back(f_other->m_uniformStorageBuffers[index]);
         // TODO not deep copy if needed
     }
 
@@ -58,6 +74,33 @@ std::shared_ptr<uniform::UniformCollection> Material::getUniformCollection(
     }
 
     throw std::runtime_error("Material::getUniformCollection(...) Uniform not found.");
+}
+
+Material& Material::addUniformStorageBuffer(
+    std::shared_ptr<uniform::UniformStorageBuffer> f_uniformStorageBuffer
+)
+{
+    m_uniformStorageBuffers.push_back(f_uniformStorageBuffer);
+    return *this;
+}
+
+std::shared_ptr<uniform::UniformStorageBuffer> Material::getUniformStorageBuffer(
+    std::string_view f_name
+)
+{
+    auto l_it = std::find_if(
+        m_uniformStorageBuffers.begin(),
+        m_uniformStorageBuffers.end(),
+        [&](const std::shared_ptr<uniform::UniformStorageBuffer>& f_member) {
+            return f_member->getName() == f_name;
+        }
+    );
+
+    if (l_it != m_uniformStorageBuffers.end()) {
+        return *l_it;
+    }
+
+    throw std::runtime_error("Material::getUniformStorageBuffer(...) Uniform not found.");
 }
 
 Material& Material::addUniformArray(std::shared_ptr<uniform::UniformArray> f_uniformArray)

@@ -9,19 +9,36 @@
 #include "renderer/render_resource/inc/render_resource.hpp"
 #include "renderer/uniform/inc/uniform_array.hpp"
 #include "renderer/uniform/inc/uniform_collection.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer.hpp"
 
 namespace renderer {
 namespace material {
+enum MaterialType {
+    MATERIAL_TYPE_RENDER,
+    MATERIAL_TYPE_COMPUTE,
+    MATERIAL_TYPE_MAX
+};
+
 class Material : public RenderResource {
 public:
+    Material&    setMaterialType(MaterialType f_materialType);
+    MaterialType getMaterialType() const;
+
     virtual Material& setShader(std::string f_shaderPath);
     virtual Material& copyMaterial(std::shared_ptr<Material> f_other);
     virtual Material& create() = 0;
+
     virtual Material& addUniformCollection(
         std::shared_ptr<uniform::UniformCollection> f_uniformCollection
     );
-
     virtual std::shared_ptr<uniform::UniformCollection> getUniformCollection(
+        std::string_view f_name
+    );
+
+    virtual Material& addUniformStorageBuffer(
+        std::shared_ptr<uniform::UniformStorageBuffer> f_uniformStorageBuffer
+    );
+    virtual std::shared_ptr<uniform::UniformStorageBuffer> getUniformStorageBuffer(
         std::string_view f_name
     );
 
@@ -37,12 +54,15 @@ public:
     void updateUniforms();
 
 protected:
-    std::vector<std::shared_ptr<uniform::UniformCollection>> m_uniformCollections;
-    std::vector<std::shared_ptr<uniform::UniformArray>>      m_uniformArrays;
+    std::vector<std::shared_ptr<uniform::UniformCollection>>    m_uniformCollections;
+    std::vector<std::shared_ptr<uniform::UniformArray>>         m_uniformArrays;
+    std::vector<std::shared_ptr<uniform::UniformStorageBuffer>> m_uniformStorageBuffers;
 
     std::string m_shaderLocation{ "" };
 
     std::shared_ptr<Material> m_original{ nullptr };
+
+    MaterialType m_materialType{ MaterialType::MATERIAL_TYPE_RENDER };
 };
 }   // namespace material
 }   // namespace  renderer

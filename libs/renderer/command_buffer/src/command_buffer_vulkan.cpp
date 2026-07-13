@@ -11,6 +11,7 @@
 #include "renderer/render_target/inc/render_target_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer_vulkan.hpp"
 
 namespace renderer {
 namespace command_buffer {
@@ -223,10 +224,12 @@ CommandBufferVulkan& CommandBufferVulkan::useMaterial(
         );
     }
 
+
     auto& l_commandBuffer = selectCurrentCommandBuffer();
     l_commandBuffer.bindPipeline(
-        vk::PipelineBindPoint::eGraphics, l_vulkanMaterial->getPipeline()
+        l_vulkanMaterial->getPipelineBindPoint(), l_vulkanMaterial->getPipeline()
     );
+
 
     updateUniforms(f_material);
     return *this;
@@ -249,7 +252,7 @@ CommandBufferVulkan& CommandBufferVulkan::updateUniforms(
     auto& l_commandBuffer = selectCurrentCommandBuffer();
 
     l_commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eGraphics,
+        l_vulkanMaterial->getPipelineBindPoint(),
         l_vulkanMaterial->getPipelineLayout(),
         0,
         l_vulkanMaterial->getDescriptorSets(),
@@ -317,6 +320,50 @@ CommandBufferVulkan& CommandBufferVulkan::renderImGui()
     auto& l_commandBuffer = selectCurrentCommandBuffer();
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), *l_commandBuffer);
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::dispatchCompute(
+    uint32_t f_groupCountX,
+    uint32_t f_groupCountY,
+    uint32_t f_groupCountZ
+)
+{
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    l_commandBuffer.dispatch(f_groupCountX, f_groupCountY, f_groupCountZ);
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::syncStorageBuffer(
+    uniform::UniformStorageBuffer* f_buffer
+)
+{
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+
+    auto l_UniformStorageBufferVulkan =
+        dynamic_cast<uniform::UniformStorageBufferVulkan*>(f_buffer);
+
+    vk::BufferMemoryBarrier l_barrier = {
+        .srcAccessMask       = vk::AccessFlagBits::eShaderWrite,
+        .dstAccessMask       = vk::AccessFlagBits::eShaderRead,
+        .srcQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .dstQueueFamilyIndex = vk::QueueFamilyIgnored,
+        .buffer              = l_UniformStorageBufferVulkan->getBuffer().get(),
+        .offset              = 0,
+        .size                = l_UniformStorageBufferVulkan->getBuffer().getSize()
+    };
+
+    l_commandBuffer.pipelineBarrier(
+        vk::PipelineStageFlagBits::eComputeShader
+            | vk::PipelineStageFlagBits::eAllGraphics,
+        vk::PipelineStageFlagBits::eComputeShader
+            | vk::PipelineStageFlagBits::eAllGraphics,
+        {},
+        {},
+        l_barrier,
+        {}
+    );
+
     return *this;
 }
 

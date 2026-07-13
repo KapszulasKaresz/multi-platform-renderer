@@ -28,6 +28,8 @@ public:
 
     vk::raii::Instance& getNativeHandle();
 
+    RenderingApiVulkan& setUseImGui(bool f_use) override;
+
     ~RenderingApiVulkan();
 
 private:

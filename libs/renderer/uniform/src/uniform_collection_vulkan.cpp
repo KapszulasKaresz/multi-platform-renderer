@@ -13,6 +13,7 @@ UniformCollectionVulkan::UniformCollectionVulkan(
     rendering_device::RenderingDeviceVulkan* f_parentDevice
 )
     : UniformCollection(),
+      UniformVulkan(),
       m_parentDevice(f_parentDevice)
 {}
 
@@ -55,7 +56,7 @@ void UniformCollectionVulkan::addTexture(
 }
 
 UniformCollectionVulkan& UniformCollectionVulkan::setShaderstage(
-    vk::ShaderStageFlagBits f_shaderStage
+    vk::Flags<vk::ShaderStageFlagBits> f_shaderStage
 )
 {
     m_shaderStage = f_shaderStage;

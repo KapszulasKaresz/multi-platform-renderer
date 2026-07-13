@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
+
 namespace renderer {
 namespace utils {
 VmaBuffer::VmaBuffer()
@@ -73,6 +75,41 @@ VkBuffer VmaBuffer::get() const
 VmaAllocation VmaBuffer::getAllocation() const
 {
     return m_allocation;
+}
+
+size_t VmaBuffer::getSize() const
+{
+    VmaAllocationInfo l_allocInfo;
+    vmaGetAllocationInfo(m_allocator, m_allocation, &l_allocInfo);
+    return l_allocInfo.size;
+}
+
+std::vector<uint8_t> VmaBuffer::copyDataToCPU()
+{
+    VmaAllocationInfo l_allocInfo;
+    vmaGetAllocationInfo(m_allocator, m_allocation, &l_allocInfo);
+
+    void* l_mappedData = nullptr;
+    if (vmaMapMemory(m_allocator, m_allocation, &l_mappedData) != VK_SUCCESS) {
+        throw std::runtime_error("VmaBuffer::copyDataToCPU() Map error");
+    }
+
+    vmaInvalidateAllocation(m_allocator, m_allocation, 0, VK_WHOLE_SIZE);
+
+    std::vector<uint8_t> l_cpuData(l_allocInfo.size);
+    std::memcpy(l_cpuData.data(), l_mappedData, l_allocInfo.size);
+
+    vmaUnmapMemory(m_allocator, m_allocation);
+
+    return l_cpuData;
+}
+
+bool VmaBuffer::isHostVisible() const
+{
+    VmaAllocationInfo l_allocInfo;
+    vmaGetAllocationInfo(m_allocator, m_allocation, &l_allocInfo);
+
+    return l_allocInfo.pMappedData != nullptr;
 }
 
 void VmaBuffer::upload(const void* f_src, VkDeviceSize f_size, VkDeviceSize f_offset)

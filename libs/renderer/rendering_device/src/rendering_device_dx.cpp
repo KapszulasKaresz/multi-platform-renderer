@@ -15,6 +15,7 @@
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/texture/inc/texture_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer_dx.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
 
@@ -105,6 +106,12 @@ std::shared_ptr<render_target::RenderTarget> RenderingDeviceDX::createRenderTarg
     return std::make_shared<render_target::RenderTargetDX>(this);
 }
 
+std::shared_ptr<uniform::UniformStorageBuffer>
+    RenderingDeviceDX::createUniformStorageBuffer()
+{
+    return std::make_shared<uniform::UniformStorageBufferDX>(this);
+}
+
 bool RenderingDeviceDX::preFrame()
 {
     waitForGPU();
@@ -134,6 +141,15 @@ void RenderingDeviceDX::finishRendering()
     waitForGPU();
 }
 
+std::string RenderingDeviceDX::getDeviceName() const
+{
+    if (!isValid()) {
+        throw std::runtime_error("RenderingDeviceDX::getDeviceName() device isn't valid");
+    }
+
+    return m_deviceName;
+}
+
 RenderingDeviceDX& RenderingDeviceDX::setWindow(window::Window* f_window)
 {
     m_window = f_window;
@@ -153,6 +169,7 @@ RenderingDeviceDX& RenderingDeviceDX::create()
     if (m_useImGui) {
         initImGui();
     }
+    createDeviceNameString();
     return *this;
 }
 
@@ -222,10 +239,12 @@ void RenderingDeviceDX::executeCommandList(ID3D12GraphicsCommandList* f_commandL
 RenderingDeviceDX::~RenderingDeviceDX()
 {
     waitForGPU();
-    ImGui_ImplDX12_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-    waitForGPU();
+    if (m_useImGui) {
+        ImGui_ImplDX12_Shutdown();
+        ImGui_ImplGlfw_Shutdown();
+        ImGui::DestroyContext();
+        waitForGPU();
+    }
 }
 
 void RenderingDeviceDX::createAdapter()
@@ -358,6 +377,31 @@ void RenderingDeviceDX::createDescriptorHeapManager()
     );
     m_commonSamplerHeap = std::make_shared<utils::DescriptorHeapManagerDX>(
         this, 1'024, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER
+    );
+}
+
+void RenderingDeviceDX::createDeviceNameString()
+{
+    if (!m_adapter) {
+        m_deviceName = "No Adapter Available";
+    }
+
+    DXGI_ADAPTER_DESC3 desc;
+    if (FAILED(m_adapter->GetDesc3(&desc))) {
+        m_deviceName = "Unknown Device";
+    }
+
+    int size_needed = WideCharToMultiByte(
+        CP_UTF8, 0, desc.Description, -1, nullptr, 0, nullptr, nullptr
+    );
+
+    if (size_needed <= 0) {
+        m_deviceName = "String Conversion Failed";
+    }
+
+    m_deviceName.resize(size_needed - 1);
+    WideCharToMultiByte(
+        CP_UTF8, 0, desc.Description, -1, &m_deviceName[0], size_needed, nullptr, nullptr
     );
 }
 

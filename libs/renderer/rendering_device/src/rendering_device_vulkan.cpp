@@ -15,6 +15,7 @@
 #include "renderer/texture/inc/texture_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_array_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer_vulkan.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
 
@@ -121,6 +122,12 @@ std::shared_ptr<render_target::RenderTarget> RenderingDeviceVulkan::createRender
     return std::make_shared<render_target::RenderTargetVulkan>(this);
 }
 
+std::shared_ptr<uniform::UniformStorageBuffer>
+    RenderingDeviceVulkan::createUniformStorageBuffer()
+{
+    return std::make_shared<uniform::UniformStorageBufferVulkan>(this);
+}
+
 bool RenderingDeviceVulkan::preFrame()
 {
     while (
@@ -191,6 +198,16 @@ void RenderingDeviceVulkan::postFrame()
 void RenderingDeviceVulkan::finishRendering()
 {
     m_device.waitIdle();
+}
+
+std::string RenderingDeviceVulkan::getDeviceName() const
+{
+    if (!isValid()) {
+        throw std::runtime_error(
+            "RenderingDeviceVulkan::getDeviceName() device isn't valid"
+        );
+    }
+    return m_physicalDevice.getProperties().deviceName;
 }
 
 RenderingDeviceVulkan& RenderingDeviceVulkan::addExtension(const char* f_extensionName)
@@ -598,7 +615,8 @@ void RenderingDeviceVulkan::createDescriptorPool()
         vk::DescriptorPoolSize(vk::DescriptorType::eUniformBuffer, maxFramesInFlight * 200),
         vk::DescriptorPoolSize(
             vk::DescriptorType::eCombinedImageSampler, maxFramesInFlight * 200
-        )
+        ),
+        vk::DescriptorPoolSize{ vk::DescriptorType::eStorageBuffer, 1'000 },
     };
     vk::DescriptorPoolCreateInfo l_poolInfo{
         .flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,
