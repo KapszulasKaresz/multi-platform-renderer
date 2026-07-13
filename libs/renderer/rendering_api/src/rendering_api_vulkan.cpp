@@ -34,6 +34,9 @@ rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
             .addExtension(vk::KHRSpirv14ExtensionName)
             .addExtension(vk::KHRSynchronization2ExtensionName)
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
+            .addExtension(vk::KHRAccelerationStructureExtensionName)
+            .addExtension(vk::KHRRayTracingPipelineExtensionName)
+            .addExtension(vk::KHRDeferredHostOperationsExtensionName)
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
                     { .features = { .samplerAnisotropy =
@@ -45,7 +48,11 @@ rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features
                     { .extendedDynamicState =
-                          true }  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+                          true }, // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+                    { .accelerationStructure =
+                          true }, // vk::PhysicalDeviceAccelerationStructureFeaturesKHR
+                    { .rayTracingPipeline =
+                          true }  // vk::PhysicalDeviceRayTracingPipelineFeaturesKHR
         }
             )
             .setTargetMSAASamples(8)   // TODO making this a setting
@@ -80,6 +87,9 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
             .addExtension(vk::KHRSpirv14ExtensionName)
             .addExtension(vk::KHRSynchronization2ExtensionName)
             .addExtension(vk::KHRCreateRenderpass2ExtensionName)
+            .addExtension(vk::KHRAccelerationStructureExtensionName)
+            .addExtension(vk::KHRRayTracingPipelineExtensionName)
+            .addExtension(vk::KHRDeferredHostOperationsExtensionName)
             .setFeatures(
                 rendering_device::RenderingDeviceVulkan::FeatureChain{
                     { .features = { .sampleRateShading = true,
@@ -92,7 +102,11 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features
                     { .extendedDynamicState =
-                          true }  // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+                          true }, // vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+                    { .accelerationStructure =
+                          true }, // vk::PhysicalDeviceAccelerationStructureFeaturesKHR
+                    { .rayTracingPipeline =
+                          true }  // vk::PhysicalDeviceRayTracingPipelineFeaturesKHR
         }
             )
             .setWindow(f_window)

@@ -33,7 +33,9 @@ namespace rendering_device {
     vk::PhysicalDeviceFeatures2, vk::PhysicalDeviceVulkan11Features,            \
         vk::PhysicalDeviceVulkan12Features, vk::PhysicalDeviceVulkan13Features, \
         vk::PhysicalDeviceVulkan14Features,                                     \
-        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT
+        vk::PhysicalDeviceExtendedDynamicStateFeaturesEXT,                      \
+        vk::PhysicalDeviceAccelerationStructureFeaturesKHR,                     \
+        vk::PhysicalDeviceRayTracingPipelineFeaturesKHR
 
 class RenderingDeviceVulkan : public RenderingDevice {
 public:
