@@ -1,3 +1,1 @@
-target_sources(${RENDERER_LIB_NAME} PRIVATE
-
-)
+add_subdirectory(acceleration_structure)

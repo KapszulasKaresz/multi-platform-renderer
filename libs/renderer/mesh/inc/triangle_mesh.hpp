@@ -13,12 +13,16 @@ public:
     TriangleMesh& setVertices(const std::vector<Vertex>& f_vertices);
     TriangleMesh& setIndices(const std::vector<uint32_t>& f_indices);
 
-    int getIndicieCount() const;
+    int  getIndicieCount() const;
+    AABB getAABB() override;
 
 protected:
-    // Test data
+    void calculateAABB();
+
     std::vector<Vertex>   m_vertices;
     std::vector<uint32_t> m_indices;
+    AABB                  m_aabb{};
+    bool                  m_aabbCalculated{ false };
 };
 }   // namespace mesh
 }   // namespace renderer

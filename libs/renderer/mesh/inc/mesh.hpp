@@ -22,9 +22,15 @@ struct Vertex {
     static std::array<vk::VertexInputAttributeDescription, 5> getAttributeDescriptions();
 };
 
+struct AABB {
+    glm::vec3 m_min{ 0.0f, 0.0f, 0.0f };
+    glm::vec3 m_max{ 0.0f, 0.0f, 0.0f };
+};
+
 class Mesh : public RenderResource {
 public:
-    virtual Mesh& create() = 0;
+    virtual Mesh& create()  = 0;
+    virtual AABB  getAABB() = 0;
 
 protected:
 };
