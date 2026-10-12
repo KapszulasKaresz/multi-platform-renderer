@@ -13,6 +13,7 @@ public:
     TriangleMesh& setVertices(const std::vector<Vertex>& f_vertices);
     TriangleMesh& setIndices(const std::vector<uint32_t>& f_indices);
 
+    size_t getVertexCount() const;
     int  getIndicieCount() const;
     AABB getAABB() override;
 

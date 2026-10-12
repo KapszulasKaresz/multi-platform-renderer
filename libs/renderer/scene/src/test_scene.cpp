@@ -8,6 +8,7 @@
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/material/inc/material.hpp"
 #include "renderer/render_target/inc/render_target.hpp"
+#include "renderer/rendering_device/inc/rendering_device.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/scene/node/inc/gltf_node.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
@@ -16,6 +17,10 @@
 
 namespace renderer {
 namespace scene {
+
+TestScene::TestScene() = default;
+
+TestScene::~TestScene() = default;
 
 TestScene& TestScene::setMesh(std::shared_ptr<mesh::TriangleMesh> f_mesh)
 {
@@ -33,6 +38,13 @@ TestScene& TestScene::create()
     // l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Buggy/glTF/Buggy.gltf");
     l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf");
     m_rootNode->addChild(std::move(l_gltfNode));
+
+    auto* l_renderingDevice =
+        rendering_server::RenderingServer::getInstance().getMainRenderingDevice();
+    m_accelerationStructure = l_renderingDevice->createAccelerationStructure();
+    if (m_accelerationStructure) {
+        m_accelerationStructure->setScene(m_rootNode.get()).create();
+    }
 
     m_camera = std::make_unique<PerspectiveCamera>();
     m_drawVisitor.setCamera(m_camera.get());

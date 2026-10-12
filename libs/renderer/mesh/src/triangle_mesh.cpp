@@ -13,6 +13,11 @@ int TriangleMesh::getIndicieCount() const
     return m_indices.size();
 }
 
+size_t TriangleMesh::getVertexCount() const
+{
+    return m_vertices.size();
+}
+
 AABB TriangleMesh::getAABB()
 {
     if (!m_aabbCalculated) {

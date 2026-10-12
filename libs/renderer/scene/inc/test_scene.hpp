@@ -2,6 +2,7 @@
 #define TEST_SCENE_HPP_INCLUDED
 
 #include "renderer/mesh/inc/triangle_mesh.hpp"
+#include "renderer/ray_tracing/acceleration_structure/inc/acceleration_structure.hpp"
 #include "renderer/render_resource/inc/render_resource.hpp"
 #include "renderer/scene/camera/inc/perspective_camera.hpp"
 #include "renderer/scene/node/inc/node.hpp"
@@ -22,8 +23,12 @@ namespace scene {
 
 class TestScene : public RenderResource {
 public:
+    TestScene();
+
     TestScene& setMesh(std::shared_ptr<mesh::TriangleMesh> f_mesh);
     TestScene& create();
+
+    ~TestScene();
 
     void recordCommandBuffer(
         command_buffer::CommandBuffer* f_commandBuffer,
@@ -35,6 +40,9 @@ private:
     std::shared_ptr<mesh::TriangleMesh> m_mesh{ nullptr };
 
     std::unique_ptr<Node>               m_rootNode{ nullptr };
+    std::shared_ptr<ray_tracing::AccelerationStructure> m_accelerationStructure{
+        nullptr
+    };
     ImGuiVisitor                        m_imguiVisitor{};
     DrawVisitor                         m_drawVisitor{};
     std::unique_ptr<PerspectiveCamera>  m_camera{ nullptr };

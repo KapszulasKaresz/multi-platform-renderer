@@ -9,6 +9,7 @@
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/material/inc/material_vulkan.hpp"
 #include "renderer/mesh/inc/triangle_mesh_vulkan.hpp"
+#include "renderer/ray_tracing/acceleration_structure/inc/acceleration_structure_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_vulkan.hpp"
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
@@ -99,6 +100,12 @@ std::shared_ptr<command_buffer::CommandBuffer>
 std::shared_ptr<mesh::TriangleMesh> RenderingDeviceVulkan::createTriangleMesh()
 {
     return std::make_shared<mesh::TriangleMeshVulkan>(this);
+}
+
+std::shared_ptr<ray_tracing::AccelerationStructure>
+    RenderingDeviceVulkan::createAccelerationStructure()
+{
+    return std::make_shared<ray_tracing::AccelerationStructureVulkan>(this);
 }
 
 std::shared_ptr<uniform::UniformCollection>
@@ -602,7 +609,9 @@ void RenderingDeviceVulkan::createSyncObjects()
 
 void RenderingDeviceVulkan::createVmaAllocator()
 {
-    VmaAllocatorCreateInfo l_allocatorInfo{ .physicalDevice = *m_physicalDevice,
+    VmaAllocatorCreateInfo l_allocatorInfo{ .flags =
+                                                VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+                                            .physicalDevice = *m_physicalDevice,
                                             .device         = *m_device,
                                             .instance = *m_parentApi->getNativeHandle() };
 

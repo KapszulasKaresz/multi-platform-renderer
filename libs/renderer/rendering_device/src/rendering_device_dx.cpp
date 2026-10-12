@@ -85,6 +85,12 @@ std::shared_ptr<mesh::TriangleMesh> RenderingDeviceDX::createTriangleMesh()
     return std::make_shared<mesh::TriangleMeshDX>(this);
 }
 
+std::shared_ptr<ray_tracing::AccelerationStructure>
+    RenderingDeviceDX::createAccelerationStructure()
+{
+    return nullptr;
+}
+
 std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformCollection()
 {
     return std::make_shared<uniform::UniformCollectionDX>(this);

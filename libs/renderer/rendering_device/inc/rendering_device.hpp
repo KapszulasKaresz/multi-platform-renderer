@@ -41,6 +41,10 @@ namespace texture {
 class Texture;
 }   // namespace texture
 
+namespace ray_tracing {
+class AccelerationStructure;
+}   // namespace ray_tracing
+
 namespace window {
 class Window;
 }   // namespace window
@@ -62,6 +66,8 @@ public:
     virtual std::shared_ptr<command_buffer::CommandBuffer> createCommandBuffer() = 0;
     virtual std::shared_ptr<command_buffer::CommandBuffer> getRenderingCommandBuffer() = 0;
     virtual std::shared_ptr<mesh::TriangleMesh>          createTriangleMesh()      = 0;
+    virtual std::shared_ptr<ray_tracing::AccelerationStructure>
+        createAccelerationStructure() = 0;
     virtual std::shared_ptr<uniform::UniformCollection>  createUniformCollection() = 0;
     virtual std::shared_ptr<uniform::UniformArray>       createUniformArray()      = 0;
     virtual std::shared_ptr<texture::Texture>            createTexture()           = 0;

@@ -39,7 +39,9 @@ void TriangleMeshVulkan::createVertexBuffer()
     m_vertexBuffer = utils::VmaBuffer(
         m_parentDevice->getVmaAllocator(),
         l_dataSize,
-        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer,
+        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eVertexBuffer
+            | vk::BufferUsageFlagBits::eShaderDeviceAddress
+            | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
         VMA_MEMORY_USAGE_GPU_ONLY,
         0
     );
@@ -71,7 +73,9 @@ void TriangleMeshVulkan::createIndexBuffer()
     m_indexBuffer = utils::VmaBuffer(
         m_parentDevice->getVmaAllocator(),
         l_dataSize,
-        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer,
+        vk::BufferUsageFlagBits::eTransferDst | vk::BufferUsageFlagBits::eIndexBuffer
+            | vk::BufferUsageFlagBits::eShaderDeviceAddress
+            | vk::BufferUsageFlagBits::eAccelerationStructureBuildInputReadOnlyKHR,
         VMA_MEMORY_USAGE_GPU_ONLY,
         0
     );
