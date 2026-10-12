@@ -124,10 +124,32 @@ void RenderingServer::frame()
         l_commandBuffer->reset();
         l_commandBuffer->begin();
         l_commandBuffer->beginRendering(
-            { .m_renderTarget = l_renderingDevice->getRenderTargetWindow(),
-              .m_clearColor   = glm::vec4(0.0, 0.0, 0.0, 1.0) }
+            {
+                .m_renderTarget = l_renderingDevice->getRenderTargetWindow(),
+                .m_clearColor   = glm::vec4(0.0, 0.0, 0.0, 1.0),
+            }
         );
         m_scene->recordCommandBuffer(l_commandBuffer.get(), l_deltaTime);
+
+        const bool l_hasRayTracing = m_scene->isRayTracingEnabled();
+        if (l_hasRayTracing) {
+            const auto l_renderTargetSize =
+                l_renderingDevice->getRenderTargetWindow()->getSize();
+            l_commandBuffer->endRendering();
+            m_scene->recordRayTracingCommandBuffer(
+                l_commandBuffer.get(),
+                l_renderingDevice->getRenderTargetWindow().get(),
+                static_cast<uint32_t>(l_renderTargetSize.x),
+                static_cast<uint32_t>(l_renderTargetSize.y)
+            );
+            l_commandBuffer->beginRendering(
+                {
+                    .m_renderTarget = l_renderingDevice->getRenderTargetWindow(),
+                    .m_clearColor   = glm::vec4(0.0, 0.0, 0.0, 1.0),
+                    .m_clear        = false,
+                }
+            );
+        }
 
         if (l_renderingDevice->isImGuiEnabled()) {
             ImGui::Begin("Rendering Server Info");

@@ -55,6 +55,16 @@ public:
         uint32_t f_groupCountY,
         uint32_t f_groupCountZ
     ) override final;
+    CommandBufferDX& traceRays(
+        std::shared_ptr<material::Material> f_material,
+        render_target::RenderTarget* f_renderTarget,
+        uint32_t f_width,
+        uint32_t f_height
+    ) override final;
+    CommandBufferDX& copyRenderTarget(
+        render_target::RenderTarget* f_source,
+        render_target::RenderTarget* f_destination
+    ) override final;
     CommandBufferDX& syncStorageBuffer(
         uniform::UniformStorageBuffer* f_buffer
     ) override final;

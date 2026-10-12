@@ -58,6 +58,17 @@ bool RenderTarget::isDepthBufferEnabled() const
     return m_useDepthBuffer;
 }
 
+RenderTarget& RenderTarget::setStorageImage(bool f_useStorageImage)
+{
+    if (isValid()) {
+        throw std::runtime_error(
+            "RenderTarget::setStorageImage() cannot be changed after creation"
+        );
+    }
+    m_useStorageImage = f_useStorageImage;
+    return *this;
+}
+
 image::ImageFormat RenderTarget::getFormat() const
 {
     return m_format;

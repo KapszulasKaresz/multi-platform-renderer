@@ -11,4 +11,6 @@ target_sources(${RENDERER_LIB_NAME} PRIVATE
     "src/uniform_storage_buffer.cpp"
     "src/uniform_storage_buffer_vulkan.cpp"
     "src/uniform_storage_buffer_dx.cpp"
+    "src/uniform_acceleration_structure.cpp"
+    "src/uniform_acceleration_structure_vulkan.cpp"
 )

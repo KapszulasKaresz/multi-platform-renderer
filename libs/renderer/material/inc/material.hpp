@@ -8,6 +8,7 @@
 
 #include "renderer/render_resource/inc/render_resource.hpp"
 #include "renderer/uniform/inc/uniform_array.hpp"
+#include "renderer/uniform/inc/uniform_acceleration_structure.hpp"
 #include "renderer/uniform/inc/uniform_collection.hpp"
 #include "renderer/uniform/inc/uniform_storage_buffer.hpp"
 
@@ -16,6 +17,7 @@ namespace material {
 enum MaterialType {
     MATERIAL_TYPE_RENDER,
     MATERIAL_TYPE_COMPUTE,
+    MATERIAL_TYPE_RAY_TRACING,
     MATERIAL_TYPE_MAX
 };
 
@@ -42,6 +44,12 @@ public:
         std::string_view f_name
     );
 
+    virtual Material& addUniformAccelerationStructure(
+        std::shared_ptr<uniform::UniformAccelerationStructure> f_uniform
+    );
+    virtual std::shared_ptr<uniform::UniformAccelerationStructure>
+        getUniformAccelerationStructure(std::string_view f_name);
+
     virtual Material& addUniformArray(
         std::shared_ptr<uniform::UniformArray> f_uniformArray
     );
@@ -57,6 +65,8 @@ protected:
     std::vector<std::shared_ptr<uniform::UniformCollection>>    m_uniformCollections;
     std::vector<std::shared_ptr<uniform::UniformArray>>         m_uniformArrays;
     std::vector<std::shared_ptr<uniform::UniformStorageBuffer>> m_uniformStorageBuffers;
+    std::vector<std::shared_ptr<uniform::UniformAccelerationStructure>>
+        m_uniformAccelerationStructures;
 
     std::string m_shaderLocation{ "" };
 

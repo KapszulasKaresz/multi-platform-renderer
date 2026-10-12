@@ -334,6 +334,120 @@ CommandBufferVulkan& CommandBufferVulkan::dispatchCompute(
     return *this;
 }
 
+CommandBufferVulkan& CommandBufferVulkan::traceRays(
+    std::shared_ptr<material::Material> f_material,
+    render_target::RenderTarget*        f_renderTarget,
+    uint32_t                            f_width,
+    uint32_t                            f_height
+)
+{
+    auto* l_material = dynamic_cast<material::MaterialVulkan*>(f_material.get());
+    if (!l_material
+        || l_material->getPipelineBindPoint() != vk::PipelineBindPoint::eRayTracingKHR)
+    {
+        throw std::runtime_error(
+            "CommandBufferVulkan::traceRays() requires a ray-tracing material"
+        );
+    }
+    auto& l_commandBuffer = selectCurrentCommandBuffer();
+    auto* l_renderTargetImage =
+        dynamic_cast<image::ImageVulkan*>(f_renderTarget->getImage().get());
+    if (!l_renderTargetImage) {
+        throw std::runtime_error("traceRays() requires a Vulkan render target image");
+    }
+
+    l_material->setRayTracingOutput(l_renderTargetImage);
+    transitionImageLayout(
+        l_renderTargetImage,
+        vk::ImageLayout::eGeneral,
+        vk::AccessFlags2{},
+        vk::AccessFlagBits2::eShaderStorageWrite,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eRayTracingShaderKHR
+    );
+    l_commandBuffer.bindPipeline(
+        vk::PipelineBindPoint::eRayTracingKHR, l_material->getPipeline()
+    );
+    updateUniforms(f_material);
+    l_commandBuffer.traceRaysKHR(
+        l_material->getRaygenRegion(),
+        l_material->getMissRegion(),
+        l_material->getHitRegion(),
+        {},
+        f_width,
+        f_height,
+        1
+    );
+    transitionImageLayout(
+        l_renderTargetImage,
+        vk::ImageLayout::eTransferSrcOptimal,
+        vk::AccessFlagBits2::eShaderStorageWrite,
+        vk::AccessFlagBits2::eTransferRead,
+        vk::PipelineStageFlagBits2::eRayTracingShaderKHR,
+        vk::PipelineStageFlagBits2::eTransfer
+    );
+    return *this;
+}
+
+CommandBufferVulkan& CommandBufferVulkan::copyRenderTarget(
+    render_target::RenderTarget* f_source,
+    render_target::RenderTarget* f_destination
+)
+{
+    auto* l_source = dynamic_cast<image::ImageVulkan*>(f_source->getImage().get());
+    auto* l_destination =
+        dynamic_cast<image::ImageVulkan*>(f_destination->getImage().get());
+
+    if (!l_source || !l_destination) {
+        throw std::runtime_error("copyRenderTarget() requires Vulkan render targets");
+    }
+
+    const auto l_sourceSize      = f_source->getSize();
+    const auto l_destinationSize = f_destination->getSize();
+    transitionImageLayout(
+        l_destination,
+        vk::ImageLayout::eTransferDstOptimal,
+        {},
+        vk::AccessFlagBits2::eTransferWrite,
+        vk::PipelineStageFlagBits2::eTopOfPipe,
+        vk::PipelineStageFlagBits2::eTransfer
+    );
+    const vk::ImageBlit l_blit{
+        .srcSubresource = { vk::ImageAspectFlagBits::eColor, 0, 0, 1 },
+        .srcOffsets =
+            std::array<vk::Offset3D, 2>{
+                           vk::Offset3D{ 0, 0, 0 },
+                           vk::Offset3D{ static_cast<int32_t>(l_sourceSize.x),
+                              static_cast<int32_t>(l_sourceSize.y),
+                              1 } },
+        .dstSubresource = { vk::ImageAspectFlagBits::eColor, 0, 0, 1 },
+        .dstOffsets =
+            std::array<vk::Offset3D, 2>{
+                           vk::Offset3D{ 0, 0, 0 },
+                           vk::Offset3D{ static_cast<int32_t>(l_destinationSize.x),
+                              static_cast<int32_t>(l_destinationSize.y),
+                              1 } }
+    };
+    selectCurrentCommandBuffer().blitImage(
+        l_source->getImage(),
+        vk::ImageLayout::eTransferSrcOptimal,
+        l_destination->getImage(),
+        vk::ImageLayout::eTransferDstOptimal,
+        l_blit,
+        vk::Filter::eLinear
+    );
+    transitionImageLayout(
+        l_destination,
+        vk::ImageLayout::eColorAttachmentOptimal,
+        vk::AccessFlagBits2::eTransferWrite,
+        vk::AccessFlagBits2::eColorAttachmentRead
+            | vk::AccessFlagBits2::eColorAttachmentWrite,
+        vk::PipelineStageFlagBits2::eTransfer,
+        vk::PipelineStageFlagBits2::eColorAttachmentOutput
+    );
+    return *this;
+}
+
 CommandBufferVulkan& CommandBufferVulkan::syncStorageBuffer(
     uniform::UniformStorageBuffer* f_buffer
 )
@@ -589,6 +703,34 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
         vk::ImageAspectFlagBits::eColor
     );
 
+    if (f_renderBeginInfo.m_directSwapchain) {
+        auto&                l_commandBuffer = selectCurrentCommandBuffer();
+        const auto           l_clearColorVec = f_renderBeginInfo.m_clearColor;
+        const vk::ClearValue l_clearColor    = vk::ClearColorValue(
+            l_clearColorVec.x, l_clearColorVec.y, l_clearColorVec.z, l_clearColorVec.w
+        );
+        const vk::RenderingAttachmentInfo l_colorAttachmentInfo = {
+            .imageView   = f_swapchChainImage->getImageView(),
+            .imageLayout = vk::ImageLayout::eColorAttachmentOptimal,
+            .loadOp      = f_renderBeginInfo.m_clear ? vk::AttachmentLoadOp::eClear
+                                                     : vk::AttachmentLoadOp::eLoad,
+            .storeOp     = vk::AttachmentStoreOp::eStore,
+            .clearValue  = l_clearColor
+        };
+        const auto              l_extentSize    = m_currentRenderTarget->getSize();
+        const vk::RenderingInfo l_renderingInfo = {
+            .renderArea = { .offset = { 0, 0 },
+                           .extent = { static_cast<uint32_t>(l_extentSize.x),
+                                        static_cast<uint32_t>(l_extentSize.y) } },
+            .layerCount = 1,
+            .colorAttachmentCount = 1,
+            .pColorAttachments    = &l_colorAttachmentInfo
+        };
+        l_commandBuffer.setDepthTestEnable(false);
+        l_commandBuffer.beginRendering(l_renderingInfo);
+        return;
+    }
+
     transitionImageLayout(
         f_colorImage,
         vk::ImageLayout::eColorAttachmentOptimal,
@@ -629,12 +771,14 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
 
         vk::ClearValue l_clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
 
-        l_depthAttachmentInfo = { .imageView = l_depthImageVulkan->getImageView(),
-                                  .imageLayout =
-                                      vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                                  .loadOp     = vk::AttachmentLoadOp::eClear,
-                                  .storeOp    = vk::AttachmentStoreOp::eDontCare,
-                                  .clearValue = l_clearDepth };
+        l_depthAttachmentInfo = {
+            .imageView   = l_depthImageVulkan->getImageView(),
+            .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            .loadOp      = f_renderBeginInfo.m_clear ? vk::AttachmentLoadOp::eClear
+                                                     : vk::AttachmentLoadOp::eLoad,
+            .storeOp     = vk::AttachmentStoreOp::eDontCare,
+            .clearValue  = l_clearDepth
+        };
         l_commandBuffer.setDepthTestEnable(true);
     }
     else {
@@ -654,7 +798,8 @@ void CommandBufferVulkan::beginRenderingSwpachainImage(
                                 : vk::ResolveModeFlagBits::eAverage,
         .resolveImageView   = f_swapchChainImage->getImageView(),
         .resolveImageLayout = vk::ImageLayout::eColorAttachmentOptimal,
-        .loadOp             = vk::AttachmentLoadOp::eClear,
+        .loadOp             = f_renderBeginInfo.m_clear ? vk::AttachmentLoadOp::eClear
+                                                        : vk::AttachmentLoadOp::eLoad,
         .storeOp            = vk::AttachmentStoreOp::eStore,
         .clearValue         = l_clearColor
     };
@@ -717,12 +862,14 @@ void CommandBufferVulkan::beginRenderingImage(
 
         vk::ClearValue l_clearDepth = vk::ClearDepthStencilValue(1.0f, 0);
 
-        l_depthAttachmentInfo = { .imageView = l_depthImageVulkan->getImageView(),
-                                  .imageLayout =
-                                      vk::ImageLayout::eDepthStencilAttachmentOptimal,
-                                  .loadOp     = vk::AttachmentLoadOp::eClear,
-                                  .storeOp    = vk::AttachmentStoreOp::eDontCare,
-                                  .clearValue = l_clearDepth };
+        l_depthAttachmentInfo = {
+            .imageView   = l_depthImageVulkan->getImageView(),
+            .imageLayout = vk::ImageLayout::eDepthStencilAttachmentOptimal,
+            .loadOp      = f_renderBeginInfo.m_clear ? vk::AttachmentLoadOp::eClear
+                                                     : vk::AttachmentLoadOp::eLoad,
+            .storeOp     = vk::AttachmentStoreOp::eDontCare,
+            .clearValue  = l_clearDepth
+        };
 
         l_commandBuffer.setDepthTestEnable(true);
     }
@@ -741,7 +888,8 @@ void CommandBufferVulkan::beginRenderingImage(
         .resolveMode        = vk::ResolveModeFlagBits::eNone,   // no resolve
         .resolveImageView   = VK_NULL_HANDLE,                   // not used
         .resolveImageLayout = vk::ImageLayout::eUndefined,      // not used
-        .loadOp             = vk::AttachmentLoadOp::eClear,
+        .loadOp             = f_renderBeginInfo.m_clear ? vk::AttachmentLoadOp::eClear
+                                                        : vk::AttachmentLoadOp::eLoad,
         .storeOp            = vk::AttachmentStoreOp::eStore,
         .clearValue         = l_clearColor
     };

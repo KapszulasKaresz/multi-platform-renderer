@@ -61,6 +61,7 @@ private:
 
     vk::Flags<vk::ShaderStageFlagBits> m_shaderStage{
         vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics
+            | vk::ShaderStageFlagBits::eRaygenKHR
     };
     vk::raii::DescriptorSetLayout m_descriptorSetLayout{ nullptr };
 

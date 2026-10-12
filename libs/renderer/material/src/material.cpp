@@ -46,6 +46,10 @@ Material& Material::copyMaterial(std::shared_ptr<Material> f_other)
         // TODO not deep copy if needed
     }
 
+    for (const auto& l_uniform : f_other->m_uniformAccelerationStructures) {
+        m_uniformAccelerationStructures.push_back(l_uniform);
+    }
+
     return *this;
 }
 
@@ -101,6 +105,30 @@ std::shared_ptr<uniform::UniformStorageBuffer> Material::getUniformStorageBuffer
     }
 
     throw std::runtime_error("Material::getUniformStorageBuffer(...) Uniform not found.");
+}
+
+Material& Material::addUniformAccelerationStructure(
+    std::shared_ptr<uniform::UniformAccelerationStructure> f_uniform
+)
+{
+    m_uniformAccelerationStructures.push_back(std::move(f_uniform));
+    return *this;
+}
+
+std::shared_ptr<uniform::UniformAccelerationStructure>
+    Material::getUniformAccelerationStructure(std::string_view f_name)
+{
+    auto l_it = std::find_if(
+        m_uniformAccelerationStructures.begin(),
+        m_uniformAccelerationStructures.end(),
+        [&](const auto& f_member) { return f_member->getName() == f_name; }
+    );
+    if (l_it != m_uniformAccelerationStructures.end()) {
+        return *l_it;
+    }
+    throw std::runtime_error(
+        "Material::getUniformAccelerationStructure(...) Uniform not found."
+    );
 }
 
 Material& Material::addUniformArray(std::shared_ptr<uniform::UniformArray> f_uniformArray)

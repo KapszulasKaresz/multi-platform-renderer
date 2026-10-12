@@ -13,6 +13,8 @@
 #include "renderer/scene/node/inc/gltf_node.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 #include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
+#include "renderer/uniform/inc/uniform_acceleration_structure.hpp"
+#include "renderer/uniform/inc/uniform_single.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
 
 namespace renderer {
@@ -44,6 +46,40 @@ TestScene& TestScene::create()
     m_accelerationStructure = l_renderingDevice->createAccelerationStructure();
     if (m_accelerationStructure) {
         m_accelerationStructure->setScene(m_rootNode.get()).create();
+        m_rayTracingMaterial      = l_renderingDevice->createMaterial();
+        m_rayTracingRenderTarget = l_renderingDevice->createRenderTarget();
+        m_rayTracingRenderTarget->setFormat(image::IMAGE_FORMAT_BGRA8)
+            .setColorSpace(image::COLOR_SPACE_LINEAR)
+            .setSize({ 1920, 1080 })
+            .setStorageImage()
+            .create();
+        m_rayTracingCameraUniform = l_renderingDevice->createUniformCollection();
+        m_rayTracingCameraUniform->setUnique(true);
+        m_rayTracingCameraUniform->addMember("view")
+            ->setType(uniform::UNIFORM_TYPE_MAT4X4)
+            .create();
+        m_rayTracingCameraUniform->addMember("proj")
+            ->setType(uniform::UNIFORM_TYPE_MAT4X4)
+            .create();
+        m_rayTracingCameraUniform->addMember("inverseView")
+            ->setType(uniform::UNIFORM_TYPE_MAT4X4)
+            .create();
+        m_rayTracingCameraUniform->addMember("inverseProj")
+            ->setType(uniform::UNIFORM_TYPE_MAT4X4)
+            .create();
+        m_rayTracingCameraUniform->setName("Camera").create();
+
+        auto l_accelerationStructureUniform =
+            l_renderingDevice->createUniformAccelerationStructure();
+        l_accelerationStructureUniform->setName("SceneAccelerationStructure");
+        l_accelerationStructureUniform->setAccelerationStructure(m_accelerationStructure);
+        l_accelerationStructureUniform->create();
+        m_rayTracingMaterial
+            ->setMaterialType(material::MaterialType::MATERIAL_TYPE_RAY_TRACING)
+            .setShader("res/shaders/compiled/raytracing")
+            .addUniformCollection(m_rayTracingCameraUniform)
+            .addUniformAccelerationStructure(l_accelerationStructureUniform)
+            .create();
     }
 
     m_camera = std::make_unique<PerspectiveCamera>();
@@ -68,11 +104,37 @@ void TestScene::recordCommandBuffer(
     );
 
     m_observer->update(f_deltaTime);
+    if (m_rayTracingCameraUniform) {
+        auto* l_view = dynamic_cast<uniform::UniformSingle*>(
+            m_rayTracingCameraUniform->getMember("view")
+        );
+        auto* l_projection = dynamic_cast<uniform::UniformSingle*>(
+            m_rayTracingCameraUniform->getMember("proj")
+        );
+        auto* l_inverseView = dynamic_cast<uniform::UniformSingle*>(
+            m_rayTracingCameraUniform->getMember("inverseView")
+        );
+        auto* l_inverseProjection = dynamic_cast<uniform::UniformSingle*>(
+            m_rayTracingCameraUniform->getMember("inverseProj")
+        );
+        l_view->setValue(m_camera->V());
+        l_projection->setValue(m_camera->P());
+        l_inverseView->setValue(glm::inverse(m_camera->V()));
+        l_inverseProjection->setValue(glm::inverse(m_camera->P()));
+    }
 
     f_commandBuffer->useViewport({ .m_fullScreen = true });
 
-    m_drawVisitor.setCommandBuffer(f_commandBuffer);
-    m_rootNode->applyVisitor(&m_drawVisitor);
+    ImGui::Begin("Rendering");
+    ImGui::Checkbox("Use ray tracing", &m_useRayTracing);
+    ImGui::End();
+
+    if (!isRayTracingEnabled()) {
+        if (!isRayTracingEnabled()) {
+            m_drawVisitor.setCommandBuffer(f_commandBuffer);
+            m_rootNode->applyVisitor(&m_drawVisitor);
+        }
+    }
 
     ImGui::Begin("Test Scene tree");
     m_rootNode->applyVisitor(&m_imguiVisitor);
@@ -84,6 +146,24 @@ void TestScene::recordCommandBuffer(
         ImGui::DrawNodeDynamic(*l_selectedNode);
     }
     ImGui::End();
+}
+
+bool TestScene::isRayTracingEnabled() const
+{
+    return m_useRayTracing && m_rayTracingMaterial != nullptr;
+}
+
+void TestScene::recordRayTracingCommandBuffer(
+    command_buffer::CommandBuffer* f_commandBuffer,
+    render_target::RenderTarget*    f_renderTarget,
+    uint32_t                       f_width,
+    uint32_t                       f_height
+)
+{
+    f_commandBuffer->traceRays(
+        m_rayTracingMaterial, m_rayTracingRenderTarget.get(), 1920, 1080
+    );
+    f_commandBuffer->copyRenderTarget(m_rayTracingRenderTarget.get(), f_renderTarget);
 }
 }   // namespace scene
 }   // namespace renderer

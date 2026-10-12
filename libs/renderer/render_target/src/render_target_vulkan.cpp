@@ -45,11 +45,11 @@ void RenderTargetVulkan::createColorResources()
     m_colorImage->setFormat(m_format)
         .setColorSpace(m_colorSpace)
         .setSize(m_size)
-        .setSampleCount(m_parentDevice->getMaxMSAASamples())
-        .setUsage(
-            vk::ImageUsageFlagBits::eTransientAttachment
-            | vk::ImageUsageFlagBits::eColorAttachment
-        )
+        .setSampleCount(m_useStorageImage ? 1 : m_parentDevice->getMaxMSAASamples())
+        .setUsage(vk::ImageUsageFlagBits::eColorAttachment
+                  | (m_useStorageImage ? vk::ImageUsageFlagBits::eStorage
+                                        | vk::ImageUsageFlagBits::eTransferSrc
+                                        : vk::ImageUsageFlagBits::eTransientAttachment))
         .createEmptyImage();
 }
 

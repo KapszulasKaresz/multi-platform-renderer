@@ -14,6 +14,7 @@
 #include "renderer/render_target/inc/render_target_window_vulkan.hpp"
 #include "renderer/rendering_api/inc/rendering_api_vulkan.hpp"
 #include "renderer/texture/inc/texture_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_acceleration_structure_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_array_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_storage_buffer_vulkan.hpp"
@@ -108,6 +109,12 @@ std::shared_ptr<ray_tracing::AccelerationStructure>
     return std::make_shared<ray_tracing::AccelerationStructureVulkan>(this);
 }
 
+std::shared_ptr<uniform::UniformAccelerationStructure>
+    RenderingDeviceVulkan::createUniformAccelerationStructure()
+{
+    return std::make_shared<uniform::UniformAccelerationStructureVulkan>(this);
+}
+
 std::shared_ptr<uniform::UniformCollection>
     RenderingDeviceVulkan::createUniformCollection()
 {
@@ -139,8 +146,7 @@ bool RenderingDeviceVulkan::preFrame()
 {
     while (
         vk::Result::eTimeout
-        == m_device.waitForFences(*m_inFlightFences[m_currentFrame], vk::True, UINT64_MAX)
-    )
+        == m_device.waitForFences(*m_inFlightFences[m_currentFrame], vk::True, UINT64_MAX))
         ;
 
     auto [l_result, l_imageIndex] =
@@ -518,7 +524,7 @@ void RenderingDeviceVulkan::pickPhysicalDevice()
         m_msaaSamples    = l_msaaSamples;
     }
     else {
-        m_msaaSamples = l_msaaSamples;
+        m_msaaSamples = static_cast<vk::SampleCountFlagBits>(m_MaxMSAASamples);
     }
 }
 
@@ -566,11 +572,11 @@ void RenderingDeviceVulkan::createLogicalDevice()
                                                        .pQueuePriorities =
                                                            &l_queuePriority };
     vk::DeviceCreateInfo      l_deviceCreateInfo{
-             .pNext = &m_requiredFeatures.get<vk::PhysicalDeviceFeatures2>(),
-             .queueCreateInfoCount    = 1,
-             .pQueueCreateInfos       = &l_deviceQueueCreateInfo,
-             .enabledExtensionCount   = static_cast<uint32_t>(m_requiredExtension.size()),
-             .ppEnabledExtensionNames = m_requiredExtension.data()
+        .pNext                   = &m_requiredFeatures.get<vk::PhysicalDeviceFeatures2>(),
+        .queueCreateInfoCount    = 1,
+        .pQueueCreateInfos       = &l_deviceQueueCreateInfo,
+        .enabledExtensionCount   = static_cast<uint32_t>(m_requiredExtension.size()),
+        .ppEnabledExtensionNames = m_requiredExtension.data()
     };
 
     m_device = vk::raii::Device(m_physicalDevice, l_deviceCreateInfo);
@@ -609,11 +615,12 @@ void RenderingDeviceVulkan::createSyncObjects()
 
 void RenderingDeviceVulkan::createVmaAllocator()
 {
-    VmaAllocatorCreateInfo l_allocatorInfo{ .flags =
-                                                VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
-                                            .physicalDevice = *m_physicalDevice,
-                                            .device         = *m_device,
-                                            .instance = *m_parentApi->getNativeHandle() };
+    VmaAllocatorCreateInfo l_allocatorInfo{
+        .flags          = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+        .physicalDevice = *m_physicalDevice,
+        .device         = *m_device,
+        .instance       = *m_parentApi->getNativeHandle()
+    };
 
     m_allocator = utils::RaiiVmaAllocator(l_allocatorInfo);
 }
@@ -625,7 +632,9 @@ void RenderingDeviceVulkan::createDescriptorPool()
         vk::DescriptorPoolSize(
             vk::DescriptorType::eCombinedImageSampler, maxFramesInFlight * 200
         ),
-        vk::DescriptorPoolSize{ vk::DescriptorType::eStorageBuffer, 1'000 },
+        vk::DescriptorPoolSize{            vk::DescriptorType::eStorageBuffer, 1'000 },
+        vk::DescriptorPoolSize{ vk::DescriptorType::eAccelerationStructureKHR, 1'000 },
+        vk::DescriptorPoolSize{             vk::DescriptorType::eStorageImage, 1'000 },
     };
     vk::DescriptorPoolCreateInfo l_poolInfo{
         .flags         = vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet,

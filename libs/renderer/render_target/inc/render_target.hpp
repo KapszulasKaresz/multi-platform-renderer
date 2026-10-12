@@ -13,6 +13,7 @@ public:
     RenderTarget&         setFormat(image::ImageFormat f_format);
     RenderTarget&         setColorSpace(image::ColorSpace f_colorSpace);
     RenderTarget&         setDepthBuffer(bool f_useDepthBuffer);
+    RenderTarget&         setStorageImage(bool f_useStorageImage = true);
     RenderTarget&         setSize(glm::ivec2 f_size);
     virtual RenderTarget& create() = 0;
 
@@ -31,6 +32,7 @@ protected:
     glm::ivec2 m_size{ 0, 0 };
 
     bool m_useDepthBuffer{ false };
+    bool m_useStorageImage{ false };
 };
 
 }   // namespace render_target

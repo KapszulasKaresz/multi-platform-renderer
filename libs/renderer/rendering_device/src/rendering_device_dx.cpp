@@ -91,6 +91,12 @@ std::shared_ptr<ray_tracing::AccelerationStructure>
     return nullptr;
 }
 
+std::shared_ptr<uniform::UniformAccelerationStructure>
+    RenderingDeviceDX::createUniformAccelerationStructure()
+{
+    return nullptr;
+}
+
 std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformCollection()
 {
     return std::make_shared<uniform::UniformCollectionDX>(this);

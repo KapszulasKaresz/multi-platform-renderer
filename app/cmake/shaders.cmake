@@ -1,5 +1,5 @@
 function(add_slang_shader_target TARGET)
-    cmake_parse_arguments("SHADER" "" "" "SOURCES;COMPUTE_SOURCES" ${ARGN})
+    cmake_parse_arguments("SHADER" "" "" "SOURCES;COMPUTE_SOURCES;RAY_TRACING_SOURCES" ${ARGN})
     set(SHADERS_DIR ${CMAKE_SOURCE_DIR}/res/shaders/compiled)
 
     if(NOT DEFINED SLANGC_EXECUTABLE)
@@ -103,6 +103,64 @@ function(add_slang_shader_target TARGET)
         )
 
         list(APPEND COMPILED_OUTPUTS ${SPV_COMP_OUTPUT} ${DXIL_COMP_OUTPUT})
+    endforeach()
+
+    foreach(SHADER_FILE ${SHADER_RAY_TRACING_SOURCES})
+        get_filename_component(FILE_NAME ${SHADER_FILE} NAME_WE)
+
+        set(RAYGEN_OUTPUT ${SHADERS_DIR}/${FILE_NAME}.rgen.spv)
+        set(MISS_OUTPUT ${SHADERS_DIR}/${FILE_NAME}.rmiss.spv)
+        set(CHIT_OUTPUT ${SHADERS_DIR}/${FILE_NAME}.rchit.spv)
+
+        add_custom_command(
+            OUTPUT ${RAYGEN_OUTPUT}
+            COMMAND ${SLANGC_EXECUTABLE}
+            ${SHADER_FILE}
+            -target spirv
+            -profile spirv_1_4
+            -emit-spirv-directly
+            -fvk-use-entrypoint-name
+            -entry raygenMain
+            -stage raygeneration
+            -o ${RAYGEN_OUTPUT}
+            DEPENDS ${SHADER_FILE}
+            COMMENT "Compiling Slang -> SPIR-V (Ray Generation): ${SHADER_FILE}"
+            VERBATIM
+        )
+
+        add_custom_command(
+            OUTPUT ${MISS_OUTPUT}
+            COMMAND ${SLANGC_EXECUTABLE}
+            ${SHADER_FILE}
+            -target spirv
+            -profile spirv_1_4
+            -emit-spirv-directly
+            -fvk-use-entrypoint-name
+            -entry missMain
+            -stage miss
+            -o ${MISS_OUTPUT}
+            DEPENDS ${SHADER_FILE}
+            COMMENT "Compiling Slang -> SPIR-V (Miss): ${SHADER_FILE}"
+            VERBATIM
+        )
+
+        add_custom_command(
+            OUTPUT ${CHIT_OUTPUT}
+            COMMAND ${SLANGC_EXECUTABLE}
+            ${SHADER_FILE}
+            -target spirv
+            -profile spirv_1_4
+            -emit-spirv-directly
+            -fvk-use-entrypoint-name
+            -entry closestHitMain
+            -stage closesthit
+            -o ${CHIT_OUTPUT}
+            DEPENDS ${SHADER_FILE}
+            COMMENT "Compiling Slang -> SPIR-V (Closest Hit): ${SHADER_FILE}"
+            VERBATIM
+        )
+
+        list(APPEND COMPILED_OUTPUTS ${RAYGEN_OUTPUT} ${MISS_OUTPUT} ${CHIT_OUTPUT})
     endforeach()
 
     add_custom_target(${TARGET} ALL DEPENDS ${COMPILED_OUTPUTS})

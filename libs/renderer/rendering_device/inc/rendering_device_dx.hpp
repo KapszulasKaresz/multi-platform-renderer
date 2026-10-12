@@ -45,6 +45,8 @@ public:
     std::shared_ptr<mesh::TriangleMesh> createTriangleMesh() override final;
     std::shared_ptr<ray_tracing::AccelerationStructure>
         createAccelerationStructure() override final;
+    std::shared_ptr<uniform::UniformAccelerationStructure>
+        createUniformAccelerationStructure() override final;
     std::shared_ptr<uniform::UniformCollection>  createUniformCollection() override final;
     std::shared_ptr<uniform::UniformArray>       createUniformArray() override final;
     std::shared_ptr<texture::Texture>            createTexture() override final;

@@ -1,12 +1,14 @@
 #include "renderer/material/inc/material_vulkan.hpp"
 
 #include <vector>
+#include <cstring>
 
 #include "renderer/command_buffer/inc/command_buffer_vulkan.hpp"
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_array_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_acceleration_structure_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_storage_buffer_vulkan.hpp"
 #include "renderer/utils/inc/utils.hpp"
@@ -30,6 +32,9 @@ MaterialVulkan& MaterialVulkan::create()
     }
     else if (getMaterialType() == MaterialType::MATERIAL_TYPE_COMPUTE) {
         createComputePipeline();
+    }
+    else if (getMaterialType() == MaterialType::MATERIAL_TYPE_RAY_TRACING) {
+        createRayTracingPipeline();
     }
     else {
         throw std::runtime_error("MaterialVulkan::create() Unsupported material type");
@@ -117,6 +122,19 @@ std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
         }
     }
 
+    for (const auto& l_accelerationStructure : m_uniformAccelerationStructures) {
+        auto* l_rawUniform =
+            dynamic_cast<uniform::UniformAccelerationStructureVulkan*>(
+                l_accelerationStructure.get()
+            );
+        if (l_rawUniform != nullptr) {
+            l_ret.push_back(l_rawUniform->getDescriptorSet());
+        }
+    }
+    if (getMaterialType() == MaterialType::MATERIAL_TYPE_RAY_TRACING) {
+        l_ret.push_back(m_rayTracingOutputSets[m_parentDevice->getCurrentFrame()]);
+    }
+
     return l_ret;
 }
 
@@ -145,9 +163,13 @@ std::vector<image::ImageVulkan*> MaterialVulkan::getImages()
 
 vk::PipelineBindPoint MaterialVulkan::getPipelineBindPoint() const
 {
-    return getMaterialType() == MaterialType::MATERIAL_TYPE_RENDER
-             ? vk::PipelineBindPoint::eGraphics
-             : vk::PipelineBindPoint::eCompute;
+    if (getMaterialType() == MaterialType::MATERIAL_TYPE_RENDER) {
+        return vk::PipelineBindPoint::eGraphics;
+    }
+    if (getMaterialType() == MaterialType::MATERIAL_TYPE_RAY_TRACING) {
+        return vk::PipelineBindPoint::eRayTracingKHR;
+    }
+    return vk::PipelineBindPoint::eCompute;
 }
 
 void MaterialVulkan::createGraphicsPipeline()
@@ -257,6 +279,16 @@ void MaterialVulkan::createGraphicsPipeline()
         if (l_rawStorageBuffer != nullptr) {
             l_descriptorSetLayouts.push_back(l_rawStorageBuffer->getDescriptorSetLayout());
         }
+
+        for (const auto& l_accelerationStructure : m_uniformAccelerationStructures) {
+            auto* l_rawUniform =
+                dynamic_cast<uniform::UniformAccelerationStructureVulkan*>(
+                    l_accelerationStructure.get()
+                );
+            if (l_rawUniform != nullptr) {
+                l_descriptorSetLayouts.push_back(l_rawUniform->getDescriptorSetLayout());
+            }
+        }
     }
 
     vk::PipelineLayoutCreateInfo l_pipelineLayoutInfo{
@@ -334,6 +366,16 @@ void MaterialVulkan::createComputePipeline()
         if (l_rawStorageBuffer != nullptr) {
             l_descriptorSetLayouts.push_back(l_rawStorageBuffer->getDescriptorSetLayout());
         }
+
+        for (const auto& l_accelerationStructure : m_uniformAccelerationStructures) {
+            auto* l_rawUniform =
+                dynamic_cast<uniform::UniformAccelerationStructureVulkan*>(
+                    l_accelerationStructure.get()
+                );
+            if (l_rawUniform != nullptr) {
+                l_descriptorSetLayouts.push_back(l_rawUniform->getDescriptorSetLayout());
+            }
+        }
     }
 
     vk::PipelineLayoutCreateInfo l_pipelineLayoutInfo{
@@ -351,6 +393,207 @@ void MaterialVulkan::createComputePipeline()
 
     m_pipeline =
         vk::raii::Pipeline(m_parentDevice->getLogicalDevice(), nullptr, l_pipelineInfo);
+}
+
+void MaterialVulkan::createRayTracingPipeline()
+{
+    const auto l_raygenModule =
+        createShaderModule(utils::readFile(m_shaderLocation + ".rgen.spv"));
+    const auto l_missModule =
+        createShaderModule(utils::readFile(m_shaderLocation + ".rmiss.spv"));
+    const auto l_closestHitModule =
+        createShaderModule(utils::readFile(m_shaderLocation + ".rchit.spv"));
+
+    std::array l_stages = {
+        vk::PipelineShaderStageCreateInfo{
+            .stage  = vk::ShaderStageFlagBits::eRaygenKHR,
+            .module = l_raygenModule,
+            .pName  = "raygenMain"
+        },
+        vk::PipelineShaderStageCreateInfo{
+            .stage  = vk::ShaderStageFlagBits::eMissKHR,
+            .module = l_missModule,
+            .pName  = "missMain"
+        },
+        vk::PipelineShaderStageCreateInfo{
+            .stage  = vk::ShaderStageFlagBits::eClosestHitKHR,
+            .module = l_closestHitModule,
+            .pName  = "closestHitMain"
+        }
+    };
+    std::array l_groups = {
+        vk::RayTracingShaderGroupCreateInfoKHR{
+            .type              = vk::RayTracingShaderGroupTypeKHR::eGeneral,
+            .generalShader     = 0,
+            .closestHitShader  = VK_SHADER_UNUSED_KHR,
+            .anyHitShader      = VK_SHADER_UNUSED_KHR,
+            .intersectionShader = VK_SHADER_UNUSED_KHR
+        },
+        vk::RayTracingShaderGroupCreateInfoKHR{
+            .type              = vk::RayTracingShaderGroupTypeKHR::eGeneral,
+            .generalShader     = 1,
+            .closestHitShader  = VK_SHADER_UNUSED_KHR,
+            .anyHitShader      = VK_SHADER_UNUSED_KHR,
+            .intersectionShader = VK_SHADER_UNUSED_KHR
+        },
+        vk::RayTracingShaderGroupCreateInfoKHR{
+            .type              = vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup,
+            .generalShader     = VK_SHADER_UNUSED_KHR,
+            .closestHitShader  = 2,
+            .anyHitShader      = VK_SHADER_UNUSED_KHR,
+            .intersectionShader = VK_SHADER_UNUSED_KHR
+        }
+    };
+
+    const vk::DescriptorSetLayoutBinding l_outputBinding{
+        .binding = 0,
+        .descriptorType = vk::DescriptorType::eStorageImage,
+        .descriptorCount = 1,
+        .stageFlags = vk::ShaderStageFlagBits::eRaygenKHR
+    };
+    m_rayTracingOutputLayout = vk::raii::DescriptorSetLayout(
+        m_parentDevice->getLogicalDevice(),
+        { .bindingCount = 1, .pBindings = &l_outputBinding }
+    );
+    std::vector<vk::DescriptorSetLayout> l_outputLayouts(
+        m_parentDevice->getMaxFramesInFlight(), *m_rayTracingOutputLayout
+    );
+    m_rayTracingOutputSets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
+        { .descriptorPool = m_parentDevice->getDescriptorPool(),
+          .descriptorSetCount = static_cast<uint32_t>(l_outputLayouts.size()),
+          .pSetLayouts = l_outputLayouts.data() }
+    );
+
+    std::vector<vk::DescriptorSetLayout> l_descriptorSetLayouts;
+    for (const auto& l_uniform : m_uniformCollections) {
+        if (auto* l_raw = dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get())) {
+            l_descriptorSetLayouts.push_back(l_raw->getDescriptorSetLayout());
+        }
+    }
+    for (const auto& l_uniform : m_uniformArrays) {
+        if (auto* l_raw = dynamic_cast<uniform::UniformArrayVulkan*>(l_uniform.get())) {
+            l_descriptorSetLayouts.push_back(l_raw->getDescriptorSetLayout());
+        }
+    }
+    for (const auto& l_uniform : m_uniformStorageBuffers) {
+        if (auto* l_raw =
+                dynamic_cast<uniform::UniformStorageBufferVulkan*>(l_uniform.get()))
+        {
+            l_descriptorSetLayouts.push_back(l_raw->getDescriptorSetLayout());
+        }
+    }
+    for (const auto& l_uniform : m_uniformAccelerationStructures) {
+        if (auto* l_raw = dynamic_cast<uniform::UniformAccelerationStructureVulkan*>(
+                l_uniform.get()
+            ))
+        {
+            l_descriptorSetLayouts.push_back(l_raw->getDescriptorSetLayout());
+        }
+    }
+    if (getMaterialType() == MaterialType::MATERIAL_TYPE_RAY_TRACING) {
+        l_descriptorSetLayouts.push_back(*m_rayTracingOutputLayout);
+    }
+
+    m_pipelineLayout = vk::raii::PipelineLayout(
+        m_parentDevice->getLogicalDevice(),
+        { .setLayoutCount = static_cast<uint32_t>(l_descriptorSetLayouts.size()),
+          .pSetLayouts    = l_descriptorSetLayouts.data() }
+    );
+
+    const vk::RayTracingPipelineCreateInfoKHR l_pipelineInfo{
+        .stageCount             = static_cast<uint32_t>(l_stages.size()),
+        .pStages                = l_stages.data(),
+        .groupCount             = static_cast<uint32_t>(l_groups.size()),
+        .pGroups                = l_groups.data(),
+        .maxPipelineRayRecursionDepth = 1,
+        .layout                 = *m_pipelineLayout
+    };
+    m_pipeline = m_parentDevice->getLogicalDevice().createRayTracingPipelineKHR(
+        nullptr, nullptr, l_pipelineInfo
+    );
+
+    auto l_properties = m_parentDevice->getPhysicalDevice().getProperties2<
+        vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPipelinePropertiesKHR
+    >();
+    const auto& l_rayTracingProperties =
+        l_properties.get<vk::PhysicalDeviceRayTracingPipelinePropertiesKHR>();
+    m_shaderGroupHandleSize = l_rayTracingProperties.shaderGroupHandleSize;
+    m_shaderGroupBaseAlignment = l_rayTracingProperties.shaderGroupBaseAlignment;
+    const vk::DeviceSize l_stride = m_shaderGroupBaseAlignment;
+    const vk::DeviceSize l_size = l_stride * l_stages.size();
+    auto l_handles = m_pipeline.getRayTracingShaderGroupHandlesKHR<uint8_t>(
+        0, static_cast<uint32_t>(l_stages.size()),
+        static_cast<size_t>(m_shaderGroupHandleSize * l_stages.size())
+    );
+    m_shaderBindingTable = utils::VmaBuffer(
+        m_parentDevice->getVmaAllocator(), l_size,
+        vk::BufferUsageFlagBits::eShaderBindingTableKHR
+            | vk::BufferUsageFlagBits::eShaderDeviceAddress,
+        VMA_MEMORY_USAGE_CPU_TO_GPU
+    );
+    std::vector<uint8_t> l_sbtData(l_size, 0);
+    for (size_t i = 0; i < l_stages.size(); ++i) {
+        std::memcpy(
+            l_sbtData.data() + i * l_stride,
+            l_handles.data() + i * m_shaderGroupHandleSize,
+            static_cast<size_t>(m_shaderGroupHandleSize)
+        );
+    }
+
+    m_shaderBindingTable.upload(l_sbtData.data(), l_sbtData.size());
+}
+
+vk::StridedDeviceAddressRegionKHR MaterialVulkan::getRaygenRegion() const
+{
+    const auto l_address = m_parentDevice->getLogicalDevice().getBufferAddress(
+        { .buffer = m_shaderBindingTable.get() }
+    );
+    return { .deviceAddress = l_address,
+             .stride       = m_shaderGroupBaseAlignment,
+             .size         = m_shaderGroupBaseAlignment };
+}
+
+void MaterialVulkan::setRayTracingOutput(image::ImageVulkan* f_image)
+{
+    if (!f_image || m_rayTracingOutputSets.empty()) {
+        throw std::runtime_error("MaterialVulkan::setRayTracingOutput() invalid image");
+    }
+    auto& l_set = m_rayTracingOutputSets[m_parentDevice->getCurrentFrame()];
+    const vk::DescriptorImageInfo l_imageInfo{
+        .sampler = nullptr,
+        .imageView = f_image->getImageView(),
+        .imageLayout = vk::ImageLayout::eGeneral
+    };
+    m_parentDevice->getLogicalDevice().updateDescriptorSets(
+        { vk::WriteDescriptorSet{
+            .dstSet = l_set,
+            .dstBinding = 0,
+            .descriptorCount = 1,
+            .descriptorType = vk::DescriptorType::eStorageImage,
+            .pImageInfo = &l_imageInfo
+        } },
+        {}
+    );
+}
+
+vk::StridedDeviceAddressRegionKHR MaterialVulkan::getMissRegion() const
+{
+    const auto l_address = m_parentDevice->getLogicalDevice().getBufferAddress(
+        { .buffer = m_shaderBindingTable.get() }
+    );
+    return { .deviceAddress = l_address + m_shaderGroupBaseAlignment,
+             .stride       = m_shaderGroupBaseAlignment,
+             .size         = m_shaderGroupBaseAlignment };
+}
+
+vk::StridedDeviceAddressRegionKHR MaterialVulkan::getHitRegion() const
+{
+    const auto l_address = m_parentDevice->getLogicalDevice().getBufferAddress(
+        { .buffer = m_shaderBindingTable.get() }
+    );
+    return { .deviceAddress = l_address + 2 * m_shaderGroupBaseAlignment,
+             .stride       = m_shaderGroupBaseAlignment,
+             .size         = m_shaderGroupBaseAlignment };
 }
 
 [[nodiscard]]

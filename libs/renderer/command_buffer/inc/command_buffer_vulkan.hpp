@@ -52,6 +52,16 @@ public:
         uint32_t f_groupCountY,
         uint32_t f_groupCountZ
     ) override final;
+    CommandBufferVulkan& traceRays(
+        std::shared_ptr<material::Material> f_material,
+        render_target::RenderTarget* f_renderTarget,
+        uint32_t f_width,
+        uint32_t f_height
+    ) override final;
+    CommandBufferVulkan& copyRenderTarget(
+        render_target::RenderTarget* f_source,
+        render_target::RenderTarget* f_destination
+    ) override final;
 
     CommandBufferVulkan& syncStorageBuffer(
         uniform::UniformStorageBuffer* f_buffer

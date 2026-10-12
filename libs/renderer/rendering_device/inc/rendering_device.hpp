@@ -10,6 +10,7 @@ namespace renderer {
 namespace uniform {
 class UniformCollection;
 class UniformArray;
+class UniformAccelerationStructure;
 }   // namespace uniform
 
 namespace command_buffer {
@@ -68,6 +69,8 @@ public:
     virtual std::shared_ptr<mesh::TriangleMesh>          createTriangleMesh()      = 0;
     virtual std::shared_ptr<ray_tracing::AccelerationStructure>
         createAccelerationStructure() = 0;
+    virtual std::shared_ptr<uniform::UniformAccelerationStructure>
+        createUniformAccelerationStructure() = 0;
     virtual std::shared_ptr<uniform::UniformCollection>  createUniformCollection() = 0;
     virtual std::shared_ptr<uniform::UniformArray>       createUniformArray()      = 0;
     virtual std::shared_ptr<texture::Texture>            createTexture()           = 0;

@@ -44,7 +44,7 @@ rendering_device::RenderingDevice* RenderingApiVulkan::getMainRenderingDevice()
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
                     { .scalarBlockLayout = true,
-                      .bufferDeviceAddress = true }, // vk::PhysicalDeviceVulkan12Features
+                     .bufferDeviceAddress = true }, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features
@@ -99,7 +99,7 @@ void RenderingApiVulkan::createMainRenderingDeviceWindow(window::Window* f_windo
                     { .shaderDrawParameters =
                           true }, // vk::PhysicalDeviceVulkan11Features
                     { .scalarBlockLayout = true,
-                      .bufferDeviceAddress = true }, // vk::PhysicalDeviceVulkan12Features
+                     .bufferDeviceAddress = true }, // vk::PhysicalDeviceVulkan12Features
                     { .synchronization2 = true,
                      .dynamicRendering = true }, // vk::PhysicalDeviceVulkan13Features
                     {}, // vk::PhysicalDeviceVulkan14Features
@@ -192,7 +192,8 @@ void RenderingApiVulkan::createInstance()
         auto l_layerProperties = m_context.enumerateInstanceLayerProperties();
         for (const auto& l_requiredLayer : m_validationLayers) {
             if (std::ranges::none_of(
-                    l_layerProperties, [l_requiredLayer](const auto& f_layerProperty) {
+                    l_layerProperties,
+                    [l_requiredLayer](const auto& f_layerProperty) {
                         return strcmp(f_layerProperty.layerName, l_requiredLayer) == 0;
                     }
                 ))

@@ -132,8 +132,9 @@ void RenderTargetWindowVulkan::createSwapChain()
         .imageColorSpace  = m_swapChainSurfaceFormat.colorSpace,
         .imageExtent      = m_swapChainExtent,
         .imageArrayLayers = 1,
-        .imageUsage = m_directRenderTarget ? vk::ImageUsageFlagBits::eColorAttachment
-                                           : vk::ImageUsageFlagBits::eTransferDst,
+        .imageUsage = vk::ImageUsageFlagBits::eColorAttachment
+                    | vk::ImageUsageFlagBits::eStorage
+                    | vk::ImageUsageFlagBits::eTransferDst,
         .imageSharingMode = vk::SharingMode::eExclusive,
         .preTransform     = l_surfaceCapabilities.currentTransform,
         .compositeAlpha   = vk::CompositeAlphaFlagBitsKHR::eOpaque,
@@ -173,10 +174,9 @@ void RenderTargetWindowVulkan::createColorResources()
         .setColorSpace(m_colorSpace)
         .setSize(glm::ivec2(m_swapChainExtent.width, m_swapChainExtent.height))
         .setSampleCount(m_parentDevice->getMaxMSAASamples())
-        .setUsage(
-            vk::ImageUsageFlagBits::eTransientAttachment
-            | vk::ImageUsageFlagBits::eColorAttachment
-        )
+        .setUsage(vk::ImageUsageFlagBits::eColorAttachment
+                  | (m_directRenderTarget ? vk::ImageUsageFlagBits::eTransferDst
+                                           : vk::ImageUsageFlagBits::eTransientAttachment))
         .createEmptyImage();
 }
 

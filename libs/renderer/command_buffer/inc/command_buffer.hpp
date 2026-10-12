@@ -27,6 +27,8 @@ namespace command_buffer {
 struct RenderBeginInfo {
     std::shared_ptr<render_target::RenderTarget> m_renderTarget{ nullptr };
     glm::vec4                                    m_clearColor{ 0.0f, 0.0f, 0.0f, 1.0f };
+    bool                                         m_clear{ true };
+    bool                                         m_directSwapchain{ false };
 };
 
 struct ViewportInfo {
@@ -56,6 +58,16 @@ public:
         uint32_t f_groupCountX,
         uint32_t f_groupCountY,
         uint32_t f_groupCountZ
+    ) = 0;
+    virtual CommandBuffer& traceRays(
+        std::shared_ptr<material::Material> f_material,
+        render_target::RenderTarget* f_renderTarget,
+        uint32_t f_width,
+        uint32_t f_height
+    ) = 0;
+    virtual CommandBuffer& copyRenderTarget(
+        render_target::RenderTarget* f_source,
+        render_target::RenderTarget* f_destination
     ) = 0;
 
     virtual CommandBuffer& syncStorageBuffer(uniform::UniformStorageBuffer* f_buffer) = 0;

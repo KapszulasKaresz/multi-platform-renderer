@@ -361,6 +361,24 @@ CommandBufferDX& CommandBufferDX::dispatchCompute(
     return *this;
 }
 
+CommandBufferDX& CommandBufferDX::traceRays(
+    std::shared_ptr<material::Material>,
+    render_target::RenderTarget*,
+    uint32_t,
+    uint32_t
+)
+{
+    throw std::runtime_error("CommandBufferDX::traceRays() not implemented");
+}
+
+CommandBufferDX& CommandBufferDX::copyRenderTarget(
+    render_target::RenderTarget*,
+    render_target::RenderTarget*
+)
+{
+    throw std::runtime_error("CommandBufferDX::copyRenderTarget() not implemented");
+}
+
 CommandBufferDX& CommandBufferDX::syncStorageBuffer(
     uniform::UniformStorageBuffer* f_buffer
 )
@@ -474,7 +492,9 @@ void CommandBufferDX::beginRendering(
                                    f_renderBeginInfo.m_clearColor.b,
                                    f_renderBeginInfo.m_clearColor.a };
 
-    l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
+    if (f_renderBeginInfo.m_clear) {
+        l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
+    }
 
     l_commandList->ClearDepthStencilView(
         l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
@@ -516,7 +536,9 @@ void CommandBufferDX::beginRendering(
                                    f_renderBeginInfo.m_clearColor.b,
                                    f_renderBeginInfo.m_clearColor.a };
 
-    l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
+    if (f_renderBeginInfo.m_clear) {
+        l_commandList->ClearRenderTargetView(l_rtvHandle, l_clearColor, 0, nullptr);
+    }
 
     l_commandList->ClearDepthStencilView(
         l_dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr
