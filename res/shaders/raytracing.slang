@@ -11,14 +11,26 @@ struct UniformBufferCamera
     float4x4 inverseProj;
 };
 
-[vk::binding(0, 1)]
+[vk::binding(0, 2)]
 RaytracingAccelerationStructure scene;
 
 [vk::binding(0, 0)]
 ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
 
-[vk::binding(0, 2)]
+[vk::binding(0, 6)]
 RWTexture2D<float4> outputImage;
+
+[vk::binding(0, 3)]
+Sampler2D<float4> albedoTextures[];
+
+[vk::binding(0, 4)]
+Sampler2D<float4> normalTextures[];
+
+[vk::binding(0, 5)]
+Sampler2D<float4> metallicRoughnessTextures[];
+
+[vk::binding(0, 1)]
+ByteAddressBuffer geometry;
 
 [shader("raygeneration")]
 void raygenMain()
@@ -57,13 +69,37 @@ void missMain(inout RayPayload payload)
 }
 
 [shader("closesthit")]
-void closestHitMain(inout RayPayload payload, in BuiltInTriangleIntersectionAttributes)
+void closestHitMain(
+    inout RayPayload payload,
+    in BuiltInTriangleIntersectionAttributes attributes
+)
 {
-    const uint materialId = InstanceID();
-    const float3 color = float3(
-        frac(float(materialId) * 0.731),
-        frac(float(materialId) * 0.379 + 0.21),
-        frac(float(materialId) * 0.527 + 0.43)
+    const uint instanceData = InstanceID();
+    const uint meshId = instanceData >> 12;
+    const uint materialId = instanceData & 0xFFF;
+    const uint meshHeader = 8 + meshId * 16;
+    const uint vertexOffset = geometry.Load(meshHeader);
+    const uint indexOffset = geometry.Load(meshHeader + 4);
+    const uint primitiveOffset = indexOffset + PrimitiveIndex() * 3;
+    const uint uvBase = 8 + geometry.Load(0) * 16;
+    const uint indexBase = uvBase + geometry.Load(4) * 8;
+    const uint index0 = geometry.Load(indexBase + primitiveOffset * 4);
+    const uint index1 = geometry.Load(indexBase + (primitiveOffset + 1) * 4);
+    const uint index2 = geometry.Load(indexBase + (primitiveOffset + 2) * 4);
+    const float2 uv0 = asfloat(geometry.Load2(uvBase + (vertexOffset + index0) * 8));
+    const float2 uv1 = asfloat(geometry.Load2(uvBase + (vertexOffset + index1) * 8));
+    const float2 uv2 = asfloat(geometry.Load2(uvBase + (vertexOffset + index2) * 8));
+    const float2 uv = uv0 * (1.0 - attributes.barycentrics.x - attributes.barycentrics.y)
+        + uv1 * attributes.barycentrics.x + uv2 * attributes.barycentrics.y;
+    const float4 albedo = albedoTextures[materialId].SampleLevel(uv, 0.0);
+    const float3 normal = normalTextures[materialId].SampleLevel(uv, 0.0).xyz * 2.0 - 1.0;
+    const float4 metallicRoughness =
+        metallicRoughnessTextures[materialId].SampleLevel(uv, 0.0);
+    const float lighting = 0.5 + 0.5 * abs(normal.z);
+    const float metallic = metallicRoughness.b;
+    const float roughness = metallicRoughness.g;
+    payload.color = float4(
+        albedo.rgb * lighting * (1.0 - 0.25 * metallic) + normal * 0.05,
+        albedo.a * (0.75 + 0.25 * (1.0 - roughness))
     );
-    payload.color = float4(0.25 + 0.75 * color, 1.0);
 }

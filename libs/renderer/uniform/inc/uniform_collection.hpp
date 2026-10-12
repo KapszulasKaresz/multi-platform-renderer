@@ -29,6 +29,7 @@ public:
         addTexture(std::shared_ptr<texture::Texture> f_textrue, int f_position = -1);
     texture::Texture* getTexture(std::string_view f_name);
     texture::Texture* getTexture(int f_position);
+    std::shared_ptr<texture::Texture> getTextureShared(int f_position);
 
     virtual std::shared_ptr<UniformCollection> deepCopy() const = 0;
 

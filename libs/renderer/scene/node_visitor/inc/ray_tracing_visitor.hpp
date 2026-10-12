@@ -30,6 +30,7 @@ public:
         glm::mat4                           m_transform{ 1.0f };
         uint32_t                            m_instanceId{ 0 };
         uint32_t                            m_materialId{ 0 };
+        uint32_t                            m_meshId{ 0 };
     };
 
     void visit(MeshInstanceNode& f_meshInstanceNode) override;
@@ -41,6 +42,7 @@ public:
 protected:
     std::vector<MeshInstance> m_meshInstances;
     std::unordered_map<material::Material*, uint32_t> m_materialIds;
+    std::unordered_map<mesh::TriangleMesh*, uint32_t> m_meshIds;
 };
 
 }   // namespace scene

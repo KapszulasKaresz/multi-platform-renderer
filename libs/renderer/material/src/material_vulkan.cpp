@@ -12,6 +12,7 @@
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_storage_buffer_vulkan.hpp"
 #include "renderer/utils/inc/utils.hpp"
+#include "renderer/texture/inc/texture_vulkan.hpp"
 
 namespace renderer {
 namespace material {
@@ -132,6 +133,11 @@ std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
         }
     }
     if (getMaterialType() == MaterialType::MATERIAL_TYPE_RAY_TRACING) {
+        l_ret.push_back(m_rayTracingAlbedoSets[m_parentDevice->getCurrentFrame()]);
+        l_ret.push_back(m_rayTracingNormalSets[m_parentDevice->getCurrentFrame()]);
+        l_ret.push_back(
+            m_rayTracingMetallicRoughnessSets[m_parentDevice->getCurrentFrame()]
+        );
         l_ret.push_back(m_rayTracingOutputSets[m_parentDevice->getCurrentFrame()]);
     }
 
@@ -464,6 +470,46 @@ void MaterialVulkan::createRayTracingPipeline()
           .pSetLayouts = l_outputLayouts.data() }
     );
 
+    const uint32_t l_textureCount =
+        static_cast<uint32_t>(m_rayTracingAlbedoTextures.size());
+    if (l_textureCount == 0) {
+        throw std::runtime_error(
+            "MaterialVulkan::createRayTracingPipeline() requires albedo textures"
+        );
+    }
+    const vk::DescriptorSetLayoutBinding l_albedoBinding{
+            .binding = 0,
+            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = l_textureCount,
+            .stageFlags = vk::ShaderStageFlagBits::eClosestHitKHR
+    };
+    m_rayTracingAlbedoLayout = vk::raii::DescriptorSetLayout(
+        m_parentDevice->getLogicalDevice(),
+        { .bindingCount = 1, .pBindings = &l_albedoBinding }
+    );
+    const auto createTextureLayout =
+        [&](uint32_t f_count) {
+            const vk::DescriptorSetLayoutBinding l_binding{
+                .binding = 0,
+                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+                .descriptorCount = f_count,
+                .stageFlags = vk::ShaderStageFlagBits::eClosestHitKHR
+            };
+            return vk::raii::DescriptorSetLayout(
+                m_parentDevice->getLogicalDevice(),
+                { .bindingCount = 1, .pBindings = &l_binding }
+            );
+        };
+    if (m_rayTracingNormalTextures.size() != l_textureCount
+        || m_rayTracingMetallicRoughnessTextures.size() != l_textureCount)
+    {
+        throw std::runtime_error(
+            "MaterialVulkan::createRayTracingPipeline() texture arrays are inconsistent"
+        );
+    }
+    m_rayTracingNormalLayout = createTextureLayout(l_textureCount);
+    m_rayTracingMetallicRoughnessLayout = createTextureLayout(l_textureCount);
+
     std::vector<vk::DescriptorSetLayout> l_descriptorSetLayouts;
     for (const auto& l_uniform : m_uniformCollections) {
         if (auto* l_raw = dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get())) {
@@ -491,6 +537,9 @@ void MaterialVulkan::createRayTracingPipeline()
         }
     }
     if (getMaterialType() == MaterialType::MATERIAL_TYPE_RAY_TRACING) {
+        l_descriptorSetLayouts.push_back(*m_rayTracingAlbedoLayout);
+        l_descriptorSetLayouts.push_back(*m_rayTracingNormalLayout);
+        l_descriptorSetLayouts.push_back(*m_rayTracingMetallicRoughnessLayout);
         l_descriptorSetLayouts.push_back(*m_rayTracingOutputLayout);
     }
 
@@ -541,6 +590,64 @@ void MaterialVulkan::createRayTracingPipeline()
     }
 
     m_shaderBindingTable.upload(l_sbtData.data(), l_sbtData.size());
+
+    std::vector<vk::DescriptorSetLayout> l_albedoLayouts(
+        m_parentDevice->getMaxFramesInFlight(), *m_rayTracingAlbedoLayout
+    );
+    m_rayTracingAlbedoSets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
+        { .descriptorPool = m_parentDevice->getDescriptorPool(),
+          .descriptorSetCount = static_cast<uint32_t>(l_albedoLayouts.size()),
+          .pSetLayouts = l_albedoLayouts.data() }
+    );
+    const auto createTextureSets =
+        [&](const auto& f_textures, auto& f_layout, auto& f_sets) {
+        std::vector<vk::DescriptorSetLayout> l_layouts(
+            m_parentDevice->getMaxFramesInFlight(), *f_layout
+        );
+        f_sets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
+            { .descriptorPool = m_parentDevice->getDescriptorPool(),
+              .descriptorSetCount = static_cast<uint32_t>(l_layouts.size()),
+              .pSetLayouts = l_layouts.data() }
+        );
+        for (auto& l_set : f_sets) {
+            for (uint32_t i = 0; i < l_textureCount; ++i) {
+                auto* l_texture =
+                    dynamic_cast<texture::TextureVulkan*>(f_textures[i].get());
+            if (!l_texture) {
+                throw std::runtime_error(
+                    "MaterialVulkan::createRayTracingPipeline() invalid ray-tracing texture"
+                );
+            }
+            const vk::DescriptorImageInfo l_imageInfo{
+                .sampler = l_texture->getSampler(),
+                .imageView = l_texture->getImageView(),
+                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal
+            };
+            m_parentDevice->getLogicalDevice().updateDescriptorSets(
+                { vk::WriteDescriptorSet{
+                    .dstSet = l_set,
+                    .dstBinding = 0,
+                    .dstArrayElement = i,
+                    .descriptorCount = 1,
+                    .descriptorType = vk::DescriptorType::eCombinedImageSampler,
+                    .pImageInfo = &l_imageInfo
+                } },
+                {}
+            );
+            }
+        }
+    };
+    createTextureSets(
+        m_rayTracingAlbedoTextures, m_rayTracingAlbedoLayout, m_rayTracingAlbedoSets
+    );
+    createTextureSets(
+        m_rayTracingNormalTextures, m_rayTracingNormalLayout, m_rayTracingNormalSets
+    );
+    createTextureSets(
+        m_rayTracingMetallicRoughnessTextures,
+        m_rayTracingMetallicRoughnessLayout,
+        m_rayTracingMetallicRoughnessSets
+    );
 }
 
 vk::StridedDeviceAddressRegionKHR MaterialVulkan::getRaygenRegion() const

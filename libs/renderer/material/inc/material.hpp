@@ -13,6 +13,10 @@
 #include "renderer/uniform/inc/uniform_storage_buffer.hpp"
 
 namespace renderer {
+namespace texture {
+class Texture;
+}
+
 namespace material {
 enum MaterialType {
     MATERIAL_TYPE_RENDER,
@@ -27,6 +31,18 @@ public:
     MaterialType getMaterialType() const;
 
     virtual Material& setShader(std::string f_shaderPath);
+    virtual Material& setRayTracingAlbedoTextures(
+        std::vector<std::shared_ptr<texture::Texture>> f_textures
+    );
+    virtual Material& setRayTracingNormalTextures(
+        std::vector<std::shared_ptr<texture::Texture>> f_textures
+    );
+    virtual Material& setRayTracingMetallicRoughnessTextures(
+        std::vector<std::shared_ptr<texture::Texture>> f_textures
+    );
+    virtual Material& setRayTracingGeometryBuffer(
+        std::shared_ptr<uniform::UniformStorageBuffer> f_buffer
+    );
     virtual Material& copyMaterial(std::shared_ptr<Material> f_other);
     virtual Material& create() = 0;
 
@@ -69,6 +85,11 @@ protected:
         m_uniformAccelerationStructures;
 
     std::string m_shaderLocation{ "" };
+    std::vector<std::shared_ptr<texture::Texture>> m_rayTracingAlbedoTextures;
+    std::vector<std::shared_ptr<texture::Texture>> m_rayTracingNormalTextures;
+    std::vector<std::shared_ptr<texture::Texture>>
+        m_rayTracingMetallicRoughnessTextures;
+    std::shared_ptr<uniform::UniformStorageBuffer> m_rayTracingGeometryBuffer;
 
     std::shared_ptr<Material> m_original{ nullptr };
 

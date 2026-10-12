@@ -15,6 +15,8 @@ public:
 
     size_t getVertexCount() const;
     int  getIndicieCount() const;
+    const std::vector<Vertex>& getVertices() const;
+    const std::vector<uint32_t>& getIndices() const;
     AABB getAABB() override;
 
 protected:

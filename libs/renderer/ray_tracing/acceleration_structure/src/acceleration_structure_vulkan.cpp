@@ -211,7 +211,8 @@ void AccelerationStructureVulkan::buildTopLevelAccelerationStructure(
         }
         vk::AccelerationStructureInstanceKHR l_vkInstance{
             .transform                              = l_vkTransform,
-            .instanceCustomIndex                    = l_instance.m_materialId,
+            .instanceCustomIndex =
+                (l_instance.m_meshId << 12) | (l_instance.m_materialId & 0xFFFu),
             .mask                                    = 0xFF,
             .instanceShaderBindingTableRecordOffset = 0,
             .flags = static_cast<VkGeometryInstanceFlagsKHR>(

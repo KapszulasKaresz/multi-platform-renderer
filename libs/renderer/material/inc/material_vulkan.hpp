@@ -53,6 +53,12 @@ private:
     vk::DeviceSize            m_shaderGroupBaseAlignment{ 0 };
     vk::raii::DescriptorSetLayout m_rayTracingOutputLayout{ nullptr };
     std::vector<vk::raii::DescriptorSet> m_rayTracingOutputSets{};
+    vk::raii::DescriptorSetLayout m_rayTracingAlbedoLayout{ nullptr };
+    std::vector<vk::raii::DescriptorSet> m_rayTracingAlbedoSets{};
+    vk::raii::DescriptorSetLayout m_rayTracingNormalLayout{ nullptr };
+    std::vector<vk::raii::DescriptorSet> m_rayTracingNormalSets{};
+    vk::raii::DescriptorSetLayout m_rayTracingMetallicRoughnessLayout{ nullptr };
+    std::vector<vk::raii::DescriptorSet> m_rayTracingMetallicRoughnessSets{};
 };
 }   // namespace material
 }   // namespace  renderer

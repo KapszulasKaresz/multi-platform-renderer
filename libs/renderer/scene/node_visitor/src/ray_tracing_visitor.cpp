@@ -23,12 +23,15 @@ void RayTracingVisitor::visit(MeshInstanceNode& f_meshInstanceNode)
             auto [l_materialIter, l_inserted] =
                 m_materialIds.emplace(l_materialKey, static_cast<uint32_t>(m_materialIds.size()));
             const uint32_t l_materialId = l_materialIter->second;
+            auto [l_meshIter, l_meshInserted] =
+                m_meshIds.emplace(l_mesh.get(), static_cast<uint32_t>(m_meshIds.size()));
             m_meshInstances.push_back({
                 .m_mesh       = std::move(l_mesh),
                 .m_material   = std::move(l_material),
                 .m_transform  = f_meshInstanceNode.M(),
                 .m_instanceId = static_cast<uint32_t>(f_meshInstanceNode.getId()),
-                .m_materialId = l_materialId
+                .m_materialId = l_materialId,
+                .m_meshId     = l_meshIter->second
             });
         }
     }

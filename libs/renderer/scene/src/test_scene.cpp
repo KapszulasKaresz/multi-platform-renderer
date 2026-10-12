@@ -4,6 +4,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include <imgui.h>
+#include <unordered_set>
+#include <cstring>
 
 #include "renderer/command_buffer/inc/command_buffer.hpp"
 #include "renderer/material/inc/material.hpp"
@@ -13,7 +15,11 @@
 #include "renderer/scene/node/inc/gltf_node.hpp"
 #include "renderer/scene/node/inc/mesh_instance_node.hpp"
 #include "renderer/scene/node_visitor/inc/imgui_visitor.hpp"
+#include "renderer/scene/node_visitor/inc/ray_tracing_visitor.hpp"
+#include "renderer/texture/inc/texture.hpp"
+#include "renderer/uniform/inc/uniform_collection.hpp"
 #include "renderer/uniform/inc/uniform_acceleration_structure.hpp"
+#include "renderer/uniform/inc/uniform_storage_buffer.hpp"
 #include "renderer/uniform/inc/uniform_single.hpp"
 #include "renderer/utils/inc/imgui_functions.hpp"
 
@@ -46,6 +52,98 @@ TestScene& TestScene::create()
     m_accelerationStructure = l_renderingDevice->createAccelerationStructure();
     if (m_accelerationStructure) {
         m_accelerationStructure->setScene(m_rootNode.get()).create();
+        RayTracingVisitor l_materialVisitor;
+        m_rootNode->applyVisitor(&l_materialVisitor);
+        struct MeshHeader {
+            uint32_t vertexOffset;
+            uint32_t indexOffset;
+            uint32_t indexCount;
+            uint32_t reserved;
+        };
+        struct GeometryHeader {
+            uint32_t meshCount;
+            uint32_t vertexCount;
+        };
+        std::vector<std::byte> l_geometryData(
+            sizeof(GeometryHeader)
+        );
+        std::unordered_map<mesh::TriangleMesh*, uint32_t> l_meshOffsets;
+        std::vector<MeshHeader> l_headers;
+        std::vector<glm::vec2> l_uvs;
+        std::vector<uint32_t> l_indices;
+        for (const auto& l_instance : l_materialVisitor.getMeshInstances()) {
+            if (l_meshOffsets.contains(l_instance.m_mesh.get())) {
+                continue;
+            }
+            const uint32_t l_meshId = static_cast<uint32_t>(l_headers.size());
+            l_meshOffsets.emplace(l_instance.m_mesh.get(), l_meshId);
+            const auto& l_meshUvs = l_instance.m_mesh->getVertices();
+            const auto& l_meshIndices = l_instance.m_mesh->getIndices();
+            l_headers.push_back({
+                .vertexOffset = static_cast<uint32_t>(l_uvs.size()),
+                .indexOffset = static_cast<uint32_t>(l_indices.size()),
+                .indexCount = static_cast<uint32_t>(l_meshIndices.size())
+            });
+            for (const auto& l_vertex : l_meshUvs) {
+                l_uvs.push_back(l_vertex.m_texCoord);
+            }
+            l_indices.insert(l_indices.end(), l_meshIndices.begin(), l_meshIndices.end());
+        }
+        const uint32_t l_headerBytes = static_cast<uint32_t>(
+            sizeof(GeometryHeader) + l_headers.size() * sizeof(MeshHeader)
+        );
+        l_geometryData.resize(
+            l_headerBytes + l_uvs.size() * sizeof(glm::vec2)
+            + l_indices.size() * sizeof(uint32_t)
+        );
+        GeometryHeader l_geometryHeader{
+            static_cast<uint32_t>(l_headers.size()),
+            static_cast<uint32_t>(l_uvs.size())
+        };
+        std::memcpy(l_geometryData.data(), &l_geometryHeader, sizeof(l_geometryHeader));
+        std::memcpy(
+            l_geometryData.data() + sizeof(l_geometryHeader),
+            l_headers.data(),
+            l_headers.size() * sizeof(MeshHeader)
+        );
+        std::memcpy(
+            l_geometryData.data() + l_headerBytes,
+            l_uvs.data(),
+            l_uvs.size() * sizeof(glm::vec2)
+        );
+        std::memcpy(
+            l_geometryData.data() + l_headerBytes + l_uvs.size() * sizeof(glm::vec2),
+            l_indices.data(),
+            l_indices.size() * sizeof(uint32_t)
+        );
+        auto l_geometryBuffer = l_renderingDevice->createUniformStorageBuffer();
+        l_geometryBuffer->create();
+        l_geometryBuffer->setValueRaw(l_geometryData);
+        std::vector<std::shared_ptr<texture::Texture>> l_albedoTextures;
+        std::vector<std::shared_ptr<texture::Texture>> l_normalTextures;
+        std::vector<std::shared_ptr<texture::Texture>> l_metallicRoughnessTextures;
+        std::unordered_set<material::Material*> l_seenMaterials;
+        for (const auto& l_instance : l_materialVisitor.getMeshInstances()) {
+            if (!l_instance.m_material || !l_seenMaterials.insert(l_instance.m_material.get()).second) {
+                continue;
+            }
+            const size_t l_requiredSize = l_instance.m_materialId + 1;
+            l_albedoTextures.resize(l_requiredSize);
+            l_normalTextures.resize(l_requiredSize);
+            l_metallicRoughnessTextures.resize(l_requiredSize);
+            auto l_objectUniform = l_instance.m_material->getUniformCollection("Object");
+            if (!l_objectUniform || l_objectUniform->getTextureCount() < 3) {
+                throw std::runtime_error(
+                    "TestScene::create() material is missing PBR textures"
+                );
+            }
+            l_albedoTextures[l_instance.m_materialId] =
+                l_objectUniform->getTextureShared(0);
+            l_metallicRoughnessTextures[l_instance.m_materialId] =
+                l_objectUniform->getTextureShared(1);
+            l_normalTextures[l_instance.m_materialId] =
+                l_objectUniform->getTextureShared(2);
+        }
         m_rayTracingMaterial      = l_renderingDevice->createMaterial();
         m_rayTracingRenderTarget = l_renderingDevice->createRenderTarget();
         m_rayTracingRenderTarget->setFormat(image::IMAGE_FORMAT_BGRA8)
@@ -76,8 +174,14 @@ TestScene& TestScene::create()
         l_accelerationStructureUniform->create();
         m_rayTracingMaterial
             ->setMaterialType(material::MaterialType::MATERIAL_TYPE_RAY_TRACING)
+            .setRayTracingAlbedoTextures(std::move(l_albedoTextures))
+            .setRayTracingNormalTextures(std::move(l_normalTextures))
+            .setRayTracingMetallicRoughnessTextures(
+                std::move(l_metallicRoughnessTextures)
+            )
             .setShader("res/shaders/compiled/raytracing")
             .addUniformCollection(m_rayTracingCameraUniform)
+            .addUniformStorageBuffer(l_geometryBuffer)
             .addUniformAccelerationStructure(l_accelerationStructureUniform)
             .create();
     }

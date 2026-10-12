@@ -106,7 +106,18 @@ texture::Texture* UniformCollection::getTexture(int f_position)
                 "of bounds."
             );
     }
+
     return m_textures[f_position].get();
+}
+
+std::shared_ptr<texture::Texture> UniformCollection::getTextureShared(int f_position)
+{
+    if (f_position < 0 || f_position >= static_cast<int>(m_textures.size())) {
+        throw std::runtime_error(
+            "UniformCollection::getTextureShared(int) texture position is out of bounds."
+        );
+    }
+    return m_textures[f_position];
 }
 
 int UniformCollection::getTextureCount() const

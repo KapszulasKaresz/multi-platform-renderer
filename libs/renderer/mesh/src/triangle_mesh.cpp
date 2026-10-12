@@ -18,6 +18,16 @@ size_t TriangleMesh::getVertexCount() const
     return m_vertices.size();
 }
 
+const std::vector<Vertex>& TriangleMesh::getVertices() const
+{
+    return m_vertices;
+}
+
+const std::vector<uint32_t>& TriangleMesh::getIndices() const
+{
+    return m_indices;
+}
+
 AABB TriangleMesh::getAABB()
 {
     if (!m_aabbCalculated) {

@@ -21,6 +21,38 @@ Material& Material::setShader(std::string f_shaderPath)
     return *this;
 }
 
+Material& Material::setRayTracingAlbedoTextures(
+    std::vector<std::shared_ptr<texture::Texture>> f_textures
+)
+{
+    m_rayTracingAlbedoTextures = std::move(f_textures);
+    return *this;
+}
+
+Material& Material::setRayTracingNormalTextures(
+    std::vector<std::shared_ptr<texture::Texture>> f_textures
+)
+{
+    m_rayTracingNormalTextures = std::move(f_textures);
+    return *this;
+}
+
+Material& Material::setRayTracingMetallicRoughnessTextures(
+    std::vector<std::shared_ptr<texture::Texture>> f_textures
+)
+{
+    m_rayTracingMetallicRoughnessTextures = std::move(f_textures);
+    return *this;
+}
+
+Material& Material::setRayTracingGeometryBuffer(
+    std::shared_ptr<uniform::UniformStorageBuffer> f_buffer
+)
+{
+    m_rayTracingGeometryBuffer = std::move(f_buffer);
+    return *this;
+}
+
 Material& Material::copyMaterial(std::shared_ptr<Material> f_other)
 {
     m_original = f_other;
