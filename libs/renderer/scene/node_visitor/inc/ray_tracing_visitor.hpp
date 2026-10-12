@@ -6,9 +6,14 @@
 #include <glm/glm.hpp>
 
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 namespace renderer {
+namespace material {
+class Material;
+}
+
 namespace mesh {
 class TriangleMesh;
 }
@@ -21,8 +26,10 @@ public:
 
     struct MeshInstance {
         std::shared_ptr<mesh::TriangleMesh> m_mesh;
+        std::shared_ptr<material::Material> m_material;
         glm::mat4                           m_transform{ 1.0f };
         uint32_t                            m_instanceId{ 0 };
+        uint32_t                            m_materialId{ 0 };
     };
 
     void visit(MeshInstanceNode& f_meshInstanceNode) override;
@@ -33,6 +40,7 @@ public:
 
 protected:
     std::vector<MeshInstance> m_meshInstances;
+    std::unordered_map<material::Material*, uint32_t> m_materialIds;
 };
 
 }   // namespace scene

@@ -59,5 +59,11 @@ void missMain(inout RayPayload payload)
 [shader("closesthit")]
 void closestHitMain(inout RayPayload payload, in BuiltInTriangleIntersectionAttributes)
 {
-    payload.color = float4(0.8, 0.8, 0.8, 1.0);
+    const uint materialId = InstanceID();
+    const float3 color = float3(
+        frac(float(materialId) * 0.731),
+        frac(float(materialId) * 0.379 + 0.21),
+        frac(float(materialId) * 0.527 + 0.43)
+    );
+    payload.color = float4(0.25 + 0.75 * color, 1.0);
 }
