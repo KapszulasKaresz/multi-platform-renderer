@@ -360,8 +360,9 @@ CommandBufferVulkan& CommandBufferVulkan::traceRays(
     transitionImageLayout(
         l_renderTargetImage,
         vk::ImageLayout::eGeneral,
-        vk::AccessFlags2{},
-        vk::AccessFlagBits2::eShaderStorageWrite,
+        vk::AccessFlagBits2::eTransferRead,
+        vk::AccessFlagBits2::eShaderStorageRead
+            | vk::AccessFlagBits2::eShaderStorageWrite,
         vk::PipelineStageFlagBits2::eTransfer,
         vk::PipelineStageFlagBits2::eRayTracingShaderKHR
     );
@@ -381,7 +382,8 @@ CommandBufferVulkan& CommandBufferVulkan::traceRays(
     transitionImageLayout(
         l_renderTargetImage,
         vk::ImageLayout::eTransferSrcOptimal,
-        vk::AccessFlagBits2::eShaderStorageWrite,
+        vk::AccessFlagBits2::eShaderStorageRead
+            | vk::AccessFlagBits2::eShaderStorageWrite,
         vk::AccessFlagBits2::eTransferRead,
         vk::PipelineStageFlagBits2::eRayTracingShaderKHR,
         vk::PipelineStageFlagBits2::eTransfer

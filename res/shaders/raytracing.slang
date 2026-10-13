@@ -44,13 +44,13 @@ ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
 RWTexture2D<float4> outputImage;
 
 [vk::binding(0, 4)]
-Sampler2D<float4> albedoTextures[64];
+Sampler2D<float4> albedoTextures[128];
 
 [vk::binding(0, 5)]
-Sampler2D<float4> normalTextures[64];
+Sampler2D<float4> normalTextures[128];
 
 [vk::binding(0, 6)]
-Sampler2D<float4> metallicRoughnessTextures[64];
+Sampler2D<float4> metallicRoughnessTextures[128];
 
 [vk::binding(0, 2)]
 ByteAddressBuffer geometry;
@@ -192,7 +192,7 @@ void raygenMain()
     // Tone map HDR radiance and convert to sRGB display space
     float3 hdrColor = payload.color.rgb;
     float3 ldrColor = ACESFilm(hdrColor);
-    float3 finalColor = pow(ldrColor, 1.0 / 2.2);
+    float3 finalColor = ldrColor; //pow(ldrColor, 1.0 / 2.2);
 
     const uint2 pixelIndex = DispatchRaysIndex().xy;
     const float4 currentColor = float4(finalColor, payload.color.a);
@@ -260,6 +260,10 @@ void closestHitMain(
     const uint instanceData = InstanceID();
     const uint meshId = instanceData >> 12;
     const uint materialId = instanceData & 0xFFF;
+    if (materialId >= 128) {
+        payload.color = float4(1.0, 0.0, 1.0, 1.0);
+        return;
+    }
     const uint meshHeader = 8 + meshId * 16;
     const uint vertexOffset = geometry.Load(meshHeader);
     const uint indexOffset = geometry.Load(meshHeader + 4);
@@ -306,7 +310,7 @@ void closestHitMain(
     // ---------------------------------------------------------------------
     // 1. Direct Lighting: Point Lights (Inverse-Square + Soft Shadows)
     // ---------------------------------------------------------------------
-    const int activeLights = lightArray.lightCount;
+    const int activeLights = min(lightArray.lightCount, 2);
     for (int i = 0; i < activeLights; ++i) {
         const float3 toLight = lightArray.lights[i].position.xyz - hitPosition;
         const float distanceToLight = length(toLight);

@@ -461,7 +461,7 @@ void MaterialVulkan::createRayTracingPipeline()
           .pSetLayouts        = l_outputLayouts.data() }
     );
 
-    constexpr uint32_t l_maxTextureCount = 64;
+    constexpr uint32_t l_maxTextureCount = 128;
     const uint32_t     l_textureCount =
         static_cast<uint32_t>(m_rayTracingAlbedoTextures.size());
     if (l_textureCount == 0) {

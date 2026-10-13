@@ -46,6 +46,9 @@ TestScene& TestScene::create()
     l_gltfNode->setName("GLTF Node").create();
     // l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Buggy/glTF/Buggy.gltf");
     l_gltfNode->loadFromFile("res/models/glTF-Sample-Models/2.0/Sponza/glTF/Sponza.gltf");
+    // l_gltfNode->loadFromFile(
+    //     "res/models/glTF-Sample-Models/2.0/WaterBottle/glTF/WaterBottle.gltf"
+    // );
     m_rootNode->addChild(std::move(l_gltfNode));
 
     auto* l_renderingDevice =
@@ -156,6 +159,11 @@ TestScene& TestScene::create()
         std::vector<std::shared_ptr<texture::Texture>> l_metallicRoughnessTextures;
         std::unordered_set<material::Material*>        l_seenMaterials;
         for (const auto& l_instance : l_materialVisitor.getMeshInstances()) {
+            if (l_instance.m_materialId >= 128) {
+                throw std::runtime_error(
+                    "TestScene::create() ray-tracing material count exceeds 128"
+                );
+            }
             if (!l_instance.m_material
                 || !l_seenMaterials.insert(l_instance.m_material.get()).second)
             {
@@ -177,6 +185,26 @@ TestScene& TestScene::create()
                 l_objectUniform->getTextureShared(1);
             l_normalTextures[l_instance.m_materialId] =
                 l_objectUniform->getTextureShared(2);
+            if (!l_albedoTextures[l_instance.m_materialId]
+                || !l_normalTextures[l_instance.m_materialId]
+                || !l_metallicRoughnessTextures[l_instance.m_materialId])
+            {
+                throw std::runtime_error(
+                    "TestScene::create() ray-tracing material texture table has a gap"
+                );
+            }
+        }
+        for (size_t l_materialId = 0; l_materialId < l_albedoTextures.size();
+             ++l_materialId)
+        {
+            if (!l_albedoTextures[l_materialId]
+                || !l_normalTextures[l_materialId]
+                || !l_metallicRoughnessTextures[l_materialId])
+            {
+                throw std::runtime_error(
+                    "TestScene::create() ray-tracing material texture table has a gap"
+                );
+            }
         }
         m_rayTracingMaterial     = l_renderingDevice->createMaterial();
         m_rayTracingRenderTarget = l_renderingDevice->createRenderTarget();
