@@ -4,7 +4,6 @@ struct UniformBufferCamera
     float4x4 proj;
     float4x4 inverseView;
     float4x4 inverseProj;
-    float accumulationContribution;
     uint accumulationFrame;
 };
 
@@ -201,7 +200,7 @@ void raygenMain()
         outputImage[pixelIndex] = currentColor;
     }
     else {
-        const float contribution = saturate(camera.accumulationContribution);
+        const float contribution = 1.0 / float(camera.accumulationFrame + 1u);
         outputImage[pixelIndex] = lerp(
             outputImage[pixelIndex], currentColor, contribution
         );

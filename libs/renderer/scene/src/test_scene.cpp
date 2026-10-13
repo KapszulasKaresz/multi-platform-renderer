@@ -199,10 +199,6 @@ TestScene& TestScene::create()
         m_rayTracingCameraUniform->addMember("inverseProj")
             ->setType(uniform::UNIFORM_TYPE_MAT4X4)
             .create();
-        m_rayTracingCameraUniform->addMember("accumulationContribution")
-            ->setType(uniform::UNIFORM_TYPE_FLOAT)
-            .setValue(m_rayTracingContribution)
-            .create();
         m_rayTracingCameraUniform->addMember("accumulationFrame")
             ->setType(uniform::UNIFORM_TYPE_UINT)
             .setValue(0u)
@@ -281,10 +277,6 @@ void TestScene::recordCommandBuffer(
         l_inverseView->setValue(glm::inverse(m_camera->V()));
         l_inverseProjection->setValue(glm::inverse(m_camera->P()));
         dynamic_cast<uniform::UniformSingle*>(
-            m_rayTracingCameraUniform->getMember("accumulationContribution")
-        )
-            ->setValue(m_rayTracingContribution);
-        dynamic_cast<uniform::UniformSingle*>(
             m_rayTracingCameraUniform->getMember("accumulationFrame")
         )
             ->setValue(m_rayTracingFrame);
@@ -294,9 +286,6 @@ void TestScene::recordCommandBuffer(
 
     ImGui::Begin("Rendering");
     ImGui::Checkbox("Use ray tracing", &m_useRayTracing);
-    ImGui::SliderFloat(
-        "Current frame contribution", &m_rayTracingContribution, 0.001f, 1.0f, "%.3f"
-    );
     ImGui::End();
 
     if (!isRayTracingEnabled()) {
