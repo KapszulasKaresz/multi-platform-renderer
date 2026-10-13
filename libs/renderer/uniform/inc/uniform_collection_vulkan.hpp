@@ -62,6 +62,11 @@ private:
     vk::Flags<vk::ShaderStageFlagBits> m_shaderStage{
         vk::ShaderStageFlagBits::eCompute | vk::ShaderStageFlagBits::eAllGraphics
             | vk::ShaderStageFlagBits::eRaygenKHR
+            | vk::ShaderStageFlagBits::eAnyHitKHR
+            | vk::ShaderStageFlagBits::eClosestHitKHR
+            | vk::ShaderStageFlagBits::eMissKHR
+            | vk::ShaderStageFlagBits::eIntersectionKHR
+            | vk::ShaderStageFlagBits::eCallableKHR
     };
     vk::raii::DescriptorSetLayout m_descriptorSetLayout{ nullptr };
 

@@ -50,6 +50,8 @@ public:
 
     void       setRenderMode(RenderMode f_renderMode);
     RenderMode getRenderMode() const;
+    void       setRayTracingFrameContribution(float f_contribution);
+    float      getRayTracingFrameContribution() const;
 
     RenderingServer& setWindow(std::unique_ptr<window::Window>&& f_renderTarget);
     RenderingServer& setScene(std::shared_ptr<scene::TestScene> f_scene);
@@ -69,6 +71,8 @@ public:
 private:
     RenderMode m_renderMode{ RENDER_MODE_LOOP };
     bool       m_mainLoopRunning{ false };
+    bool       m_hasRayTracingFrame{ false };
+    float      m_rayTracingFrameContribution{ 0.1f };
 
     std::unique_ptr<window::Window>              m_window{ nullptr };
     std::unique_ptr<rendering_api::RenderingApi> m_renderingApi{ nullptr };

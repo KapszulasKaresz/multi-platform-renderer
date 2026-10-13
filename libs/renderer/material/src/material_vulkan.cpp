@@ -1,18 +1,18 @@
 #include "renderer/material/inc/material_vulkan.hpp"
 
-#include <vector>
 #include <cstring>
+#include <vector>
 
 #include "renderer/command_buffer/inc/command_buffer_vulkan.hpp"
 #include "renderer/image/inc/image_vulkan.hpp"
 #include "renderer/mesh/inc/mesh.hpp"
 #include "renderer/rendering_device/inc/rendering_device_vulkan.hpp"
-#include "renderer/uniform/inc/uniform_array_vulkan.hpp"
+#include "renderer/texture/inc/texture_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_acceleration_structure_vulkan.hpp"
+#include "renderer/uniform/inc/uniform_array_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_collection_vulkan.hpp"
 #include "renderer/uniform/inc/uniform_storage_buffer_vulkan.hpp"
 #include "renderer/utils/inc/utils.hpp"
-#include "renderer/texture/inc/texture_vulkan.hpp"
 
 namespace renderer {
 namespace material {
@@ -124,10 +124,9 @@ std::vector<vk::DescriptorSet> MaterialVulkan::getDescriptorSets()
     }
 
     for (const auto& l_accelerationStructure : m_uniformAccelerationStructures) {
-        auto* l_rawUniform =
-            dynamic_cast<uniform::UniformAccelerationStructureVulkan*>(
-                l_accelerationStructure.get()
-            );
+        auto* l_rawUniform = dynamic_cast<uniform::UniformAccelerationStructureVulkan*>(
+            l_accelerationStructure.get()
+        );
         if (l_rawUniform != nullptr) {
             l_ret.push_back(l_rawUniform->getDescriptorSet());
         }
@@ -411,51 +410,43 @@ void MaterialVulkan::createRayTracingPipeline()
         createShaderModule(utils::readFile(m_shaderLocation + ".rchit.spv"));
 
     std::array l_stages = {
+        vk::PipelineShaderStageCreateInfo{.stage  = vk::ShaderStageFlagBits::eRaygenKHR,
+                                          .module = l_raygenModule,
+                                          .pName  = "raygenMain"    },
+        vk::PipelineShaderStageCreateInfo{      .stage  = vk::ShaderStageFlagBits::eMissKHR,
+                                          .module = l_missModule,
+                                          .pName  = "missMain"      },
         vk::PipelineShaderStageCreateInfo{
-            .stage  = vk::ShaderStageFlagBits::eRaygenKHR,
-            .module = l_raygenModule,
-            .pName  = "raygenMain"
-        },
-        vk::PipelineShaderStageCreateInfo{
-            .stage  = vk::ShaderStageFlagBits::eMissKHR,
-            .module = l_missModule,
-            .pName  = "missMain"
-        },
-        vk::PipelineShaderStageCreateInfo{
-            .stage  = vk::ShaderStageFlagBits::eClosestHitKHR,
-            .module = l_closestHitModule,
-            .pName  = "closestHitMain"
-        }
+                                          .stage  = vk::ShaderStageFlagBits::eClosestHitKHR,
+                                          .module = l_closestHitModule,
+                                          .pName  = "closestHitMain" }
     };
     std::array l_groups = {
         vk::RayTracingShaderGroupCreateInfoKHR{
-            .type              = vk::RayTracingShaderGroupTypeKHR::eGeneral,
-            .generalShader     = 0,
-            .closestHitShader  = VK_SHADER_UNUSED_KHR,
-            .anyHitShader      = VK_SHADER_UNUSED_KHR,
-            .intersectionShader = VK_SHADER_UNUSED_KHR
-        },
+                                               .type               = vk::RayTracingShaderGroupTypeKHR::eGeneral,
+                                               .generalShader      = 0,
+                                               .closestHitShader   = VK_SHADER_UNUSED_KHR,
+                                               .anyHitShader       = VK_SHADER_UNUSED_KHR,
+                                               .intersectionShader = VK_SHADER_UNUSED_KHR },
         vk::RayTracingShaderGroupCreateInfoKHR{
-            .type              = vk::RayTracingShaderGroupTypeKHR::eGeneral,
-            .generalShader     = 1,
-            .closestHitShader  = VK_SHADER_UNUSED_KHR,
-            .anyHitShader      = VK_SHADER_UNUSED_KHR,
-            .intersectionShader = VK_SHADER_UNUSED_KHR
-        },
+                                               .type               = vk::RayTracingShaderGroupTypeKHR::eGeneral,
+                                               .generalShader      = 1,
+                                               .closestHitShader   = VK_SHADER_UNUSED_KHR,
+                                               .anyHitShader       = VK_SHADER_UNUSED_KHR,
+                                               .intersectionShader = VK_SHADER_UNUSED_KHR },
         vk::RayTracingShaderGroupCreateInfoKHR{
-            .type              = vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup,
-            .generalShader     = VK_SHADER_UNUSED_KHR,
-            .closestHitShader  = 2,
-            .anyHitShader      = VK_SHADER_UNUSED_KHR,
-            .intersectionShader = VK_SHADER_UNUSED_KHR
-        }
+                                               .type               = vk::RayTracingShaderGroupTypeKHR::eTrianglesHitGroup,
+                                               .generalShader      = VK_SHADER_UNUSED_KHR,
+                                               .closestHitShader   = 2,
+                                               .anyHitShader       = VK_SHADER_UNUSED_KHR,
+                                               .intersectionShader = VK_SHADER_UNUSED_KHR }
     };
 
     const vk::DescriptorSetLayoutBinding l_outputBinding{
-        .binding = 0,
-        .descriptorType = vk::DescriptorType::eStorageImage,
+        .binding         = 0,
+        .descriptorType  = vk::DescriptorType::eStorageImage,
         .descriptorCount = 1,
-        .stageFlags = vk::ShaderStageFlagBits::eRaygenKHR
+        .stageFlags      = vk::ShaderStageFlagBits::eRaygenKHR
     };
     m_rayTracingOutputLayout = vk::raii::DescriptorSetLayout(
         m_parentDevice->getLogicalDevice(),
@@ -465,12 +456,13 @@ void MaterialVulkan::createRayTracingPipeline()
         m_parentDevice->getMaxFramesInFlight(), *m_rayTracingOutputLayout
     );
     m_rayTracingOutputSets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
-        { .descriptorPool = m_parentDevice->getDescriptorPool(),
+        { .descriptorPool     = m_parentDevice->getDescriptorPool(),
           .descriptorSetCount = static_cast<uint32_t>(l_outputLayouts.size()),
-          .pSetLayouts = l_outputLayouts.data() }
+          .pSetLayouts        = l_outputLayouts.data() }
     );
 
-    const uint32_t l_textureCount =
+    constexpr uint32_t l_maxTextureCount = 64;
+    const uint32_t     l_textureCount =
         static_cast<uint32_t>(m_rayTracingAlbedoTextures.size());
     if (l_textureCount == 0) {
         throw std::runtime_error(
@@ -478,28 +470,27 @@ void MaterialVulkan::createRayTracingPipeline()
         );
     }
     const vk::DescriptorSetLayoutBinding l_albedoBinding{
-            .binding = 0,
-            .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-            .descriptorCount = l_textureCount,
-            .stageFlags = vk::ShaderStageFlagBits::eClosestHitKHR
+        .binding         = 0,
+        .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+        .descriptorCount = l_maxTextureCount,
+        .stageFlags      = vk::ShaderStageFlagBits::eClosestHitKHR
     };
     m_rayTracingAlbedoLayout = vk::raii::DescriptorSetLayout(
         m_parentDevice->getLogicalDevice(),
         { .bindingCount = 1, .pBindings = &l_albedoBinding }
     );
-    const auto createTextureLayout =
-        [&](uint32_t f_count) {
-            const vk::DescriptorSetLayoutBinding l_binding{
-                .binding = 0,
-                .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-                .descriptorCount = f_count,
-                .stageFlags = vk::ShaderStageFlagBits::eClosestHitKHR
-            };
-            return vk::raii::DescriptorSetLayout(
-                m_parentDevice->getLogicalDevice(),
-                { .bindingCount = 1, .pBindings = &l_binding }
-            );
+    const auto createTextureLayout = [&](uint32_t f_count) {
+        const vk::DescriptorSetLayoutBinding l_binding{
+            .binding         = 0,
+            .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+            .descriptorCount = f_count,
+            .stageFlags      = vk::ShaderStageFlagBits::eClosestHitKHR
         };
+        return vk::raii::DescriptorSetLayout(
+            m_parentDevice->getLogicalDevice(),
+            { .bindingCount = 1, .pBindings = &l_binding }
+        );
+    };
     if (m_rayTracingNormalTextures.size() != l_textureCount
         || m_rayTracingMetallicRoughnessTextures.size() != l_textureCount)
     {
@@ -507,12 +498,13 @@ void MaterialVulkan::createRayTracingPipeline()
             "MaterialVulkan::createRayTracingPipeline() texture arrays are inconsistent"
         );
     }
-    m_rayTracingNormalLayout = createTextureLayout(l_textureCount);
-    m_rayTracingMetallicRoughnessLayout = createTextureLayout(l_textureCount);
+    m_rayTracingNormalLayout            = createTextureLayout(l_maxTextureCount);
+    m_rayTracingMetallicRoughnessLayout = createTextureLayout(l_maxTextureCount);
 
     std::vector<vk::DescriptorSetLayout> l_descriptorSetLayouts;
     for (const auto& l_uniform : m_uniformCollections) {
-        if (auto* l_raw = dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get())) {
+        if (auto* l_raw = dynamic_cast<uniform::UniformCollectionVulkan*>(l_uniform.get()))
+        {
             l_descriptorSetLayouts.push_back(l_raw->getDescriptorSetLayout());
         }
     }
@@ -550,32 +542,35 @@ void MaterialVulkan::createRayTracingPipeline()
     );
 
     const vk::RayTracingPipelineCreateInfoKHR l_pipelineInfo{
-        .stageCount             = static_cast<uint32_t>(l_stages.size()),
-        .pStages                = l_stages.data(),
-        .groupCount             = static_cast<uint32_t>(l_groups.size()),
-        .pGroups                = l_groups.data(),
-        .maxPipelineRayRecursionDepth = 1,
-        .layout                 = *m_pipelineLayout
+        .stageCount                   = static_cast<uint32_t>(l_stages.size()),
+        .pStages                      = l_stages.data(),
+        .groupCount                   = static_cast<uint32_t>(l_groups.size()),
+        .pGroups                      = l_groups.data(),
+        .maxPipelineRayRecursionDepth = 4,
+        .layout                       = *m_pipelineLayout
     };
     m_pipeline = m_parentDevice->getLogicalDevice().createRayTracingPipelineKHR(
         nullptr, nullptr, l_pipelineInfo
     );
 
-    auto l_properties = m_parentDevice->getPhysicalDevice().getProperties2<
-        vk::PhysicalDeviceProperties2, vk::PhysicalDeviceRayTracingPipelinePropertiesKHR
-    >();
+    auto l_properties = m_parentDevice->getPhysicalDevice()
+                            .getProperties2<
+                                vk::PhysicalDeviceProperties2,
+                                vk::PhysicalDeviceRayTracingPipelinePropertiesKHR>();
     const auto& l_rayTracingProperties =
         l_properties.get<vk::PhysicalDeviceRayTracingPipelinePropertiesKHR>();
-    m_shaderGroupHandleSize = l_rayTracingProperties.shaderGroupHandleSize;
-    m_shaderGroupBaseAlignment = l_rayTracingProperties.shaderGroupBaseAlignment;
+    m_shaderGroupHandleSize       = l_rayTracingProperties.shaderGroupHandleSize;
+    m_shaderGroupBaseAlignment    = l_rayTracingProperties.shaderGroupBaseAlignment;
     const vk::DeviceSize l_stride = m_shaderGroupBaseAlignment;
-    const vk::DeviceSize l_size = l_stride * l_stages.size();
+    const vk::DeviceSize l_size   = l_stride * l_stages.size();
     auto l_handles = m_pipeline.getRayTracingShaderGroupHandlesKHR<uint8_t>(
-        0, static_cast<uint32_t>(l_stages.size()),
+        0,
+        static_cast<uint32_t>(l_stages.size()),
         static_cast<size_t>(m_shaderGroupHandleSize * l_stages.size())
     );
     m_shaderBindingTable = utils::VmaBuffer(
-        m_parentDevice->getVmaAllocator(), l_size,
+        m_parentDevice->getVmaAllocator(),
+        l_size,
         vk::BufferUsageFlagBits::eShaderBindingTableKHR
             | vk::BufferUsageFlagBits::eShaderDeviceAddress,
         VMA_MEMORY_USAGE_CPU_TO_GPU
@@ -595,48 +590,52 @@ void MaterialVulkan::createRayTracingPipeline()
         m_parentDevice->getMaxFramesInFlight(), *m_rayTracingAlbedoLayout
     );
     m_rayTracingAlbedoSets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
-        { .descriptorPool = m_parentDevice->getDescriptorPool(),
+        { .descriptorPool     = m_parentDevice->getDescriptorPool(),
           .descriptorSetCount = static_cast<uint32_t>(l_albedoLayouts.size()),
-          .pSetLayouts = l_albedoLayouts.data() }
+          .pSetLayouts        = l_albedoLayouts.data() }
     );
     const auto createTextureSets =
         [&](const auto& f_textures, auto& f_layout, auto& f_sets) {
-        std::vector<vk::DescriptorSetLayout> l_layouts(
-            m_parentDevice->getMaxFramesInFlight(), *f_layout
-        );
-        f_sets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
-            { .descriptorPool = m_parentDevice->getDescriptorPool(),
-              .descriptorSetCount = static_cast<uint32_t>(l_layouts.size()),
-              .pSetLayouts = l_layouts.data() }
-        );
-        for (auto& l_set : f_sets) {
-            for (uint32_t i = 0; i < l_textureCount; ++i) {
-                auto* l_texture =
-                    dynamic_cast<texture::TextureVulkan*>(f_textures[i].get());
-            if (!l_texture) {
-                throw std::runtime_error(
-                    "MaterialVulkan::createRayTracingPipeline() invalid ray-tracing texture"
-                );
-            }
-            const vk::DescriptorImageInfo l_imageInfo{
-                .sampler = l_texture->getSampler(),
-                .imageView = l_texture->getImageView(),
-                .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal
-            };
-            m_parentDevice->getLogicalDevice().updateDescriptorSets(
-                { vk::WriteDescriptorSet{
-                    .dstSet = l_set,
-                    .dstBinding = 0,
-                    .dstArrayElement = i,
-                    .descriptorCount = 1,
-                    .descriptorType = vk::DescriptorType::eCombinedImageSampler,
-                    .pImageInfo = &l_imageInfo
-                } },
-                {}
+            std::vector<vk::DescriptorSetLayout> l_layouts(
+                m_parentDevice->getMaxFramesInFlight(), *f_layout
             );
+            f_sets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
+                { .descriptorPool     = m_parentDevice->getDescriptorPool(),
+                  .descriptorSetCount = static_cast<uint32_t>(l_layouts.size()),
+                  .pSetLayouts        = l_layouts.data() }
+            );
+            for (auto& l_set : f_sets) {
+                for (uint32_t i = 0; i < l_maxTextureCount; ++i) {
+                    auto* l_texture = dynamic_cast<texture::TextureVulkan*>(
+                        f_textures[i % l_textureCount].get()
+                    );
+                    if (!l_texture) {
+                        throw std::runtime_error(
+                            "MaterialVulkan::createRayTracingPipeline() invalid "
+                            "ray-tracing " "texture"
+                        );
+                    }
+                    const vk::DescriptorImageInfo l_imageInfo{
+                        .sampler     = l_texture->getSampler(),
+                        .imageView   = l_texture->getImageView(),
+                        .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal
+                    };
+                    m_parentDevice->getLogicalDevice().updateDescriptorSets(
+                        {
+                            vk::WriteDescriptorSet{
+                                                   .dstSet          = l_set,
+                                                   .dstBinding      = 0,
+                                                   .dstArrayElement = i,
+                                                   .descriptorCount = 1,
+                                                   .descriptorType =
+                                    vk::DescriptorType::eCombinedImageSampler,
+                                                   .pImageInfo = &l_imageInfo }
+                    },
+                        {}
+                    );
+                }
             }
-        }
-    };
+        };
     createTextureSets(
         m_rayTracingAlbedoTextures, m_rayTracingAlbedoLayout, m_rayTracingAlbedoSets
     );
@@ -656,8 +655,8 @@ vk::StridedDeviceAddressRegionKHR MaterialVulkan::getRaygenRegion() const
         { .buffer = m_shaderBindingTable.get() }
     );
     return { .deviceAddress = l_address,
-             .stride       = m_shaderGroupBaseAlignment,
-             .size         = m_shaderGroupBaseAlignment };
+             .stride        = m_shaderGroupBaseAlignment,
+             .size          = m_shaderGroupBaseAlignment };
 }
 
 void MaterialVulkan::setRayTracingOutput(image::ImageVulkan* f_image)
@@ -666,19 +665,17 @@ void MaterialVulkan::setRayTracingOutput(image::ImageVulkan* f_image)
         throw std::runtime_error("MaterialVulkan::setRayTracingOutput() invalid image");
     }
     auto& l_set = m_rayTracingOutputSets[m_parentDevice->getCurrentFrame()];
-    const vk::DescriptorImageInfo l_imageInfo{
-        .sampler = nullptr,
-        .imageView = f_image->getImageView(),
-        .imageLayout = vk::ImageLayout::eGeneral
-    };
+    const vk::DescriptorImageInfo l_imageInfo{ .sampler     = nullptr,
+                                               .imageView   = f_image->getImageView(),
+                                               .imageLayout = vk::ImageLayout::eGeneral };
     m_parentDevice->getLogicalDevice().updateDescriptorSets(
-        { vk::WriteDescriptorSet{
-            .dstSet = l_set,
-            .dstBinding = 0,
-            .descriptorCount = 1,
-            .descriptorType = vk::DescriptorType::eStorageImage,
-            .pImageInfo = &l_imageInfo
-        } },
+        {
+            vk::WriteDescriptorSet{ .dstSet          = l_set,
+                                   .dstBinding      = 0,
+                                   .descriptorCount = 1,
+                                   .descriptorType  = vk::DescriptorType::eStorageImage,
+                                   .pImageInfo      = &l_imageInfo }
+    },
         {}
     );
 }
@@ -689,8 +686,8 @@ vk::StridedDeviceAddressRegionKHR MaterialVulkan::getMissRegion() const
         { .buffer = m_shaderBindingTable.get() }
     );
     return { .deviceAddress = l_address + m_shaderGroupBaseAlignment,
-             .stride       = m_shaderGroupBaseAlignment,
-             .size         = m_shaderGroupBaseAlignment };
+             .stride        = m_shaderGroupBaseAlignment,
+             .size          = m_shaderGroupBaseAlignment };
 }
 
 vk::StridedDeviceAddressRegionKHR MaterialVulkan::getHitRegion() const
@@ -699,8 +696,8 @@ vk::StridedDeviceAddressRegionKHR MaterialVulkan::getHitRegion() const
         { .buffer = m_shaderBindingTable.get() }
     );
     return { .deviceAddress = l_address + 2 * m_shaderGroupBaseAlignment,
-             .stride       = m_shaderGroupBaseAlignment,
-             .size         = m_shaderGroupBaseAlignment };
+             .stride        = m_shaderGroupBaseAlignment,
+             .size          = m_shaderGroupBaseAlignment };
 }
 
 [[nodiscard]]

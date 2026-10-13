@@ -62,6 +62,10 @@ private:
     DrawVisitor                         m_drawVisitor{};
     std::unique_ptr<PerspectiveCamera>  m_camera{ nullptr };
     std::unique_ptr<ControlledObserver> m_observer{ nullptr };
+    glm::mat4                           m_previousCameraView{ 1.0f };
+    uint32_t                            m_rayTracingFrame{ 0 };
+    float                               m_rayTracingContribution{ 0.1f };
+    bool                                m_wasRayTracingEnabled{ false };
 };
 }   // namespace scene
 }   // namespace renderer

@@ -41,6 +41,8 @@ struct UniformBufferLightArray
 {
     int lightCount;
     UniformBufferLight lights[2];
+    float4 sunlightDirection;
+    float4 sunlightEmission;
 };
 
 [vk::binding(0, 0)]

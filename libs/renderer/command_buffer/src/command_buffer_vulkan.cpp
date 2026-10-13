@@ -362,7 +362,7 @@ CommandBufferVulkan& CommandBufferVulkan::traceRays(
         vk::ImageLayout::eGeneral,
         vk::AccessFlags2{},
         vk::AccessFlagBits2::eShaderStorageWrite,
-        vk::PipelineStageFlagBits2::eColorAttachmentOutput,
+        vk::PipelineStageFlagBits2::eTransfer,
         vk::PipelineStageFlagBits2::eRayTracingShaderKHR
     );
     l_commandBuffer.bindPipeline(
