@@ -16,7 +16,7 @@ struct UniformBufferLight
 struct UniformBufferLightArray
 {
     int lightCount;
-    UniformBufferLight lights[2];
+    UniformBufferLight lights[3];
     float4 sunlightDirection;
     float4 sunlightEmission;
 };
@@ -310,7 +310,7 @@ void closestHitMain(
     // ---------------------------------------------------------------------
     // 1. Direct Lighting: Point Lights (Inverse-Square + Soft Shadows)
     // ---------------------------------------------------------------------
-    const int activeLights = min(lightArray.lightCount, 2);
+    const int activeLights = min(lightArray.lightCount, 3);
     for (int i = 0; i < activeLights; ++i) {
         const float3 toLight = lightArray.lights[i].position.xyz - hitPosition;
         const float distanceToLight = length(toLight);
@@ -408,7 +408,7 @@ void closestHitMain(
     // ---------------------------------------------------------------------
     float3 indirectRadiance = float3(0.0, 0.0, 0.0);
 
-    if (payload.depth == 0) {
+    if (payload.depth < 1) {
         // Specular Reflection (Mirror / Glossy Lobe)
         const float3 R = reflect(-V, normal);
         const float3 jitterDir = sampleCosineHemisphere(randomFloat2(seed), normal);
@@ -416,7 +416,7 @@ void closestHitMain(
 
         if (dot(reflDir, normal) > 0.0) {
             RayPayload reflPayload;
-            reflPayload.depth = 1;
+            reflPayload.depth = payload.depth + 1;
             reflPayload.shadow = 0;
             reflPayload.visible = 0;
             reflPayload.color = float4(0.0, 0.0, 0.0, 1.0);
@@ -438,7 +438,7 @@ void closestHitMain(
             const float3 giDir = sampleCosineHemisphere(randomFloat2(seed), normal);
 
             RayPayload giPayload;
-            giPayload.depth = 1;
+            giPayload.depth = payload.depth + 1;
             giPayload.shadow = 0;
             giPayload.visible = 0;
             giPayload.color = float4(0.0, 0.0, 0.0, 1.0);

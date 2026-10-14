@@ -29,7 +29,7 @@ struct UniformBufferObject
 struct UniformBufferLight
 {
     float4 position;
-    float4 color;
+    float4 emission;
 };
 
 struct UniformBufferLightCount
@@ -40,7 +40,7 @@ struct UniformBufferLightCount
 struct UniformBufferLightArray
 {
     int lightCount;
-    UniformBufferLight lights[2];
+    UniformBufferLight lights[3];
     float4 sunlightDirection;
     float4 sunlightEmission;
 };
@@ -74,7 +74,6 @@ Sampler2D texture : register(t0, space0);
 float4 fragMain(VSOutput vertIn) : SV_TARGET {
 
     float3 baseColor = texture.Sample(vertIn.fragTexCoord).rgb;
-
     float3 normal = normalize(vertIn.normal);
     
     float3 ambientLight = float3(0.1, 0.1, 0.1); 
@@ -83,12 +82,32 @@ float4 fragMain(VSOutput vertIn) : SV_TARGET {
     for (int i = 0; i < lightArray.lightCount; ++i) {
         UniformBufferLight light = lightArray.lights[i];
         
-        float3 lightDir = normalize(light.position.xyz - vertIn.worldPos);
+        float3 lightDir;
+        float attenuation = 1.0;
+        
+        if (light.position.w < 0.5) {
+            // Directional Light: light.position.xyz specifies direction towards the light
+            lightDir = normalize(light.position.xyz);
+        } else {
+            // Point Light: calculate position offset and apply distance attenuation
+            float3 lightVec = light.position.xyz - vertIn.worldPos;
+            float dist = length(lightVec);
+            
+            lightDir = lightVec / max(dist, 0.0001); // Prevent divide-by-zero
+            
+            // Inverse-square law attenuation
+            attenuation = 1.0 / (dist * dist);
+        }
         
         float diff = max(dot(normal, lightDir), 0.0);
         
-        diffuseLight += diff * light.color.rgb;
+        diffuseLight += diff * light.emission.rgb * attenuation;
     }
+
+    const float3 sunlightDirection =
+        normalize(-lightArray.sunlightDirection.xyz);
+    const float sunlightDiffuse = max(dot(normal, sunlightDirection), 0.0);
+    diffuseLight += sunlightDiffuse * lightArray.sunlightEmission.rgb;
     
     float3 finalColor = baseColor * (ambientLight + diffuseLight);
     

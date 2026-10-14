@@ -141,10 +141,13 @@ TestScene& TestScene::create()
         };
         l_lightArray->addMember("lightCount")
             ->setType(uniform::UNIFORM_TYPE_INT)
-            .setValue(2)
+            .setValue(3)
             .create();
-        createLight({ 0.0f, 10.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, "Light_0");
-        createLight({ 10.0f, 10.0f, 0.0f, 1.0f }, { 0.0f, 0.0f, 0.0f, 0.0f }, "Light_1");
+        createLight({ 0.0f, 1.5f, 0.0f, 1.0f }, { 20.0f, 120.0f, 40.0f, 1.0f }, "Light_0");
+        createLight(
+            { -8.0f, 1.5f, 0.0f, 1.0f }, { 10.0f, 50.0f, 180.0f, 1.0f }, "Light_1"
+        );
+        createLight({ 8.0f, 1.5f, 0.0f, 1.0f }, { 10.0f, 10.0f, 10.0f, 1.0f }, "Light_2");
         l_lightArray->addMember("sunlightDirection")
             ->setType(uniform::UNIFORM_TYPE_VEC4)
             .setValue(glm::vec4(-0.45f, -1.0f, -0.35f, 0.0f))
@@ -197,8 +200,7 @@ TestScene& TestScene::create()
         for (size_t l_materialId = 0; l_materialId < l_albedoTextures.size();
              ++l_materialId)
         {
-            if (!l_albedoTextures[l_materialId]
-                || !l_normalTextures[l_materialId]
+            if (!l_albedoTextures[l_materialId] || !l_normalTextures[l_materialId]
                 || !l_metallicRoughnessTextures[l_materialId])
             {
                 throw std::runtime_error(

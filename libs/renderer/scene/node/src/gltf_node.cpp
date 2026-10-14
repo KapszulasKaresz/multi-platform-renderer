@@ -371,12 +371,12 @@ void GltfNode::createDefaultMaterial()
                         ->createUniformCollection();
     l_light0->addMember("position")
         ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
-        .setValue(glm::vec4(0.0f, 10.0f, 0.0f, 1.0f))
+        .setValue(glm::vec4(8.0f, 1.5f, 0.0f, 1.0f))
         .create();
 
     l_light0->addMember("emission")
         ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
-        .setValue(glm::vec4(1.0f, 0.0f, 1.0f, 1.0f))
+        .setValue(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f))
         .create();
 
     l_light0->setName("Light_0")
@@ -385,7 +385,7 @@ void GltfNode::createDefaultMaterial()
 
     l_lightArray->addMember("lightCount")
         ->setType(renderer::uniform::UNIFORM_TYPE_INT)
-        .setValue(2)
+        .setValue(3)
         .create();
 
     l_lightArray->addMember(l_light0);
@@ -395,12 +395,12 @@ void GltfNode::createDefaultMaterial()
                         ->createUniformCollection();
     l_light1->addMember("position")
         ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
-        .setValue(glm::vec4(10.0f, 10.0f, 0.0f, 1.0f))
+        .setValue(glm::vec4(-8.0f, 1.5f, 0.0f, 1.0f))
         .create();
 
     l_light1->addMember("emission")
         ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
-        .setValue(glm::vec4(0.0f, 1.0f, 0.0f, 1.0f))
+        .setValue(glm::vec4(1.0f, 5.0f, 18.0f, 1.0f))
         .create();
 
     l_light1->setName("Light_1")
@@ -408,6 +408,31 @@ void GltfNode::createDefaultMaterial()
         .create();
 
     l_lightArray->addMember(l_light1);
+
+    auto l_light2 = rendering_server::RenderingServer::getInstance()
+                        .getMainRenderingDevice()
+                        ->createUniformCollection();
+    l_light2->addMember("position")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(0.0f, 1.5f, 0.0f, 1.0f))
+        .create();
+    l_light2->addMember("emission")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(2.0f, 12.0f, 4.0f, 1.0f))
+        .create();
+    l_light2->setName("Light_2")
+        .setType(renderer::uniform::UNIFORM_TYPE_STRUCT_MEMBER)
+        .create();
+    l_lightArray->addMember(l_light2);
+
+    l_lightArray->addMember("sunlightDirection")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(-0.45f, -1.0f, -0.35f, 0.0f))
+        .create();
+    l_lightArray->addMember("sunlightEmission")
+        ->setType(renderer::uniform::UNIFORM_TYPE_VEC4)
+        .setValue(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f))
+        .create();
 
     l_lightArray->create();
     m_defaultMaterial->setShader("res/shaders/compiled/gltf_pbr")

@@ -594,48 +594,48 @@ void MaterialVulkan::createRayTracingPipeline()
           .descriptorSetCount = static_cast<uint32_t>(l_albedoLayouts.size()),
           .pSetLayouts        = l_albedoLayouts.data() }
     );
-    const auto createTextureSets =
-        [&](const auto& f_textures, auto& f_layout, auto& f_sets) {
-            std::vector<vk::DescriptorSetLayout> l_layouts(
-                m_parentDevice->getMaxFramesInFlight(), *f_layout
-            );
-            f_sets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
-                { .descriptorPool     = m_parentDevice->getDescriptorPool(),
-                  .descriptorSetCount = static_cast<uint32_t>(l_layouts.size()),
-                  .pSetLayouts        = l_layouts.data() }
-            );
-            for (auto& l_set : f_sets) {
-                for (uint32_t i = 0; i < l_maxTextureCount; ++i) {
-                    auto* l_texture = dynamic_cast<texture::TextureVulkan*>(
-                        f_textures[i % l_textureCount].get()
-                    );
-                    if (!l_texture) {
-                        throw std::runtime_error(
+    const auto createTextureSets = [&](const auto& f_textures,
+                                       auto&       f_layout,
+                                       auto&       f_sets) {
+        std::vector<vk::DescriptorSetLayout> l_layouts(
+            m_parentDevice->getMaxFramesInFlight(), *f_layout
+        );
+        f_sets = m_parentDevice->getLogicalDevice().allocateDescriptorSets(
+            { .descriptorPool     = m_parentDevice->getDescriptorPool(),
+              .descriptorSetCount = static_cast<uint32_t>(l_layouts.size()),
+              .pSetLayouts        = l_layouts.data() }
+        );
+        for (auto& l_set : f_sets) {
+            for (uint32_t i = 0; i < l_maxTextureCount; ++i) {
+                auto* l_texture = dynamic_cast<texture::TextureVulkan*>(
+                    f_textures[i % l_textureCount].get()
+                );
+                if (!l_texture) {
+                    throw std::runtime_error(
                             "MaterialVulkan::createRayTracingPipeline() invalid "
                             "ray-tracing " "texture"
                         );
-                    }
-                    const vk::DescriptorImageInfo l_imageInfo{
-                        .sampler     = l_texture->getSampler(),
-                        .imageView   = l_texture->getImageView(),
-                        .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal
-                    };
-                    m_parentDevice->getLogicalDevice().updateDescriptorSets(
-                        {
-                            vk::WriteDescriptorSet{
-                                                   .dstSet          = l_set,
-                                                   .dstBinding      = 0,
-                                                   .dstArrayElement = i,
-                                                   .descriptorCount = 1,
-                                                   .descriptorType =
-                                    vk::DescriptorType::eCombinedImageSampler,
-                                                   .pImageInfo = &l_imageInfo }
-                    },
-                        {}
-                    );
                 }
+                const vk::DescriptorImageInfo l_imageInfo{
+                    .sampler     = l_texture->getSampler(),
+                    .imageView   = l_texture->getImageView(),
+                    .imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal
+                };
+                m_parentDevice->getLogicalDevice().updateDescriptorSets(
+                    {
+                        vk::WriteDescriptorSet{
+                                               .dstSet          = l_set,
+                                               .dstBinding      = 0,
+                                               .dstArrayElement = i,
+                                               .descriptorCount = 1,
+                                               .descriptorType  = vk::DescriptorType::eCombinedImageSampler,
+                                               .pImageInfo      = &l_imageInfo }
+                },
+                    {}
+                );
             }
-        };
+        }
+    };
     createTextureSets(
         m_rayTracingAlbedoTextures, m_rayTracingAlbedoLayout, m_rayTracingAlbedoSets
     );

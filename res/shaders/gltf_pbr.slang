@@ -30,7 +30,7 @@ struct UniformBufferObject
 struct UniformBufferLight
 {
     float4 position;
-    float4 color;
+    float4 emission;
 };
 
 struct UniformBufferLightCount
@@ -41,7 +41,9 @@ struct UniformBufferLightCount
 struct UniformBufferLightArray
 {
     int lightCount;
-    UniformBufferLight lights[2];
+    UniformBufferLight lights[3];
+    float4 sunlightDirection;
+    float4 sunlightEmission;
 };
 
 [vk::binding(0, 0)]
@@ -119,22 +121,50 @@ float4 fragMain(VSOutput vertIn) : SV_TARGET {
     float3 ambientLight = float3(0.1, 0.1, 0.1) * baseColor; 
     float3 diffuseLight = float3(0.0, 0.0, 0.0);
     float3 specularLight = float3(0.0, 0.0, 0.0);
+    const float specPower = exp2(10.0 * (1.0 - roughness) + 1.0);
     
-    for (int i = 0; i < lightArray.lightCount; ++i) {
+    const int activeLightCount = min(lightArray.lightCount, 3);
+    for (int i = 0; i < activeLightCount; ++i) {
         UniformBufferLight light = lightArray.lights[i];
         
-        float3 lightDir = normalize(light.position.xyz - vertIn.worldPos);
+        float3 lightDir;
+        float attenuation = 1.0;
+        
+        if (light.position.w < 0.5) {
+            // Directional Light: light.position.xyz is direction towards the light source
+            lightDir = normalize(light.position.xyz);
+        } else {
+            // Point Light: vector to light source and inverse-square distance attenuation
+            float3 lightVec = light.position.xyz - vertIn.worldPos;
+            float dist = length(lightVec);
+            
+            lightDir = lightVec / max(dist, 0.0001); // Prevent divide-by-zero
+            attenuation = 1.0 / (dist * dist);
+        }
+        
         float diff = max(dot(finalNormal, lightDir), 0.0);
         
         float3 halfDir = normalize(lightDir + viewDir);
         float NdotH = max(dot(finalNormal, halfDir), 0.0);
         
-        float specPower = exp2(10.0 * (1.0 - roughness) + 1.0);
         float spec = pow(NdotH, specPower);
         
-        diffuseLight += diff * light.color.rgb * diffuseColor;
-        specularLight += spec * light.color.rgb * F0 * diff; 
+        diffuseLight += diff * light.emission.rgb * diffuseColor * attenuation;
+        specularLight += spec * light.emission.rgb * F0 * diff * attenuation;
     }
+
+    const float3 sunlightDirection =
+        normalize(-lightArray.sunlightDirection.xyz);
+    const float sunlightDiffuse = max(dot(finalNormal, sunlightDirection), 0.0);
+    const float3 sunlightHalfDir = normalize(sunlightDirection + viewDir);
+    const float sunlightNdotH =
+        max(dot(finalNormal, sunlightHalfDir), 0.0);
+    const float sunlightSpec =
+        pow(sunlightNdotH, specPower);
+    diffuseLight += sunlightDiffuse
+        * lightArray.sunlightEmission.rgb * diffuseColor;
+    specularLight += sunlightSpec
+        * lightArray.sunlightEmission.rgb * F0 * sunlightDiffuse;
     
     float3 finalColor = ambientLight + diffuseLight + specularLight;
     
