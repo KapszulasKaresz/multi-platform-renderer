@@ -269,7 +269,10 @@ void closestHitMain(
     const uint indexOffset = geometry.Load(meshHeader + 4);
     const uint primitiveOffset = indexOffset + PrimitiveIndex() * 3;
     const uint uvBase = 8 + geometry.Load(0) * 16;
-    const uint indexBase = uvBase + geometry.Load(4) * 8;
+    const uint vertexCount = geometry.Load(4);
+    const uint normalBase = uvBase + vertexCount * 8;
+    const uint tangentBase = normalBase + vertexCount * 16;
+    const uint indexBase = tangentBase + vertexCount * 16;
     const uint index0 = geometry.Load(indexBase + primitiveOffset * 4);
     const uint index1 = geometry.Load(indexBase + (primitiveOffset + 1) * 4);
     const uint index2 = geometry.Load(indexBase + (primitiveOffset + 2) * 4);
@@ -278,13 +281,40 @@ void closestHitMain(
     const float2 uv2 = asfloat(geometry.Load2(uvBase + (vertexOffset + index2) * 8));
     const float2 uv = uv0 * (1.0 - attributes.barycentrics.x - attributes.barycentrics.y)
         + uv1 * attributes.barycentrics.x + uv2 * attributes.barycentrics.y;
+    const float4 normal0 = asfloat(geometry.Load4(normalBase + (vertexOffset + index0) * 16));
+    const float4 normal1 = asfloat(geometry.Load4(normalBase + (vertexOffset + index1) * 16));
+    const float4 normal2 = asfloat(geometry.Load4(normalBase + (vertexOffset + index2) * 16));
+    const float4 tangent0 = asfloat(geometry.Load4(tangentBase + (vertexOffset + index0) * 16));
+    const float4 tangent1 = asfloat(geometry.Load4(tangentBase + (vertexOffset + index1) * 16));
+    const float4 tangent2 = asfloat(geometry.Load4(tangentBase + (vertexOffset + index2) * 16));
+    const float barycentric0 = 1.0 - attributes.barycentrics.x - attributes.barycentrics.y;
+    const float3 objectNormal = normalize(
+        normal0.xyz * barycentric0 + normal1.xyz * attributes.barycentrics.x
+        + normal2.xyz * attributes.barycentrics.y
+    );
+    const float4 interpolatedTangent =
+        tangent0 * barycentric0 + tangent1 * attributes.barycentrics.x
+        + tangent2 * attributes.barycentrics.y;
+    const float3 objectTangent = normalize(interpolatedTangent.xyz);
+    const float tangentHandedness = interpolatedTangent.w < 0.0 ? -1.0 : 1.0;
+    const float3 geometricNormal = normalize(
+        mul(ObjectToWorld3x4(), float4(objectNormal, 0.0)).xyz
+    );
+    const float3 tangent = normalize(
+        mul(ObjectToWorld3x4(), float4(objectTangent, 0.0)).xyz
+    );
+    const float3 bitangent =
+        normalize(cross(geometricNormal, tangent) * tangentHandedness);
 
     // Textures & Material properties
     const float4 rawAlbedo = albedoTextures[materialId].SampleLevel(uv, 0.0);
     const float3 albedo = pow(rawAlbedo.rgb, 2.2); // Linearize sRGB texture
 
+    const float3 tangentNormal =
+        normalTextures[materialId].SampleLevel(uv, 0.0).xyz * 2.0 - 1.0;
     float3 normal = normalize(
-        normalTextures[materialId].SampleLevel(uv, 0.0).xyz * 2.0 - 1.0
+        tangent * tangentNormal.x + bitangent * tangentNormal.y
+        + geometricNormal * tangentNormal.z
     );
 
     const float4 metallicRoughness = metallicRoughnessTextures[materialId].SampleLevel(uv, 0.0);

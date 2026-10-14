@@ -75,6 +75,8 @@ TestScene& TestScene::create()
         std::unordered_map<mesh::TriangleMesh*, uint32_t> l_meshOffsets;
         std::vector<MeshHeader>                           l_headers;
         std::vector<glm::vec2>                            l_uvs;
+        std::vector<glm::vec4>                            l_normals;
+        std::vector<glm::vec4>                            l_tangents;
         std::vector<uint32_t>                             l_indices;
         for (const auto& l_instance : l_materialVisitor.getMeshInstances()) {
             if (l_meshOffsets.contains(l_instance.m_mesh.get())) {
@@ -91,6 +93,8 @@ TestScene& TestScene::create()
             );
             for (const auto& l_vertex : l_meshUvs) {
                 l_uvs.push_back(l_vertex.m_texCoord);
+                l_normals.emplace_back(l_vertex.m_normal, 0.0f);
+                l_tangents.push_back(l_vertex.m_tangent);
             }
             l_indices.insert(l_indices.end(), l_meshIndices.begin(), l_meshIndices.end());
         }
@@ -99,6 +103,8 @@ TestScene& TestScene::create()
         );
         l_geometryData.resize(
             l_headerBytes + l_uvs.size() * sizeof(glm::vec2)
+            + l_normals.size() * sizeof(glm::vec4)
+            + l_tangents.size() * sizeof(glm::vec4)
             + l_indices.size() * sizeof(uint32_t)
         );
         GeometryHeader l_geometryHeader{ static_cast<uint32_t>(l_headers.size()),
@@ -114,8 +120,24 @@ TestScene& TestScene::create()
             l_uvs.data(),
             l_uvs.size() * sizeof(glm::vec2)
         );
+        const uint32_t l_normalBase =
+            l_headerBytes + static_cast<uint32_t>(l_uvs.size() * sizeof(glm::vec2));
         std::memcpy(
-            l_geometryData.data() + l_headerBytes + l_uvs.size() * sizeof(glm::vec2),
+            l_geometryData.data() + l_normalBase,
+            l_normals.data(),
+            l_normals.size() * sizeof(glm::vec4)
+        );
+        const uint32_t l_tangentBase =
+            l_normalBase + static_cast<uint32_t>(l_normals.size() * sizeof(glm::vec4));
+        std::memcpy(
+            l_geometryData.data() + l_tangentBase,
+            l_tangents.data(),
+            l_tangents.size() * sizeof(glm::vec4)
+        );
+        const uint32_t l_indexBase =
+            l_tangentBase + static_cast<uint32_t>(l_tangents.size() * sizeof(glm::vec4));
+        std::memcpy(
+            l_geometryData.data() + l_indexBase,
             l_indices.data(),
             l_indices.size() * sizeof(uint32_t)
         );
