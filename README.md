@@ -46,3 +46,6 @@ There is an example standalone app in the repository which uses the renderer lib
 | MSAA                    |   ✅    |       ✅ |
 | ImGui                   |   ✅    |       ✅ |
 | Compute                 |   ✅    |       ✅ |
+| Ray tracing             |   ✅    |       ✅ |
+
+Ray tracing requires a compatible Vulkan ray-tracing device or a DirectX Raytracing-capable Direct3D 12 adapter.

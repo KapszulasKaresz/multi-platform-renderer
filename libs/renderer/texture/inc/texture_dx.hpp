@@ -20,6 +20,10 @@ public:
 
     UINT getHeapOffset();
     UINT getSamplerOffset();
+    void writeDescriptors(
+        D3D12_CPU_DESCRIPTOR_HANDLE f_srv,
+        D3D12_CPU_DESCRIPTOR_HANDLE f_sampler
+    ) const;
 
     static D3D12_FILTER convertToD3D12Filter(Filter f_filter, MipMapMode f_mipmapMode);
     static D3D12_TEXTURE_ADDRESS_MODE convertToD3D12AddressMode(AddressMode f_addressMode);
@@ -33,6 +37,7 @@ private:
     rendering_device::RenderingDeviceDX* m_parentDevice{ nullptr };
 
     D3D12_SAMPLER_DESC m_samplerDesc{};
+    D3D12_SHADER_RESOURCE_VIEW_DESC m_srvDesc{};
 
     UINT m_heapPosition{ 0 };
     UINT m_heapPositionSampler{ 0 };

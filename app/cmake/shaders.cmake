@@ -123,7 +123,7 @@ function(add_slang_shader_target TARGET)
             -entry raygenMain
             -stage raygeneration
             -o ${RAYGEN_OUTPUT}
-            DEPENDS ${SHADER_FILE}
+            DEPENDS ${SHADER_FILE} ${CMAKE_SOURCE_DIR}/res/shaders/raytracing_bindings.slang
             COMMENT "Compiling Slang -> SPIR-V (Ray Generation): ${SHADER_FILE}"
             VERBATIM
         )
@@ -139,7 +139,7 @@ function(add_slang_shader_target TARGET)
             -entry missMain
             -stage miss
             -o ${MISS_OUTPUT}
-            DEPENDS ${SHADER_FILE}
+            DEPENDS ${SHADER_FILE} ${CMAKE_SOURCE_DIR}/res/shaders/raytracing_bindings.slang
             COMMENT "Compiling Slang -> SPIR-V (Miss): ${SHADER_FILE}"
             VERBATIM
         )
@@ -155,7 +155,7 @@ function(add_slang_shader_target TARGET)
             -entry closestHitMain
             -stage closesthit
             -o ${CHIT_OUTPUT}
-            DEPENDS ${SHADER_FILE}
+            DEPENDS ${SHADER_FILE} ${CMAKE_SOURCE_DIR}/res/shaders/raytracing_bindings.slang
             COMMENT "Compiling Slang -> SPIR-V (Closest Hit): ${SHADER_FILE}"
             VERBATIM
         )

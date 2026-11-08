@@ -1,5 +1,6 @@
 #include "renderer/utils/inc/descriptor_heap_manager_dx.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 
 #include "renderer/rendering_device/inc/rendering_device_dx.hpp"
@@ -28,9 +29,9 @@ DescriptorHeapManagerDX::DescriptorHeapManagerDX(
     }
 
     m_descriptorSize = m_parentDevice->getDevice()->GetDescriptorHandleIncrementSize(
-        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV
+        m_type
     );
-    m_freeHandles.resize((int)l_heapDesc.NumDescriptors);
+    m_freeHandles.reserve(l_heapDesc.NumDescriptors);
     for (int n = l_heapDesc.NumDescriptors; n > 0; n--) {
         m_freeHandles.push_back(n - 1);
     }
@@ -44,15 +45,8 @@ UINT DescriptorHeapManagerDX::addCBV(const D3D12_CONSTANT_BUFFER_VIEW_DESC& f_cb
             "D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV"
         );
     }
-    if (m_freeHandles.size() == 0) {
-        throw std::runtime_error(
-            "DescriptorHeapManagerDX::addCBV(...) Descriptor heap full"
-        );
-    }
-
-    auto l_originalFreeHandle = m_freeHandles.back();
+    auto l_originalFreeHandle = allocateRange(1);
     auto l_handle             = getCPUHandle(l_originalFreeHandle);
-    m_freeHandles.pop_back();
     m_parentDevice->getDevice()->CreateConstantBufferView(&f_cbvDesc, l_handle);
     return l_originalFreeHandle;
 }
@@ -68,15 +62,8 @@ UINT DescriptorHeapManagerDX::addUAV(
             "D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV"
         );
     }
-    if (m_freeHandles.size() == 0) {
-        throw std::runtime_error(
-            "DescriptorHeapManagerDX::addUAV(...) Descriptor heap full"
-        );
-    }
-
-    auto l_originalFreeHandle = m_freeHandles.back();
+    auto l_originalFreeHandle = allocateRange(1);
     auto l_handle             = getCPUHandle(l_originalFreeHandle);
-    m_freeHandles.pop_back();
 
     m_parentDevice->getDevice()->CreateUnorderedAccessView(
         f_resource, nullptr, &f_uavDesc, l_handle
@@ -96,18 +83,11 @@ UINT DescriptorHeapManagerDX::addSRV(
             "D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV"
         );
     }
-    if (m_freeHandles.size() == 0) {
-        throw std::runtime_error(
-            "DescriptorHeapManagerDX::addCBV(...) Descriptor heap full"
-        );
-    }
-
-    auto l_originalFreeHandle = m_freeHandles.back();
+    auto l_originalFreeHandle = allocateRange(1);
     auto l_handle             = getCPUHandle(l_originalFreeHandle);
     m_parentDevice->getDevice()->CreateShaderResourceView(
         f_resource, &f_srvDesc, l_handle
     );
-    m_freeHandles.pop_back();
     return l_originalFreeHandle;
 }
 
@@ -119,29 +99,60 @@ UINT DescriptorHeapManagerDX::addSampler(const D3D12_SAMPLER_DESC& f_desc)
             "D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER"
         );
     }
-    if (m_freeHandles.size() == 0) {
-        throw std::runtime_error(
-            "DescriptorHeapManagerDX::addSampler(...) Descriptor heap full"
-        );
-    }
-
-    auto l_originalFreeHandle = m_freeHandles.back();
+    auto l_originalFreeHandle = allocateRange(1);
     auto l_handle             = getCPUHandle(l_originalFreeHandle);
     m_parentDevice->getDevice()->CreateSampler(&f_desc, l_handle);
-    m_freeHandles.pop_back();
     return l_originalFreeHandle;
 }
 
 UINT DescriptorHeapManagerDX::addEmpty()
 {
-    if (m_freeHandles.size() == 0) {
+    return allocateRange(1);
+}
+
+UINT DescriptorHeapManagerDX::allocateRange(UINT f_count)
+{
+    if (f_count == 0 || f_count > m_freeHandles.size()) {
         throw std::runtime_error(
-            "DescriptorHeapManagerDX::addEmpty() Descriptor heap full"
+            "DescriptorHeapManagerDX::allocateRange() invalid descriptor count"
         );
     }
-    auto l_originalFreeHandle = m_freeHandles.back();
-    m_freeHandles.pop_back();
-    return l_originalFreeHandle;
+
+    for (UINT l_candidate = 0;
+         l_candidate + f_count <= m_heap->GetDesc().NumDescriptors;
+         ++l_candidate)
+    {
+        std::vector<UINT> l_range;
+        l_range.reserve(f_count);
+        for (UINT i = 0; i < f_count; ++i) {
+            const auto l_handle = l_candidate + i;
+            if (std::find(m_freeHandles.begin(), m_freeHandles.end(), l_handle)
+                == m_freeHandles.end())
+            {
+                break;
+            }
+            l_range.push_back(l_handle);
+        }
+        if (l_range.size() == f_count) {
+            for (const auto l_handle : l_range) {
+                m_freeHandles.erase(
+                    std::find(m_freeHandles.begin(), m_freeHandles.end(), l_handle)
+                );
+            }
+            return l_candidate;
+        }
+    }
+
+    throw std::runtime_error(
+        "DescriptorHeapManagerDX::allocateRange() descriptor heap full or fragmented"
+    );
+}
+
+void DescriptorHeapManagerDX::freeRange(UINT f_first, UINT f_count)
+{
+    for (UINT i = 0; i < f_count; ++i) {
+        free(f_first + i);
+    }
 }
 
 D3D12_GPU_DESCRIPTOR_HANDLE DescriptorHeapManagerDX::getGPUStart() const

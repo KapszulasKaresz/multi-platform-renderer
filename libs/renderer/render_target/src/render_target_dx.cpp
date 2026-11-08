@@ -96,7 +96,8 @@ void RenderTargetDX::createRenderTargets()
     if (m_useDepthBuffer) {
         D3D12_DEPTH_STENCIL_VIEW_DESC l_dsvDesc = {};
         l_dsvDesc.Format = image::ImageDX::convertToDXFormat(m_depthImage->getFormat());
-        l_dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DMS;
+        l_dsvDesc.ViewDimension = isMSAA() ? D3D12_DSV_DIMENSION_TEXTURE2DMS
+                                          : D3D12_DSV_DIMENSION_TEXTURE2D;
         l_dsvDesc.Flags         = D3D12_DSV_FLAG_NONE;
 
         m_parentDevice->getDevice()->CreateDepthStencilView(
@@ -108,7 +109,8 @@ void RenderTargetDX::createRenderTargets()
 
     D3D12_RENDER_TARGET_VIEW_DESC l_msaaRtvDesc = {};
     l_msaaRtvDesc.Format = image::ImageDX::convertToDXFormat(m_colorImage->getFormat());
-    l_msaaRtvDesc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+    l_msaaRtvDesc.ViewDimension = isMSAA() ? D3D12_RTV_DIMENSION_TEXTURE2DMS
+                                           : D3D12_RTV_DIMENSION_TEXTURE2D;
 
     m_parentDevice->getDevice()->CreateRenderTargetView(
         m_colorImage->getResource(),
@@ -134,18 +136,28 @@ void RenderTargetDX::createColorResource()
 {
     m_colorImage =
         std::dynamic_pointer_cast<image::ImageDX>(m_parentDevice->createImage());
-    m_colorImage->setFormat(m_format)
+    const auto l_imageFormat =
+        m_useStorageImage && m_format == image::IMAGE_FORMAT_BGRA8
+            ? image::IMAGE_FORMAT_RGBA8
+            : m_format;
+    m_colorImage->setFormat(l_imageFormat)
         .setColorSpace(image::COLOR_SPACE_LINEAR)
         .setSize(m_size)
         .setMSAASamples(m_MSAASampleDesc)
-        .setDefaultState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-        .setResrouceFlags(D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET)
+        .setDefaultState(m_useStorageImage ? D3D12_RESOURCE_STATE_UNORDERED_ACCESS
+                                           : D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+        .setResrouceFlags(
+            D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET
+            | (m_useStorageImage ? D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS
+                                 : D3D12_RESOURCE_FLAG_NONE)
+        )
         .createEmptyImage();
 }
 
 void RenderTargetDX::validateMSAARequirements()
 {
-    m_MSAASampleDesc.Count   = m_parentDevice->getMaxMSAASamples();
+    m_MSAASampleDesc.Count   =
+        m_useStorageImage ? 1 : m_parentDevice->getMaxMSAASamples();
     m_MSAASampleDesc.Quality = 0;
 
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS l_qualityLevels = {};

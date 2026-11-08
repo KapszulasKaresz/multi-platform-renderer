@@ -11,10 +11,12 @@
 #include "renderer/mesh/inc/triangle_mesh_dx.hpp"
 #include "renderer/render_target/inc/render_target_dx.hpp"
 #include "renderer/render_target/inc/render_target_window_dx.hpp"
+#include "renderer/ray_tracing/acceleration_structure/inc/acceleration_structure_dx.hpp"
 #include "renderer/rendering_api/inc/rendering_api_dx.hpp"
 #include "renderer/rendering_server/inc/rendering_server.hpp"
 #include "renderer/texture/inc/texture_dx.hpp"
 #include "renderer/uniform/inc/uniform_collection_dx.hpp"
+#include "renderer/uniform/inc/uniform_acceleration_structure_dx.hpp"
 #include "renderer/uniform/inc/uniform_storage_buffer_dx.hpp"
 #include "renderer/window/inc/glfw_window.hpp"
 #include "renderer/window/inc/window.hpp"
@@ -88,13 +90,31 @@ std::shared_ptr<mesh::TriangleMesh> RenderingDeviceDX::createTriangleMesh()
 std::shared_ptr<ray_tracing::AccelerationStructure>
     RenderingDeviceDX::createAccelerationStructure()
 {
-    return nullptr;
+        if (!isValid()) {
+            throw std::runtime_error(
+                "RenderingDeviceDX::createAccelerationStructure() requires a valid device"
+            );
+        }
+        D3D12_FEATURE_DATA_D3D12_OPTIONS5 l_options = {};
+    if (FAILED(m_device->CheckFeatureSupport(
+            D3D12_FEATURE_D3D12_OPTIONS5, &l_options, sizeof(l_options)
+        )))
+    {
+        throw std::runtime_error(
+            "RenderingDeviceDX::createAccelerationStructure() failed to query DXR "
+            "support"
+        );
+    }
+    if (l_options.RaytracingTier == D3D12_RAYTRACING_TIER_NOT_SUPPORTED) {
+        return nullptr;
+    }
+    return std::make_shared<ray_tracing::AccelerationStructureDX>(this);
 }
 
 std::shared_ptr<uniform::UniformAccelerationStructure>
     RenderingDeviceDX::createUniformAccelerationStructure()
 {
-    return nullptr;
+        return std::make_shared<uniform::UniformAccelerationStructureDX>(this);
 }
 
 std::shared_ptr<uniform::UniformCollection> RenderingDeviceDX::createUniformCollection()

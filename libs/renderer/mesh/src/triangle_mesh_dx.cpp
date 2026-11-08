@@ -52,7 +52,7 @@ void TriangleMeshDX::createVertexBuffer()
     if (FAILED(m_parentDevice->getMemoryAllocator()->CreateResource(
             &l_allocationDesc,
             &l_resourceDesc,
-            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
             NULL,
             &m_vertexBuffer,
             IID_NULL,
@@ -105,7 +105,7 @@ void TriangleMeshDX::createIndexBuffer()
     if (FAILED(m_parentDevice->getMemoryAllocator()->CreateResource(
             &l_allocationDesc,
             &l_resourceDesc,
-            D3D12_RESOURCE_STATE_INDEX_BUFFER,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
             NULL,
             &m_indexBuffer,
             IID_NULL,

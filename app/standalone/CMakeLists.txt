@@ -2,6 +2,7 @@ set(STANDALONE_PROJECT_NAME "${PROJECT_NAME}_standalone")
 set(SHADER_COMPILE_STEP "${PROJECT_NAME}_shader_compile_standalone")
 
 include(../cmake/shaders.cmake)
+include(../cmake/shaders_dx.cmake)
 
 set(SHADER_SLANG_SOURCES
     ${CMAKE_SOURCE_DIR}/res/shaders/shader.slang
@@ -22,6 +23,10 @@ add_slang_shader_target(
     COMPUTE_SOURCES ${SHADER_COMPUTE_SOURCES}
     RAY_TRACING_SOURCES ${SHADER_RAY_TRACING_SOURCES}
 )
+add_slang_dx_ray_tracing_target(
+    ${SHADER_COMPILE_STEP}_dx
+    ${CMAKE_SOURCE_DIR}/res/shaders/raytracing_dx.slang
+)
 
 add_executable(${STANDALONE_PROJECT_NAME}
     src/main.cpp)
@@ -29,4 +34,8 @@ add_executable(${STANDALONE_PROJECT_NAME}
 target_link_libraries(${STANDALONE_PROJECT_NAME} PRIVATE renderer::renderer)
 target_link_libraries(${STANDALONE_PROJECT_NAME} PRIVATE app::common)
 
-add_dependencies(${STANDALONE_PROJECT_NAME} ${SHADER_COMPILE_STEP})
+add_dependencies(
+    ${STANDALONE_PROJECT_NAME}
+    ${SHADER_COMPILE_STEP}
+    ${SHADER_COMPILE_STEP}_dx
+)

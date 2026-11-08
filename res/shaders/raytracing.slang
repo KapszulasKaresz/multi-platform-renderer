@@ -31,29 +31,10 @@ struct RayPayload
     uint shadow;
 };
 
-[vk::binding(0, 1)]
-ConstantBuffer<UniformBufferLightArray> lightArray : register(b1, space0);
-
-[vk::binding(0, 3)]
-RaytracingAccelerationStructure scene;
-
-[vk::binding(0, 0)]
-ConstantBuffer<UniformBufferCamera> camera : register(b0, space0);
-
-[vk::binding(0, 7)]
-RWTexture2D<float4> outputImage;
-
-[vk::binding(0, 4)]
-Sampler2D<float4> albedoTextures[128];
-
-[vk::binding(0, 5)]
-Sampler2D<float4> normalTextures[128];
-
-[vk::binding(0, 6)]
-Sampler2D<float4> metallicRoughnessTextures[128];
-
-[vk::binding(0, 2)]
-ByteAddressBuffer geometry;
+#ifndef RAY_TRACING_BINDINGS
+#define RAY_TRACING_BINDINGS "raytracing_bindings.slang"
+#endif
+#include RAY_TRACING_BINDINGS
 
 // =========================================================================
 // Math & PBR Helpers
@@ -167,7 +148,7 @@ void raygenMain()
 
     const float2 pixel = (float2(DispatchRaysIndex().xy) + 0.5)
         / float2(DispatchRaysDimensions().xy);
-    const float2 ndc = pixel * 2.0 - 1.0;
+    const float2 ndc = rayTracingNdc(pixel);
     const float4 origin = mul(camera.inverseView, float4(0.0, 0.0, 0.0, 1.0));
     const float4 target =
         mul(camera.inverseView, mul(camera.inverseProj, float4(ndc, 1.0, 1.0)));
@@ -314,18 +295,18 @@ void closestHitMain(
     const float textureLod = max(0.0, log2(max(distanceToCamera, 1.0)));
 
     const float4 rawAlbedo =
-        albedoTextures[materialId].SampleLevel(uv, textureLod);
+        sampleAlbedo(materialId, uv, textureLod);
     const float3 albedo = pow(rawAlbedo.rgb, 2.2); // Linearize sRGB texture
 
     const float3 tangentNormal =
-        normalTextures[materialId].SampleLevel(uv, textureLod).xyz * 2.0 - 1.0;
+        sampleNormal(materialId, uv, textureLod).xyz * 2.0 - 1.0;
     float3 normal = normalize(
         tangent * tangentNormal.x + bitangent * tangentNormal.y
         + geometricNormal * tangentNormal.z
     );
 
     const float4 metallicRoughness =
-        metallicRoughnessTextures[materialId].SampleLevel(uv, textureLod);
+        sampleMetallicRoughness(materialId, uv, textureLod);
     const float metallic = saturate(metallicRoughness.b);
     const float roughness = clamp(metallicRoughness.g, 0.04, 1.0); // 0.04 avoids GGX divide-by-zero
 

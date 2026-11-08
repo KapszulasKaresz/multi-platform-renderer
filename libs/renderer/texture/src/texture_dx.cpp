@@ -30,6 +30,20 @@ UINT TextureDX::getSamplerOffset()
     return m_heapPositionSampler;
 }
 
+void TextureDX::writeDescriptors(
+    D3D12_CPU_DESCRIPTOR_HANDLE f_srv,
+    D3D12_CPU_DESCRIPTOR_HANDLE f_sampler
+) const
+{
+    auto* l_image = dynamic_cast<image::ImageDX*>(m_image.get());
+    if (!isValid() || !l_image) {
+        throw std::runtime_error("TextureDX::writeDescriptors() requires a valid texture");
+    }
+    auto* l_device = m_parentDevice->getDevice().Get();
+    l_device->CreateShaderResourceView(l_image->getResource(), &m_srvDesc, f_srv);
+    l_device->CreateSampler(&m_samplerDesc, f_sampler);
+}
+
 D3D12_FILTER TextureDX::convertToD3D12Filter(Filter f_filter, MipMapMode f_mipmapMode)
 {
     switch (f_filter) {
@@ -80,14 +94,13 @@ TextureDX::~TextureDX()
 
 void TextureDX::createShaderResourceView()
 {
-    D3D12_SHADER_RESOURCE_VIEW_DESC l_srvDesc = {};
-    l_srvDesc.Shader4ComponentMapping         = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    l_srvDesc.Format        = image::ImageDX::convertToDXFormat(m_image->getFormat());
-    l_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    l_srvDesc.Texture2D.MostDetailedMip     = 0;
-    l_srvDesc.Texture2D.MipLevels           = m_image->getMipLevels();
-    l_srvDesc.Texture2D.PlaneSlice          = 0;
-    l_srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    m_srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    m_srvDesc.Format        = image::ImageDX::convertToDXFormat(m_image->getFormat());
+    m_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    m_srvDesc.Texture2D.MostDetailedMip     = 0;
+    m_srvDesc.Texture2D.MipLevels           = m_image->getMipLevels();
+    m_srvDesc.Texture2D.PlaneSlice          = 0;
+    m_srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
     image::ImageDX* l_imageDX = dynamic_cast<image::ImageDX*>(m_image.get());
 
@@ -98,7 +111,7 @@ void TextureDX::createShaderResourceView()
     }
 
     m_heapPosition = m_parentDevice->getCommonDescriptorHeapManager()->addSRV(
-        l_imageDX->getResource(), l_srvDesc
+        l_imageDX->getResource(), m_srvDesc
     );
 }
 

@@ -2,6 +2,8 @@
 #define COMMAND_BUFFER_DX_HPP
 
 #include <array>
+#include <climits>
+#include <unordered_map>
 
 #include <d3d12.h>
 #include <dxgi1_6.h>
@@ -110,6 +112,13 @@ protected:
         rendering_device::maxFramesInFlight>
                                                 m_commandLists{};
     Microsoft::WRL::ComPtr<ID3D12PipelineState> m_initialPipelineState{ nullptr };
+    std::unordered_map<ID3D12Resource*, UINT> m_copySourceDescriptors;
+    UINT m_copySamplerDescriptor{ UINT_MAX };
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> m_copyRootSignature{ nullptr };
+    Microsoft::WRL::ComPtr<ID3DBlob> m_copyVertexShader{ nullptr };
+    Microsoft::WRL::ComPtr<ID3DBlob> m_copyPixelShader{ nullptr };
+    std::unordered_map<uint64_t, Microsoft::WRL::ComPtr<ID3D12PipelineState>>
+        m_copyPipelineStates;
 
     bool m_renderImGui{ false };
 };

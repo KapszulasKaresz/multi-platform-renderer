@@ -32,6 +32,8 @@ public:
     );
     UINT addSampler(const D3D12_SAMPLER_DESC& f_desc);
 
+    UINT allocateRange(UINT f_count);
+    void freeRange(UINT f_first, UINT f_count);
     UINT addEmpty();
 
     D3D12_GPU_DESCRIPTOR_HANDLE getGPUStart() const;
