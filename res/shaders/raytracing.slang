@@ -305,23 +305,30 @@ void closestHitMain(
     );
     const float3 bitangent =
         normalize(cross(geometricNormal, tangent) * tangentHandedness);
+    const float3 hitPosition = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
 
     // Textures & Material properties
-    const float4 rawAlbedo = albedoTextures[materialId].SampleLevel(uv, 0.0);
+    const float3 cameraPosition =
+        mul(camera.inverseView, float4(0.0, 0.0, 0.0, 1.0)).xyz;
+    const float distanceToCamera = length(hitPosition - cameraPosition);
+    const float textureLod = max(0.0, log2(max(distanceToCamera, 1.0)));
+
+    const float4 rawAlbedo =
+        albedoTextures[materialId].SampleLevel(uv, textureLod);
     const float3 albedo = pow(rawAlbedo.rgb, 2.2); // Linearize sRGB texture
 
     const float3 tangentNormal =
-        normalTextures[materialId].SampleLevel(uv, 0.0).xyz * 2.0 - 1.0;
+        normalTextures[materialId].SampleLevel(uv, textureLod).xyz * 2.0 - 1.0;
     float3 normal = normalize(
         tangent * tangentNormal.x + bitangent * tangentNormal.y
         + geometricNormal * tangentNormal.z
     );
 
-    const float4 metallicRoughness = metallicRoughnessTextures[materialId].SampleLevel(uv, 0.0);
+    const float4 metallicRoughness =
+        metallicRoughnessTextures[materialId].SampleLevel(uv, textureLod);
     const float metallic = saturate(metallicRoughness.b);
     const float roughness = clamp(metallicRoughness.g, 0.04, 1.0); // 0.04 avoids GGX divide-by-zero
 
-    const float3 hitPosition = WorldRayOrigin() + WorldRayDirection() * RayTCurrent();
     const float3 V = -normalize(WorldRayDirection());
 
     // Ensure normal is oriented towards the incoming ray
